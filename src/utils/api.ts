@@ -69,12 +69,27 @@ export const authAPI = {
 
   getSession: async () => {
     const { data } = await supabase.auth.getSession();
-    
+
     if (data.session?.access_token) {
       setAuthToken(data.session.access_token);
     }
 
     return data.session;
+  },
+
+  signInWithOAuth: async (provider: 'google' | 'linkedin_oidc') => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 };
 
