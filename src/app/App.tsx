@@ -568,9 +568,11 @@ export default function App() {
         <Toaster position="top-right" />
         <SignInForm
           onSignInSuccess={handleSignInSuccess}
-          onNavigateToSignUp={() => {
+          onNavigateToSignUp={(userType) => {
+            // Set user type and navigate to sign up screen
+            setFormData(prev => ({ ...prev, userType }));
             setShowSignIn(false);
-            setCurrentScreen(0);
+            setCurrentScreen(1); // Go to SignUpScreen
           }}
         />
       </div>

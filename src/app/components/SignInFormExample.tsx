@@ -15,10 +15,10 @@ export default function SignInFormExample() {
     // window.location.href = '/dashboard';
   };
 
-  const handleNavigateToSignUp = () => {
-    console.log('Navigate to sign up');
-    // Navigate to sign up screen
-    // window.location.href = '/signup';
+  const handleNavigateToSignUp = (userType: 'organizer' | 'speaker') => {
+    console.log('Navigate to sign up as:', userType);
+    // Set user type and navigate to sign up screen
+    // window.location.href = `/signup?type=${userType}`;
   };
 
   return (
@@ -45,13 +45,19 @@ export default function SignInFormExample() {
  *         loadUserProfile();
  *         setShowSignIn(false);
  *       }}
- *       onNavigateToSignUp={() => {
+ *       onNavigateToSignUp={(userType) => {
+ *         // User selected their type in the modal
+ *         setFormData(prev => ({ ...prev, userType }));
  *         setShowSignIn(false);
- *         setCurrentScreen(0); // Go to welcome screen
+ *         setCurrentScreen(1); // Go to SignUpScreen
  *       }}
  *     />
  *   );
  * }
  *
  * 3. Update the "Sign in" button in WelcomeScreen to set showSignIn to true
+ *
+ * Note: The SignInForm now includes a user type selection modal that appears
+ * when clicking "Sign up". Users choose between organizer or speaker before
+ * being directed to the sign-up form.
  */

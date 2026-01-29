@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Users, Mic } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 interface SignInFormProps {
   onSignInSuccess?: () => void;
-  onNavigateToSignUp?: () => void;
+  onNavigateToSignUp?: (userType: 'organizer' | 'speaker') => void;
 }
 
 export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: SignInFormProps) {
@@ -18,6 +18,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
   const [showOAuthModal, setShowOAuthModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'LinkedIn' | 'Google' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -79,6 +80,13 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSignIn();
+    }
+  };
+
+  const handleSelectUserType = (userType: 'organizer' | 'speaker') => {
+    setShowUserTypeModal(false);
+    if (onNavigateToSignUp) {
+      onNavigateToSignUp(userType);
     }
   };
 
@@ -202,9 +210,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
               style={{ fontWeight: '600' }}
               onClick={(e) => {
                 e.preventDefault();
-                if (onNavigateToSignUp) {
-                  onNavigateToSignUp();
-                }
+                setShowUserTypeModal(true);
               }}
             >
               Sign up
@@ -329,6 +335,86 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
             <a href="#" className="underline">Terms of Service</a> and{' '}
             <a href="#" className="underline">Privacy Policy</a>
           </p>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Type Selection Modal */}
+      <Dialog open={showUserTypeModal} onOpenChange={setShowUserTypeModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-3xl mb-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold' }}>
+              Create Your Account
+            </DialogTitle>
+            <DialogDescription className="text-center text-base" style={{ fontFamily: 'Inter, sans-serif' }}>
+              Choose your account type to get started
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6 space-y-4">
+            {/* Event Organizer Option */}
+            <button
+              onClick={() => handleSelectUserType('organizer')}
+              className="w-full p-6 border-2 border-[#e9ebef] rounded-2xl hover:border-[#0B3B2E] hover:bg-[#0B3B2E]/5 transition-all text-left group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-[#0B3B2E] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className="text-xl mb-2"
+                    style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold' }}
+                  >
+                    I'm an Event Organizer
+                  </h3>
+                  <p
+                    className="text-[#717182] text-sm"
+                    style={{ fontFamily: 'Inter, sans-serif', lineHeight: '1.6' }}
+                  >
+                    Find and book professional speakers for your events, conferences, and podcasts
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            {/* Speaker Option */}
+            <button
+              onClick={() => handleSelectUserType('speaker')}
+              className="w-full p-6 border-2 border-[#e9ebef] rounded-2xl hover:border-[#0B3B2E] hover:bg-[#0B3B2E]/5 transition-all text-left group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-[#0B3B2E] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Mic className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className="text-xl mb-2"
+                    style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold' }}
+                  >
+                    I'm a Speaker
+                  </h3>
+                  <p
+                    className="text-[#717182] text-sm"
+                    style={{ fontFamily: 'Inter, sans-serif', lineHeight: '1.6' }}
+                  >
+                    Get discovered by event organizers and showcase your expertise to wider audiences
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Cancel button */}
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              onClick={() => setShowUserTypeModal(false)}
+              className="text-[#717182] hover:text-[#0B3B2E]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
