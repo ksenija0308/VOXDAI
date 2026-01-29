@@ -77,12 +77,40 @@ export const authAPI = {
     return data.session;
   },
 
-  signInWithOAuth: async (provider: 'google' | 'linkedin_oidc') => {
+  signInWithOAuth: async (provider: 'google' | 'linkedin_oidc', options?: { userType?: 'organizer' | 'speaker' }) => {
+    // Store user type in localStorage if provided (for sign-up flow)
+    if (options?.userType) {
+      localStorage.setItem('voxd_signup_user_type', options.userType);
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,
       options: {
         redirectTo: window.location.origin,
       },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
+  // Get and clear stored user type from OAuth sign-up flow
+  getAndClearSignupUserType: () => {
+    const userType = localStorage.getItem('voxd_signup_user_type');
+    if (userType) {
+      localStorage.removeItem('voxd_signup_user_type');
+      return userType as 'organizer' | 'speaker';
+    }
+    return null;
+  },
+
+  // Update user metadata (e.g., to store user type)
+  updateUserMetadata: async (metadata: { userType?: 'organizer' | 'speaker', [key: string]: any }) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: metadata
     });
 
     if (error) {

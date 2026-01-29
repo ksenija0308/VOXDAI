@@ -96,7 +96,10 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
     }
 
     try {
-      await authAPI.signInWithOAuth(provider);
+      // Pass user type so it can be retrieved after OAuth redirect
+      await authAPI.signInWithOAuth(provider, {
+        userType: formData.userType as 'organizer' | 'speaker'
+      });
       // Supabase will redirect to the OAuth provider
       // After successful auth, user will be redirected back to the app
     } catch (error: any) {

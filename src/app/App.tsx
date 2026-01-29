@@ -227,24 +227,49 @@ export default function App() {
       try {
         const session = await authAPI.getSession();
         if (session) {
-          // Try to load existing profile
+          // Check if this is an OAuth sign-up callback
+          const signupUserType = authAPI.getAndClearSignupUserType();
+
+          if (signupUserType) {
+            // This is a new OAuth sign-up
+            console.log('OAuth sign-up detected, user type:', signupUserType);
+            setFormData(prev => ({ ...prev, userType: signupUserType }));
+
+            // Save user type to Supabase user metadata
+            try {
+              await authAPI.updateUserMetadata({ userType: signupUserType });
+            } catch (error) {
+              console.error('Failed to update user metadata:', error);
+            }
+
+            toast.success('Account created successfully! Please complete your profile.');
+            // Navigate to first profile creation screen
+            setCurrentScreen(2);
+            return;
+          }
+
+          // Not a sign-up callback, check for existing profile
           const userType = session.user?.user_metadata?.userType;
           if (userType) {
             setFormData(prev => ({ ...prev, userType }));
-            
+
             try {
-              const profile = userType === 'organizer' 
+              const profile = userType === 'organizer'
                 ? await organizerAPI.getProfile()
                 : await speakerAPI.getProfile();
-              
+
               if (profile) {
                 setFormData(prev => ({ ...prev, ...profile }));
                 // If profile exists, go to dashboard
                 setCurrentScreen(userType === 'organizer' ? 7 : 8);
+              } else {
+                // Profile doesn't exist, go to profile creation
+                setCurrentScreen(2);
               }
             } catch (err) {
-              // Profile doesn't exist yet, that's ok
-              console.log('No existing profile found');
+              // Profile doesn't exist yet, go to profile creation
+              console.log('No existing profile found, starting profile creation');
+              setCurrentScreen(2);
             }
           }
         }
