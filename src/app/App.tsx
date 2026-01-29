@@ -408,7 +408,7 @@ export default function App() {
         languages: formData.languages.length > 0,
         leadTime: formData.leadTime,
       };
-      
+
       const totalFields = Object.keys(fields).length;
       const completedFields = Object.values(fields).filter(Boolean).length;
       return Math.round((completedFields / totalFields) * 100);
@@ -433,11 +433,90 @@ export default function App() {
         preferredAudienceSizes: formData.preferredAudienceSizes.length > 0,
         speakingFeeRange: formData.speakingFeeRange,
       };
-      
+
       const totalFields = Object.keys(fields).length;
       const completedFields = Object.values(fields).filter(Boolean).length;
       return Math.round((completedFields / totalFields) * 100);
     }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    // Reset form data to initial state
+    setFormData({
+      userType: '',
+      email: '',
+      password: '',
+      acceptTerms: false,
+      organisationName: '',
+      website: '',
+      country: '',
+      city: '',
+      industries: [],
+      logo: null,
+      tagline: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      calendarLink: '',
+      calendarType: '',
+      linkedIn: '',
+      instagram: '',
+      youtube: '',
+      twitter: '',
+      authorised: false,
+      eventTypes: [],
+      frequency: [],
+      eventSizes: [],
+      formats: [],
+      locations: [],
+      speakerFormats: [],
+      diversityGoals: false,
+      diversityTargets: '',
+      languages: [],
+      budgetRange: 'unpaid',
+      budgetMin: 0,
+      budgetMax: 10000,
+      leadTime: '',
+      visibility: 'public',
+      firstName: '',
+      lastName: '',
+      professionalTitle: '',
+      speakerLocation: '',
+      speakerCity: '',
+      profilePhoto: null,
+      speakerTagline: '',
+      topics: [],
+      customTopics: [],
+      speakingFormats: [],
+      yearsOfExperience: '',
+      pastEngagements: 0,
+      notableClients: '',
+      bio: '',
+      speakerWebsite: '',
+      speakerLinkedIn: '',
+      speakerTwitter: '',
+      speakerInstagram: '',
+      speakerYoutube: '',
+      demoVideoUrl: '',
+      geographicReach: '',
+      willingToTravel: false,
+      preferredEventTypes: [],
+      preferredAudienceSizes: [],
+      speakingFeeRange: '',
+      feeMin: 0,
+      feeMax: 10000,
+      technicalRequirements: '',
+      specialAccommodations: '',
+      videoIntroUrl: '',
+      videoIntroFile: null,
+      availabilityPeriods: [],
+      acceptedTerms: false,
+      subscribeNewsletter: false,
+    });
+
+    // Navigate back to welcome screen
+    setCurrentScreen(0);
   };
 
   // Define organizer and speaker flows
@@ -488,7 +567,7 @@ export default function App() {
       isSaving={isSaving}
     />,
     <SuccessScreen nextScreen={nextScreen} formData={formData} />,
-    <DashboardScreen formData={formData} />,
+    <DashboardScreen formData={formData} onLogout={handleLogout} />,
   ];
 
   const speakerScreens = [
@@ -546,7 +625,7 @@ export default function App() {
       isSaving={isSaving}
     />,
     <SuccessScreen nextScreen={nextScreen} formData={formData} />,
-    <DashboardScreen formData={formData} />,
+    <DashboardScreen formData={formData} onLogout={handleLogout} />,
   ];
 
   // Choose screens based on userType

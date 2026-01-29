@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 interface DashboardScreenProps {
   formData: FormData;
+  onLogout?: () => void;
 }
 
 interface Message {
@@ -29,12 +30,25 @@ interface Conversation {
   messages: Message[];
 }
 
-export default function DashboardScreen({ formData }: DashboardScreenProps) {
+export default function DashboardScreen({ formData, onLogout }: DashboardScreenProps) {
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const profileCompletion = 85; // Mock completion percentage
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showUserMenu && !target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserMenu]);
 
   // Load profile from backend on mount
   useEffect(() => {
@@ -309,8 +323,37 @@ export default function DashboardScreen({ formData }: DashboardScreenProps) {
                 </span>
               )}
             </button>
-            <div className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white">
-              {profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'}
+            <div className="relative user-menu-container">
+              <button
+                className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+                onClick={() => setShowUserMenu(!showUserMenu)}
+              >
+                {profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'}
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg overflow-hidden z-50">
+                  <button
+                    onClick={async () => {
+                      if (onLogout) {
+                        try {
+                          await authAPI.signOut();
+                          toast.success('Logged out successfully');
+                          onLogout();
+                        } catch (error: any) {
+                          console.error('Logout error:', error);
+                          toast.error(`Failed to logout: ${error.message}`);
+                        }
+                      }
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-[#f3f3f5] transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-4 h-4 text-[#717182]" />
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                      Logout
+                    </span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
