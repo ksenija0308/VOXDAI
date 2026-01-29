@@ -9,6 +9,20 @@ const supabase = createClient(
   publicAnonKey
 );
 
+// Types
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  userType: 'organizer' | 'speaker';
+}
+
+export interface AuthResponse {
+  user?: User;
+  accessToken?: string;
+  error?: string;
+}
+
 // Helper to get auth token from localStorage
 const getAuthToken = (): string | null => {
   return localStorage.getItem('voxd_access_token');
@@ -118,6 +132,38 @@ export const authAPI = {
     }
 
     return data;
+  },
+
+  // Get current session with user info
+  getCurrentSession: async (): Promise<AuthResponse> => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error || !data.session) {
+        return { error: 'No active session' };
+      }
+
+      const user: User = {
+        id: data.session.user.id,
+        email: data.session.user.email!,
+        name: data.session.user.user_metadata.name,
+        userType: data.session.user.user_metadata.userType
+      };
+
+      return {
+        user,
+        accessToken: data.session.access_token
+      };
+    } catch (error) {
+      console.error('Session error:', error);
+      return { error: String(error) };
+    }
+  },
+
+  // Get access token
+  getAccessToken: async (): Promise<string | null> => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || null;
   }
 };
 

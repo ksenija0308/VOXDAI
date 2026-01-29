@@ -1,10 +1,10 @@
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
-import { getAccessToken } from './auth';
+import { authAPI } from '../../utils/api';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-3a218522`;
 
 async function apiCall(endpoint: string, options: RequestInit = {}) {
-  const accessToken = await getAccessToken();
+  const accessToken = await authAPI.getAccessToken();
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
