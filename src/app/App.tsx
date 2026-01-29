@@ -1,18 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import WelcomeScreen from './components/WelcomeScreen';
 import SignUpScreen from './components/SignUpScreen';
 import SignInForm from './components/SignInForm';
-import OrganiserBasicsScreen from './components/OrganiserBasicsScreen';
-import AboutScreen from './components/AboutScreen';
-import EventTypesScreen from './components/EventTypesScreen';
-import SpeakerPreferencesScreen from './components/SpeakerPreferencesScreen';
-import SuccessScreen from './components/SuccessScreen';
 import DashboardScreen from './components/DashboardScreen';
-import SpeakerBasicsScreen from './components/SpeakerBasicsScreen';
-import SpeakerTopicsScreen from './components/SpeakerTopicsScreen';
-import SpeakerExperienceScreen from './components/SpeakerExperienceScreen';
-import SpeakerVideoIntroductionScreen from './components/SpeakerVideoIntroductionScreen';
-import SpeakerAvailabilityScreen from './components/SpeakerAvailabilityScreen';
+import OrganizerWizard from './components/OrganizerWizard';
+import SpeakerWizard from './components/SpeakerWizard';
+import ProtectedRoute from './components/ProtectedRoute';
 import { organizerAPI, speakerAPI, fileAPI, authAPI } from '../utils/api';
 import { Toaster } from './components/ui/toaster';
 import { toast } from 'sonner';
@@ -20,12 +14,12 @@ import { toast } from 'sonner';
 export interface FormData {
   // User type
   userType: 'organizer' | 'speaker' | '';
-  
+
   // Screen 1 - Sign Up
   email: string;
   password: string;
   acceptTerms: boolean;
-  
+
   // Screen 2 - Organiser Basics
   organisationName: string;
   website: string;
@@ -34,7 +28,7 @@ export interface FormData {
   industries: string[];
   logo: File | null;
   tagline: string;
-  
+
   // Screen 3 - About
   contactName: string;
   contactEmail: string;
@@ -46,14 +40,14 @@ export interface FormData {
   youtube: string;
   twitter: string;
   authorised: boolean;
-  
+
   // Screen 4 - Event Types & Frequency
   eventTypes: string[];
   frequency: string[];
   eventSizes: string[];
   formats: string[];
   locations: string[]
-  
+
   // Screen 5 - Speaker Preferences
   speakerFormats: string[];
   diversityGoals: boolean;
@@ -63,10 +57,10 @@ export interface FormData {
   budgetMin: number;
   budgetMax: number;
   leadTime: string;
-  
+
   // Screen 6 - Review & Publish
   visibility: 'public' | 'invite-only' | 'private';
-  
+
   // Speaker Profile Fields
   // Speaker Basics
   firstName: string;
@@ -76,17 +70,17 @@ export interface FormData {
   speakerCity: string;
   profilePhoto: File | null;
   speakerTagline: string;
-  
+
   // Speaker Topics & Expertise
   topics: string[];
   customTopics: string[];
-  
+
   // Speaker Experience
   speakingFormats: string[];
   yearsOfExperience: string;
   pastEngagements: number;
   notableClients: string;
-  
+
   // Speaker Bio & Portfolio
   bio: string;
   speakerWebsite: string;
@@ -95,24 +89,24 @@ export interface FormData {
   speakerInstagram: string;
   speakerYoutube: string;
   demoVideoUrl: string;
-  
+
   // Speaker Availability & Preferences
   geographicReach: string;
   willingToTravel: boolean;
   preferredEventTypes: string[];
   preferredAudienceSizes: string[];
-  
+
   // Speaker Requirements & Pricing
   speakingFeeRange: string;
   feeMin: number;
   feeMax: number;
   technicalRequirements: string;
   specialAccommodations: string;
-  
+
   // Speaker Video Introduction (optional)
   videoIntroUrl: string;
   videoIntroFile: File | null;
-  
+
   // Speaker Availability Periods
   availabilityPeriods: Array<{
     id: string;
@@ -120,15 +114,14 @@ export interface FormData {
     endDate: string;
     ongoing: boolean;
   }>;
-  
+
   // Review & Confirm
   acceptedTerms: boolean;
   subscribeNewsletter: boolean;
 }
 
-export default function App() {
-  const [currentScreen, setCurrentScreen] = useState(0);
-  const [showSignIn, setShowSignIn] = useState(false);
+function AppContent() {
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     userType: '',
@@ -231,8 +224,6 @@ export default function App() {
           const signupUserType = authAPI.getAndClearSignupUserType();
 
           if (signupUserType) {
-            // This is a new OAuth sign-up
-            console.log('OAuth sign-up detected, user type:', signupUserType);
             setFormData(prev => ({ ...prev, userType: signupUserType }));
 
             // Save user type to Supabase user metadata
@@ -244,7 +235,11 @@ export default function App() {
 
             toast.success('Account created successfully! Please complete your profile.');
             // Navigate to first profile creation screen
-            setCurrentScreen(2);
+            if (signupUserType === 'organizer') {
+              navigate('/onboarding/organizer/basics', { replace: true });
+            } else {
+              navigate('/onboarding/speaker/basics', { replace: true });
+            }
             return;
           }
 
@@ -261,15 +256,21 @@ export default function App() {
               if (profile) {
                 setFormData(prev => ({ ...prev, ...profile }));
                 // If profile exists, go to dashboard
-                setCurrentScreen(userType === 'organizer' ? 7 : 8);
+                navigate('/dashboard', { replace: true });
               } else {
                 // Profile doesn't exist, go to profile creation
-                setCurrentScreen(2);
+                if (userType === 'organizer') {
+                  navigate('/onboarding/organizer/basics', { replace: true });
+                } else {
+                  navigate('/onboarding/speaker/basics', { replace: true });
+                }
               }
             } catch (err) {
-              // Profile doesn't exist yet, go to profile creation
-              console.log('No existing profile found, starting profile creation');
-              setCurrentScreen(2);
+              if (userType === 'organizer') {
+                navigate('/onboarding/organizer/basics', { replace: true });
+              } else {
+                navigate('/onboarding/speaker/basics', { replace: true });
+              }
             }
           }
         }
@@ -280,7 +281,7 @@ export default function App() {
     };
 
     loadProfile();
-  }, []);
+  }, [navigate]);
 
   const updateFormData = (data: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -297,7 +298,6 @@ export default function App() {
       try {
         // Use ref to get latest formData to avoid stale closure
         await saveProfile({ ...formDataRef.current, ...data }, false);
-        console.log('Autosaved successfully');
       } catch (error) {
         console.error('Autosave failed:', error);
       }
@@ -307,21 +307,19 @@ export default function App() {
   // Save profile to backend
   const saveProfile = async (dataToSave: FormData, showLoading = true) => {
     if (showLoading) setIsSaving(true);
-    
+
     try {
       // Upload files first if they exist
       let logoUrl = null;
       let photoUrl = null;
 
       if (dataToSave.logo instanceof File) {
-        console.log('Uploading logo...');
         toast.loading('Uploading logo...', { id: 'upload-logo' });
         logoUrl = await fileAPI.upload(dataToSave.logo, 'logo');
         toast.success('Logo uploaded!', { id: 'upload-logo' });
       }
 
       if (dataToSave.profilePhoto instanceof File) {
-        console.log('Uploading profile photo...');
         toast.loading('Uploading profile photo...', { id: 'upload-photo' });
         photoUrl = await fileAPI.upload(dataToSave.profilePhoto, 'photo');
         toast.success('Photo uploaded!', { id: 'upload-photo' });
@@ -339,7 +337,7 @@ export default function App() {
       if (showLoading) {
         toast.loading('Saving profile...', { id: 'save-profile' });
       }
-      
+
       if (dataToSave.userType === 'organizer') {
         await organizerAPI.saveProfile(profileData);
       } else if (dataToSave.userType === 'speaker') {
@@ -349,7 +347,6 @@ export default function App() {
       if (showLoading) {
         toast.success('Profile saved successfully!', { id: 'save-profile' });
       }
-      console.log('Profile saved successfully!');
       return true;
     } catch (error: any) {
       console.error('Error saving profile:', error);
@@ -360,30 +357,6 @@ export default function App() {
     }
   };
 
-  const nextScreen = async () => {
-    // Check if we're moving to the success screen
-    const isMovingToSuccess = 
-      (formData.userType === 'organizer' && currentScreen === 5) ||
-      (formData.userType === 'speaker' && currentScreen === 6);
-
-    if (isMovingToSuccess) {
-      // Save profile before showing success screen
-      const saved = await saveProfile(formData, true);
-      if (saved) {
-        setCurrentScreen(prev => Math.min(prev + 1, 10));
-      }
-    } else {
-      setCurrentScreen(prev => Math.min(prev + 1, 10));
-    }
-  };
-
-  const prevScreen = () => {
-    setCurrentScreen(prev => Math.max(prev - 1, 0))
-  };
-
-  const goToScreen = (screen: number) => {
-    setCurrentScreen(screen);
-  };
 
   const calculateProgress = (): number => {
     if (formData.userType === 'organizer') {
@@ -441,197 +414,92 @@ export default function App() {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    // Reset form data to initial state
-    setFormData({
-      userType: '',
-      email: '',
-      password: '',
-      acceptTerms: false,
-      organisationName: '',
-      website: '',
-      country: '',
-      city: '',
-      industries: [],
-      logo: null,
-      tagline: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      calendarLink: '',
-      calendarType: '',
-      linkedIn: '',
-      instagram: '',
-      youtube: '',
-      twitter: '',
-      authorised: false,
-      eventTypes: [],
-      frequency: [],
-      eventSizes: [],
-      formats: [],
-      locations: [],
-      speakerFormats: [],
-      diversityGoals: false,
-      diversityTargets: '',
-      languages: [],
-      budgetRange: 'unpaid',
-      budgetMin: 0,
-      budgetMax: 10000,
-      leadTime: '',
-      visibility: 'public',
-      firstName: '',
-      lastName: '',
-      professionalTitle: '',
-      speakerLocation: '',
-      speakerCity: '',
-      profilePhoto: null,
-      speakerTagline: '',
-      topics: [],
-      customTopics: [],
-      speakingFormats: [],
-      yearsOfExperience: '',
-      pastEngagements: 0,
-      notableClients: '',
-      bio: '',
-      speakerWebsite: '',
-      speakerLinkedIn: '',
-      speakerTwitter: '',
-      speakerInstagram: '',
-      speakerYoutube: '',
-      demoVideoUrl: '',
-      geographicReach: '',
-      willingToTravel: false,
-      preferredEventTypes: [],
-      preferredAudienceSizes: [],
-      speakingFeeRange: '',
-      feeMin: 0,
-      feeMax: 10000,
-      technicalRequirements: '',
-      specialAccommodations: '',
-      videoIntroUrl: '',
-      videoIntroFile: null,
-      availabilityPeriods: [],
-      acceptedTerms: false,
-      subscribeNewsletter: false,
-    });
+  const handleLogout = async () => {
+    try {
+      await authAPI.signOut();
+      // Reset form data to initial state
+      setFormData({
+        userType: '',
+        email: '',
+        password: '',
+        acceptTerms: false,
+        organisationName: '',
+        website: '',
+        country: '',
+        city: '',
+        industries: [],
+        logo: null,
+        tagline: '',
+        contactName: '',
+        contactEmail: '',
+        contactPhone: '',
+        calendarLink: '',
+        calendarType: '',
+        linkedIn: '',
+        instagram: '',
+        youtube: '',
+        twitter: '',
+        authorised: false,
+        eventTypes: [],
+        frequency: [],
+        eventSizes: [],
+        formats: [],
+        locations: [],
+        speakerFormats: [],
+        diversityGoals: false,
+        diversityTargets: '',
+        languages: [],
+        budgetRange: 'unpaid',
+        budgetMin: 0,
+        budgetMax: 10000,
+        leadTime: '',
+        visibility: 'public',
+        firstName: '',
+        lastName: '',
+        professionalTitle: '',
+        speakerLocation: '',
+        speakerCity: '',
+        profilePhoto: null,
+        speakerTagline: '',
+        topics: [],
+        customTopics: [],
+        speakingFormats: [],
+        yearsOfExperience: '',
+        pastEngagements: 0,
+        notableClients: '',
+        bio: '',
+        speakerWebsite: '',
+        speakerLinkedIn: '',
+        speakerTwitter: '',
+        speakerInstagram: '',
+        speakerYoutube: '',
+        demoVideoUrl: '',
+        geographicReach: '',
+        willingToTravel: false,
+        preferredEventTypes: [],
+        preferredAudienceSizes: [],
+        speakingFeeRange: '',
+        feeMin: 0,
+        feeMax: 10000,
+        technicalRequirements: '',
+        specialAccommodations: '',
+        videoIntroUrl: '',
+        videoIntroFile: null,
+        availabilityPeriods: [],
+        acceptedTerms: false,
+        subscribeNewsletter: false,
+      });
 
-    // Navigate back to welcome screen
-    setCurrentScreen(0);
+      // Navigate back to welcome screen
+      navigate('/', { replace: true });
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast.error('Failed to log out');
+    }
   };
 
-  // Define organizer and speaker flows
-  const organizerScreens = [
-    <WelcomeScreen
-      formData={formData}
-      updateFormData={updateFormData}
-      nextScreen={nextScreen}
-      onShowSignIn={() => setShowSignIn(true)}
-    />,
-    <SignUpScreen
-      formData={formData}
-      updateFormData={updateFormData}
-      nextScreen={nextScreen}
-      onShowSignIn={() => setShowSignIn(true)}
-    />,
-    <OrganiserBasicsScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <AboutScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <EventTypesScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <SpeakerPreferencesScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-      isSaving={isSaving}
-    />,
-    <SuccessScreen nextScreen={nextScreen} formData={formData} />,
-    <DashboardScreen formData={formData} onLogout={handleLogout} />,
-  ];
-
-  const speakerScreens = [
-    <WelcomeScreen
-      formData={formData}
-      updateFormData={updateFormData}
-      nextScreen={nextScreen}
-      onShowSignIn={() => setShowSignIn(true)}
-    />,
-    <SignUpScreen
-      formData={formData}
-      updateFormData={updateFormData}
-      nextScreen={nextScreen}
-      onShowSignIn={() => setShowSignIn(true)}
-    />,
-    <SpeakerBasicsScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <SpeakerTopicsScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <SpeakerExperienceScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <SpeakerVideoIntroductionScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-    />,
-    <SpeakerAvailabilityScreen 
-      formData={formData} 
-      updateFormData={updateFormData} 
-      nextScreen={nextScreen} 
-      prevScreen={prevScreen}
-      goToScreen={goToScreen}
-      progress={calculateProgress()}
-      isSaving={isSaving}
-    />,
-    <SuccessScreen nextScreen={nextScreen} formData={formData} />,
-    <DashboardScreen formData={formData} onLogout={handleLogout} />,
-  ];
-
-  // Choose screens based on userType
-  const screens = formData.userType === 'speaker' ? speakerScreens : organizerScreens;
-
-  // Handle sign-in flow
+  // Handle sign-in success
   const handleSignInSuccess = async () => {
     try {
       // Get session to determine user type
@@ -650,43 +518,108 @@ export default function App() {
           if (profile) {
             setFormData(prev => ({ ...prev, ...profile }));
             // Go to dashboard
-            setCurrentScreen(userType === 'organizer' ? 7 : 8);
+            navigate('/dashboard', { replace: true });
+          } else {
+            // Profile doesn't exist, go to profile creation
+            if (userType === 'organizer') {
+              navigate('/onboarding/organizer/basics', { replace: true });
+            } else {
+              navigate('/onboarding/speaker/basics', { replace: true });
+            }
           }
         } catch (err) {
           // Profile doesn't exist, go to first profile creation screen
-          setCurrentScreen(2);
+          if (userType === 'organizer') {
+            navigate('/onboarding/organizer/basics', { replace: true });
+          } else {
+            navigate('/onboarding/speaker/basics', { replace: true });
+          }
         }
       }
-
-      setShowSignIn(false);
     } catch (error) {
       console.error('Error loading user data:', error);
       toast.error('Failed to load user data');
     }
   };
 
-  // Show sign-in form if requested
-  if (showSignIn) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Toaster position="top-right" />
-        <SignInForm
-          onSignInSuccess={handleSignInSuccess}
-          onNavigateToSignUp={(userType) => {
-            // Set user type and navigate to sign up screen
-            setFormData(prev => ({ ...prev, userType }));
-            setShowSignIn(false);
-            setCurrentScreen(1); // Go to SignUpScreen
-          }}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <Toaster position="top-right" />
-      {screens[currentScreen]}
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={
+          <WelcomeScreen
+            formData={formData}
+            updateFormData={updateFormData}
+            nextScreen={() => navigate('/signup')}
+            onShowSignIn={() => navigate('/login')}
+          />
+        } />
+        <Route path="/signup" element={
+          <SignUpScreen
+            formData={formData}
+            updateFormData={updateFormData}
+            nextScreen={() => {
+              // After signup, navigate to appropriate onboarding
+              if (formData.userType === 'organizer') {
+                navigate('/onboarding/organizer/basics');
+              } else if (formData.userType === 'speaker') {
+                navigate('/onboarding/speaker/basics');
+              }
+            }}
+            onShowSignIn={() => navigate('/login')}
+          />
+        } />
+        <Route path="/login" element={
+          <SignInForm
+            onSignInSuccess={handleSignInSuccess}
+            onNavigateToSignUp={(userType) => {
+              setFormData(prev => ({ ...prev, userType }));
+              navigate('/signup');
+            }}
+          />
+        } />
+
+        {/* Protected routes */}
+        <Route path="/onboarding/organizer/:step" element={
+          <ProtectedRoute>
+            <OrganizerWizard
+              formData={formData}
+              updateFormData={updateFormData}
+              calculateProgress={calculateProgress}
+              isSaving={isSaving}
+              saveProfile={saveProfile}
+            />
+          </ProtectedRoute>
+        } />
+        <Route path="/onboarding/speaker/:step" element={
+          <ProtectedRoute>
+            <SpeakerWizard
+              formData={formData}
+              updateFormData={updateFormData}
+              calculateProgress={calculateProgress}
+              isSaving={isSaving}
+              saveProfile={saveProfile}
+            />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <DashboardScreen formData={formData} onLogout={handleLogout} />
+          </ProtectedRoute>
+        } />
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
