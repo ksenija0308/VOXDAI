@@ -1,4 +1,4 @@
-import { Search, FileText, TrendingUp, User, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, Globe, DollarSign, LogOut, Settings } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, Globe, DollarSign, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { FormData } from '../App';
 import { useState, useEffect } from 'react';
@@ -55,10 +55,10 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     const loadProfile = async () => {
       setIsLoading(true);
       try {
-        const profile = formData.userType === 'organizer' 
+        const profile = formData.userType === 'organizer'
           ? await organizerAPI.getProfile()
           : await speakerAPI.getProfile();
-        
+
         if (profile) {
           setProfileData({ ...formData, ...profile });
         }
@@ -95,7 +95,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ name: string; topic: string } | null>(null);
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     hasVideo: false,
@@ -105,7 +105,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     languages: [] as string[],
     feeRange: 'all'
   });
-  
+
   const [conversations, setConversations] = useState<Conversation[]>([
     {
       speakerId: 'sarah-chen',
@@ -204,9 +204,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   // Mock AI search function
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
-    
+
     setIsSearching(true);
-    
+
     // Simulate AI processing
     setTimeout(() => {
       // Mock AI matchmaking results
@@ -272,7 +272,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           feeRange: 'Medium'
         }
       ];
-      
+
       setSearchResults(mockResults);
       setIsSearching(false);
     }, 1500);
@@ -280,14 +280,14 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
-    
+
     const newMessage: Message = {
       id: Date.now(),
       sender: 'user',
       content: messageInput,
       timestamp: new Date().toLocaleTimeString()
     };
-    
+
     const updatedConversations = conversations.map(conversation => {
       if (conversation.speakerId === activeConversation) {
         return {
@@ -300,7 +300,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       }
       return conversation;
     });
-    
+
     setConversations(updatedConversations);
     setMessageInput('');
   };
@@ -419,7 +419,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                   <Sparkles className="w-4 h-4" />
                   {isSearching ? 'Finding matches...' : 'Find matches'}
                 </Button>
-                
+
                 {searchResults && (
                   <Button
                     onClick={() => {
@@ -609,7 +609,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       </div>
                     </div>
                   )}
-                  
+
                   {searchResults.filter(result => {
                     // Apply filters
                     if (filters.hasVideo && !result.hasVideo) return false;
@@ -661,7 +661,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                             // Create a new conversation with this speaker
                             const newConvId = result.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
                             const existingConv = conversations.find(conv => conv.speakerId === newConvId);
-                            
+
                             if (!existingConv) {
                               setConversations([...conversations, {
                                 speakerId: newConvId,
@@ -673,7 +673,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                                 messages: []
                               }]);
                             }
-                            
+
                             setActiveConversation(newConvId);
                             setIsChatOpen(true);
                           }}
@@ -711,14 +711,14 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
               <h3 className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
                 Profile Completeness
               </h3>
-              
+
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span style={{ fontSize: '14px' }}>Overall progress</span>
                   <span style={{ fontSize: '14px', fontWeight: '500' }}>{profileCompletion}%</span>
                 </div>
                 <div className="relative w-full h-2 bg-white rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-[#0B3B2E] transition-all duration-300"
                     style={{ width: `${profileCompletion}%` }}
                   />
@@ -799,7 +799,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         onClick={() => {
                           const speakerId = match.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
                           const existingConv = conversations.find(conv => conv.speakerId === speakerId);
-                          
+
                           if (!existingConv) {
                             setConversations([...conversations, {
                               speakerId: speakerId,
@@ -811,7 +811,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                               messages: []
                             }]);
                           }
-                          
+
                           setActiveConversation(speakerId);
                           setIsChatOpen(true);
                         }}
@@ -1023,7 +1023,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           onContact={() => {
             const speakerId = viewingSpeaker.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
             const existingConv = conversations.find(conv => conv.speakerId === speakerId);
-            
+
             if (!existingConv) {
               setConversations([...conversations, {
                 speakerId: speakerId,
@@ -1035,7 +1035,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 messages: []
               }]);
             }
-            
+
             setActiveConversation(speakerId);
             setViewingSpeaker(null);
             setIsChatOpen(true);

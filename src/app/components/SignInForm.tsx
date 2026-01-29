@@ -41,7 +41,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
       try {
-        const signInData = await authAPI.signIn(email, password);
+        await authAPI.signIn(email, password);
         toast.success('Welcome back!');
 
         // Call the success callback if provided
