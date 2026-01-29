@@ -62,7 +62,6 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
 
   const handleOAuthSignIn = (provider: 'LinkedIn' | 'Google') => {
     // Placeholder for OAuth flow
-    console.log(`Signing in with ${provider}`);
     toast.info(`${provider} sign-in coming soon!`);
     closeOAuthModal();
   };
