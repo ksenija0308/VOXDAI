@@ -1,7 +1,7 @@
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
+import { projectId, publicAnonKey, apiBaseUrl } from '../../utils/supabase/info';
 import { createClient } from '@supabase/supabase-js';
 
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-3a218522`;
+const API_BASE_URL = apiBaseUrl;
 
 // Create Supabase client singleton
 const supabase = createClient(
