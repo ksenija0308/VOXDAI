@@ -92,7 +92,6 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
           <div className="flex items-center gap-6">
             <a href="#features" className="text-[#717182] hover:text-[#0B3B2E] transition-colors" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>Features</a>
             <a href="#how-it-works" className="text-[#717182] hover:text-[#0B3B2E] transition-colors" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>How It Works</a>
-            <a href="#pricing" className="text-[#717182] hover:text-[#0B3B2E] transition-colors" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>Pricing</a>
             <Button
               variant="outline"
               className="border-[#0B3B2E] text-[#0B3B2E] hover:bg-[#0B3B2E] hover:text-white"
