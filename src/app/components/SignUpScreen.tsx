@@ -3,8 +3,8 @@ import { Mail, Lock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
-import { FormData } from '../App';
-import { authAPI } from '../../utils/api';
+import { FormData } from "@/types/formData.ts";
+import { authAPI } from '@/utils/api';
 
 interface SignUpScreenProps {
   formData: FormData;

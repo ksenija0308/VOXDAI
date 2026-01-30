@@ -1,11 +1,11 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, Settings } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import { useState, useEffect } from 'react';
 import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
-import { organizerAPI, speakerAPI, authAPI } from '../../utils/api';
+import { organizerAPI, speakerAPI, authAPI } from '@/utils/api';
 import { toast } from 'sonner';
 
 interface DashboardScreenProps {

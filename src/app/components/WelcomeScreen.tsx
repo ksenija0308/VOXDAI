@@ -13,7 +13,7 @@ interface WelcomeScreenProps {
   onShowSignIn?: () => void;
 }
 
-export default function WelcomeScreen({ formData, updateFormData, nextScreen, onShowSignIn }: WelcomeScreenProps) {
+export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn }: WelcomeScreenProps) {
   const [currentEventType, setCurrentEventType] = useState(0);
   const eventTypes = ['conference', 'podcast', 'corporate event', 'meetup'];
   const [showContactForm, setShowContactForm] = useState(false);
