@@ -13,6 +13,7 @@ interface SpeakerWizardProps {
   calculateProgress: () => number;
   isSaving: boolean;
   saveProfile: (data: FormData, showLoading: boolean) => Promise<boolean>;
+  clearOnboardingData: () => void;
 }
 
 export default function SpeakerWizard({
@@ -21,6 +22,7 @@ export default function SpeakerWizard({
   calculateProgress,
   isSaving,
   saveProfile,
+  clearOnboardingData,
 }: SpeakerWizardProps) {
   const { step = 'basics' } = useParams<{ step: string }>();
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ export default function SpeakerWizard({
     if (step === 'availability') {
       const saved = await saveProfile(formData, true);
       if (saved) {
+        // Clear localStorage after successful save
+        clearOnboardingData();
         navigate(`/onboarding/speaker/${stepOrder[currentIndex + 1]}`, { replace: true });
       }
     } else if (currentIndex < stepOrder.length - 1) {

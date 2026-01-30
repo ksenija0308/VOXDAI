@@ -14,6 +14,7 @@ export default function AppContent() {
     isSaving,
     saveProfile,
     resetFormData,
+    clearOnboardingData,
   } = useFormContext();
 
   // Handle logout
@@ -38,6 +39,7 @@ export default function AppContent() {
       isSaving={isSaving}
       saveProfile={saveProfile}
       handleLogout={handleLogout}
+      clearOnboardingData={clearOnboardingData}
     />
   );
 }

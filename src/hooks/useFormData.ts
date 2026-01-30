@@ -1,50 +1,45 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FormData, initialFormData } from '../types/formData';
 import { organizerAPI, speakerAPI, fileAPI } from '../utils/api';
 import { toast } from 'sonner';
 
+const STORAGE_KEY = 'voxdai_onboarding_data';
+
 export function useFormData() {
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<FormData>(() => {
+    // Restore from localStorage on mount
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...initialFormData, ...parsed };
+      }
+    } catch (error) {
+      console.error('Failed to restore form data from localStorage:', error);
+    }
+    return initialFormData;
+  });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Use ref to persist timeout across renders
-  const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Use ref to always have latest formData for autosave
-  const formDataRef = useRef<FormData>(formData);
-
-  // Keep ref in sync with state
+  // Save to localStorage whenever formData changes
   useEffect(() => {
-    formDataRef.current = formData;
+    try {
+      // Exclude File objects from localStorage (can't be serialized)
+      const dataToStore = {
+        ...formData,
+        logo: typeof formData.logo === 'string' ? formData.logo : null,
+        profilePhoto: typeof formData.profilePhoto === 'string' ? formData.profilePhoto : null,
+        videoIntroFile: null,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore));
+    } catch (error) {
+      console.error('Failed to save form data to localStorage:', error);
+    }
   }, [formData]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (autosaveTimeoutRef.current) {
-        clearTimeout(autosaveTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const updateFormData = (data: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
-    // Auto-save to backend (debounced)
-    saveProfileDebounced(data);
-  };
-
-  // Debounced autosave function
-  const saveProfileDebounced = (data: Partial<FormData>) => {
-    if (autosaveTimeoutRef.current) {
-      clearTimeout(autosaveTimeoutRef.current);
-    }
-    autosaveTimeoutRef.current = setTimeout(async () => {
-      try {
-        // Use ref to get latest formData to avoid stale closure
-        await saveProfile({ ...formDataRef.current, ...data }, false);
-      } catch (error) {
-        console.error('Autosave failed:', error);
-      }
-    }, 2000); // Save 2 seconds after last change
+    // Data will be automatically saved to localStorage via useEffect above
   };
 
   // Save profile to backend
@@ -163,6 +158,21 @@ export function useFormData() {
 
   const resetFormData = () => {
     setFormData(initialFormData);
+    // Clear localStorage when resetting
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear localStorage:', error);
+    }
+  };
+
+  const clearOnboardingData = () => {
+    // Clear localStorage after successful onboarding completion
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear onboarding data:', error);
+    }
   };
 
   return {
@@ -173,5 +183,6 @@ export function useFormData() {
     calculateProgress,
     isSaving,
     resetFormData,
+    clearOnboardingData,
   };
 }

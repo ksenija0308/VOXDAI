@@ -13,6 +13,7 @@ interface FormContextType {
   calculateProgress: () => number;
   isSaving: boolean;
   resetFormData: () => void;
+  clearOnboardingData: () => void;
 }
 
 const FormContext = createContext<FormContextType | undefined>(undefined);

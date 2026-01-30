@@ -18,6 +18,7 @@ interface AppRoutesProps {
   isSaving: boolean;
   saveProfile: (data: FormData, showLoading: boolean) => Promise<boolean>;
   handleLogout: () => void;
+  clearOnboardingData: () => void;
 }
 
 export default function AppRoutes({
@@ -28,6 +29,7 @@ export default function AppRoutes({
   isSaving,
   saveProfile,
   handleLogout,
+  clearOnboardingData,
 }: AppRoutesProps) {
   const navigate = useNavigate();
 
@@ -130,6 +132,7 @@ export default function AppRoutes({
               calculateProgress={calculateProgress}
               isSaving={isSaving}
               saveProfile={saveProfile}
+              clearOnboardingData={clearOnboardingData}
             />
           </ProtectedRoute>
         }
@@ -144,6 +147,7 @@ export default function AppRoutes({
               calculateProgress={calculateProgress}
               isSaving={isSaving}
               saveProfile={saveProfile}
+              clearOnboardingData={clearOnboardingData}
             />
           </ProtectedRoute>
         }
