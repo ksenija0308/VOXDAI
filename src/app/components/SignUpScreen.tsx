@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { Mail, Lock, Linkedin } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { FormData } from '../App';
 import { authAPI } from '../../utils/api';
 
@@ -65,20 +64,16 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
       // Create account via backend
       setIsLoading(true);
       try {
-        // Determine user name based on type (will be filled in later screens)
         const name = formData.userType === 'organizer' ? 'Organizer' : 'Speaker';
 
-        const response = await authAPI.signUp(
+        await authAPI.signUp(
           formData.email,
           formData.password,
           name,
           formData.userType as 'organizer' | 'speaker'
         );
 
-        // Sign in automatically after signup
-        const signInData = await authAPI.signIn(formData.email, formData.password);
-
-        console.log('User created and signed in successfully:', signInData);
+        await authAPI.signIn(formData.email, formData.password);
         nextScreen();
       } catch (error: any) {
         console.error('Signup error:', error);
