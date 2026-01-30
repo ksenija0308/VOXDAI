@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FormData } from '../App';
 import SpeakerBasicsScreen from './SpeakerBasicsScreen';
@@ -25,13 +24,6 @@ export default function SpeakerWizard({
 }: SpeakerWizardProps) {
   const { step = 'basics' } = useParams<{ step: string }>();
   const navigate = useNavigate();
-
-  // Redirect to dashboard if profile is complete
-  useEffect(() => {
-    if (formData.userType === 'speaker' && calculateProgress() === 100) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [formData.userType, calculateProgress, navigate]);
 
   const nextScreen = async () => {
     const stepOrder = ['basics', 'topics', 'experience', 'video', 'availability', 'success'];

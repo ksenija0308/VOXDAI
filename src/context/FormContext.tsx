@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FormData } from '../types/formData';
 import { useFormData } from '../hooks/useFormData';
 import { authAPI, organizerAPI, speakerAPI } from '../utils/api';
@@ -31,6 +31,7 @@ interface FormProviderProps {
 
 export function FormProvider({ children }: FormProviderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const formMethods = useFormData();
 
   // Load profile on mount if user is authenticated
@@ -74,8 +75,11 @@ export function FormProvider({ children }: FormProviderProps) {
 
               if (profile) {
                 formMethods.setFormData(prev => ({ ...prev, ...profile }));
-                // If profile exists, go to dashboard
-                navigate('/dashboard', { replace: true });
+                // Only redirect to dashboard if NOT currently in onboarding flow
+                const isOnboardingRoute = location.pathname.startsWith('/onboarding/');
+                if (!isOnboardingRoute) {
+                  navigate('/dashboard', { replace: true });
+                }
               } else {
                 // Profile doesn't exist, go to profile creation
                 if (userType === 'organizer') {

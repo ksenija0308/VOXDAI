@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FormData } from '../App';
 import OrganiserBasicsScreen from './OrganiserBasicsScreen';
@@ -24,13 +23,6 @@ export default function OrganizerWizard({
 }: OrganizerWizardProps) {
   const { step = 'basics' } = useParams<{ step: string }>();
   const navigate = useNavigate();
-
-  // Redirect to dashboard if profile is complete
-  useEffect(() => {
-    if (formData.userType === 'organizer' && calculateProgress() === 100) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [formData.userType, calculateProgress, navigate]);
 
   const nextScreen = async () => {
     const stepOrder = ['basics', 'about', 'events', 'preferences', 'success'];

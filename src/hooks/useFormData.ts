@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { FormData, initialFormData } from '../types/formData';
 import { organizerAPI, speakerAPI, fileAPI } from '../utils/api';
 import { toast } from 'sonner';
@@ -57,15 +57,21 @@ export function useFormData() {
       let photoUrl = null;
 
       if (dataToSave.logo instanceof File) {
-        toast.loading('Uploading logo...', { id: 'upload-logo' });
+        if (showLoading) toast.loading('Uploading logo...', { id: 'upload-logo' });
         logoUrl = await fileAPI.upload(dataToSave.logo, 'logo');
-        toast.success('Logo uploaded!', { id: 'upload-logo' });
+        if (showLoading) toast.success('Logo uploaded!', { id: 'upload-logo' });
+
+        // Update formData to replace File with URL to avoid re-uploading
+        setFormData(prev => ({ ...prev, logo: logoUrl }));
       }
 
       if (dataToSave.profilePhoto instanceof File) {
-        toast.loading('Uploading profile photo...', { id: 'upload-photo' });
+        if (showLoading) toast.loading('Uploading profile photo...', { id: 'upload-photo' });
         photoUrl = await fileAPI.upload(dataToSave.profilePhoto, 'photo');
-        toast.success('Photo uploaded!', { id: 'upload-photo' });
+        if (showLoading) toast.success('Photo uploaded!', { id: 'upload-photo' });
+
+        // Update formData to replace File with URL to avoid re-uploading
+        setFormData(prev => ({ ...prev, profilePhoto: photoUrl }));
       }
 
       // Prepare profile data (convert File objects to URLs)
@@ -100,7 +106,7 @@ export function useFormData() {
     }
   };
 
-  const calculateProgress = (): number => {
+  const calculateProgress = useCallback((): number => {
     if (formData.userType === 'organizer') {
       const fields = {
         email: formData.email,
@@ -153,7 +159,7 @@ export function useFormData() {
       const completedFields = Object.values(fields).filter(Boolean).length;
       return Math.round((completedFields / totalFields) * 100);
     }
-  };
+  }, [formData]);
 
   const resetFormData = () => {
     setFormData(initialFormData);
