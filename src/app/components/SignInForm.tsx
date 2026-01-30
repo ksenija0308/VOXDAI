@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Users, Mic } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -12,6 +13,7 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: SignInFormProps) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -160,9 +162,13 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
           <div>
             <div className="flex justify-between items-center mb-2">
               <label htmlFor="password" style={{ fontSize: '14px', fontWeight: '600' }}>Password</label>
-              <a href="#" className="text-[#0B3B2E] text-[14px] hover:underline">
+              <button
+                type="button"
+                className="text-[#0B3B2E] text-[14px] hover:underline bg-transparent border-none cursor-pointer p-0"
+                onClick={() => navigate('/forgot-password')}
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />

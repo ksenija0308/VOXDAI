@@ -51,7 +51,7 @@ export const authAPI = {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Sign up failed');
     }
@@ -102,6 +102,18 @@ export const authAPI = {
       options: {
         redirectTo: window.location.origin,
       },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
+  resetPasswordForEmail: async (email: string) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
     });
 
     if (error) {

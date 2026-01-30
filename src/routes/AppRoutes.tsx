@@ -3,6 +3,7 @@ import { FormData } from '../types/formData';
 import WelcomeScreen from '../app/components/WelcomeScreen';
 import SignUpScreen from '../app/components/SignUpScreen';
 import SignInForm from '../app/components/SignInForm';
+import ForgotPasswordScreen from '../app/components/ForgotPasswordScreen';
 import DashboardScreen from '../app/components/DashboardScreen';
 import OrganizerWizard from '../app/components/OrganizerWizard';
 import SpeakerWizard from '../app/components/SpeakerWizard';
@@ -124,6 +125,14 @@ export default function AppRoutes({
                 navigate('/signup');
               }}
             />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPasswordScreen />
           </PublicRoute>
         }
       />
