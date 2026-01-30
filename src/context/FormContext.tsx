@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FormData } from '../types/formData';
 import { useFormData } from '../hooks/useFormData';
 import { authAPI, organizerAPI, speakerAPI } from '../utils/api';
@@ -32,6 +32,7 @@ interface FormProviderProps {
 
 export function FormProvider({ children }: FormProviderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const formMethods = useFormData();
 
   // Load profile on mount if user is authenticated
@@ -68,6 +69,12 @@ export function FormProvider({ children }: FormProviderProps) {
           if (userType) {
             formMethods.setFormData(prev => ({ ...prev, userType }));
 
+            // Skip profile loading on onboarding routes to avoid unnecessary 404 errors
+            const isOnboarding = location.pathname.startsWith('/onboarding/');
+            if (isOnboarding) {
+              return;
+            }
+
             try {
               const profile = userType === 'organizer'
                 ? await organizerAPI.getProfile()
@@ -89,7 +96,7 @@ export function FormProvider({ children }: FormProviderProps) {
     };
 
     loadProfile();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   return (
     <FormContext.Provider value={formMethods}>

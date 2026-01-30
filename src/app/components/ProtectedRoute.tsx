@@ -33,25 +33,50 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           return;
         }
 
-        // Check if profile exists
-        try {
-          const profile = userType === 'organizer'
-            ? await organizerAPI.getProfile()
-            : await speakerAPI.getProfile();
+        // Only check for profile existence if accessing dashboard
+        // Skip this check for onboarding routes to avoid unnecessary 404 errors
+        const isDashboard = location.pathname === '/dashboard';
+        const isOnboarding = location.pathname.startsWith('/onboarding/');
 
-          setAuthState({
-            isAuthenticated: true,
-            userType,
-            hasProfile: !!profile
-          });
-        } catch (error) {
-          // Profile doesn't exist
+        if (isOnboarding) {
+          // User is in onboarding, don't check profile - assume it doesn't exist yet
           setAuthState({
             isAuthenticated: true,
             userType,
             hasProfile: false
           });
+          return;
         }
+
+        if (isDashboard) {
+          // Check if profile exists before allowing dashboard access
+          try {
+            const profile = userType === 'organizer'
+              ? await organizerAPI.getProfile()
+              : await speakerAPI.getProfile();
+
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: !!profile
+            });
+          } catch (error) {
+            // Profile doesn't exist
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: false
+            });
+          }
+          return;
+        }
+
+        // For any other route, just authenticate without profile check
+        setAuthState({
+          isAuthenticated: true,
+          userType,
+          hasProfile: true // Assume true for other routes
+        });
       } catch (error) {
         console.error('Error checking authentication:', error);
         setAuthState({ isAuthenticated: false, userType: null, hasProfile: false });
