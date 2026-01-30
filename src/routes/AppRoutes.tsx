@@ -7,6 +7,7 @@ import DashboardScreen from '../app/components/DashboardScreen';
 import OrganizerWizard from '../app/components/OrganizerWizard';
 import SpeakerWizard from '../app/components/SpeakerWizard';
 import ProtectedRoute from '../app/components/ProtectedRoute';
+import PublicRoute from '../app/components/PublicRoute';
 import { organizerAPI, speakerAPI, authAPI } from '../utils/api';
 import { toast } from 'sonner';
 
@@ -82,42 +83,48 @@ export default function AppRoutes({
       <Route
         path="/"
         element={
-          <WelcomeScreen
-            formData={formData}
-            updateFormData={updateFormData}
-            nextScreen={() => navigate('/signup')}
-            onShowSignIn={() => navigate('/login')}
-          />
+          <PublicRoute>
+            <WelcomeScreen
+              formData={formData}
+              updateFormData={updateFormData}
+              nextScreen={() => navigate('/signup')}
+              onShowSignIn={() => navigate('/login')}
+            />
+          </PublicRoute>
         }
       />
       <Route
         path="/signup"
         element={
-          <SignUpScreen
-            formData={formData}
-            updateFormData={updateFormData}
-            nextScreen={() => {
-              // After signup, navigate to appropriate onboarding
-              if (formData.userType === 'organizer') {
-                navigate('/onboarding/organizer/basics');
-              } else if (formData.userType === 'speaker') {
-                navigate('/onboarding/speaker/basics');
-              }
-            }}
-            onShowSignIn={() => navigate('/login')}
-          />
+          <PublicRoute>
+            <SignUpScreen
+              formData={formData}
+              updateFormData={updateFormData}
+              nextScreen={() => {
+                // After signup, navigate to appropriate onboarding
+                if (formData.userType === 'organizer') {
+                  navigate('/onboarding/organizer/basics');
+                } else if (formData.userType === 'speaker') {
+                  navigate('/onboarding/speaker/basics');
+                }
+              }}
+              onShowSignIn={() => navigate('/login')}
+            />
+          </PublicRoute>
         }
       />
       <Route
         path="/login"
         element={
-          <SignInForm
-            onSignInSuccess={handleSignInSuccess}
-            onNavigateToSignUp={(userType) => {
-              setFormData(prev => ({ ...prev, userType }));
-              navigate('/signup');
-            }}
-          />
+          <PublicRoute>
+            <SignInForm
+              onSignInSuccess={handleSignInSuccess}
+              onNavigateToSignUp={(userType) => {
+                setFormData(prev => ({ ...prev, userType }));
+                navigate('/signup');
+              }}
+            />
+          </PublicRoute>
         }
       />
 
