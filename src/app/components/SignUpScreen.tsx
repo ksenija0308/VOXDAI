@@ -21,7 +21,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
 
   // Get user type friendly name
   const userTypeName = formData.userType === 'organizer' ? 'Event Organizer' : 'Speaker';
-  const userTypeDescription = formData.userType === 'organizer' 
+  const userTypeDescription = formData.userType === 'organizer'
     ? 'Create your organizer profile and start finding speakers'
     : 'Create your speaker profile and get discovered by organizers';
 
@@ -67,7 +67,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
       try {
         // Determine user name based on type (will be filled in later screens)
         const name = formData.userType === 'organizer' ? 'Organizer' : 'Speaker';
-        
+
         const response = await authAPI.signUp(
           formData.email,
           formData.password,
@@ -77,7 +77,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
 
         // Sign in automatically after signup
         const signInData = await authAPI.signIn(formData.email, formData.password);
-        
+
         console.log('User created and signed in successfully:', signInData);
         nextScreen();
       } catch (error: any) {
@@ -124,7 +124,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
           {/* LinkedIn Button */}
           <Button
             variant="outline"
-            className="w-full justify-center gap-3 h-12 border-[#d1d5db]"
+            className="w-full cursor-pointer justify-center gap-3 h-12 border-[#d1d5db]"
             onClick={() => handleOAuthSignup('linkedin_oidc')}
           >
             <svg className="w-5 h-5" fill="#0A66C2" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
           {/* Google Button */}
           <Button
             variant="outline"
-            className="w-full justify-center gap-3 h-12 border-[#d1d5db]"
+            className="w-full cursor-pointer justify-center gap-3 h-12 border-[#d1d5db]"
             onClick={() => handleOAuthSignup('google')}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -251,7 +251,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
 
           {/* Create Account Button */}
           <Button
-            className="w-full bg-[#0B3B2E] text-white hover:bg-[#0B3B2E]/90 h-12 disabled:opacity-50"
+            className="w-full cursor-pointer bg-[#0B3B2E] text-white hover:bg-[#0B3B2E]/90 h-12 disabled:opacity-50"
             onClick={handleContinue}
             disabled={isLoading}
             style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}

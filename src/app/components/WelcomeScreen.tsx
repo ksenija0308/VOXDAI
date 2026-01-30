@@ -94,7 +94,7 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
             <a href="#how-it-works" className="hidden sm:inline text-[#717182] hover:text-[#0B3B2E] transition-colors" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>How It Works</a>
             <Button
               variant="outline"
-              className="border-[#0B3B2E] text-[#0B3B2E] hover:bg-[#0B3B2E] hover:text-white text-sm sm:text-base px-3 sm:px-4"
+              className="border-[#0B3B2E] cursor-pointer text-[#0B3B2E] hover:bg-[#0B3B2E] hover:text-white text-sm sm:text-base px-3 sm:px-4"
               style={{ fontFamily: 'Inter, sans-serif' }}
               onClick={() => onShowSignIn?.()}
             >
@@ -142,7 +142,7 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
                 <Button
                   onClick={() => handleSelectUserType('organizer')}
-                  className="bg-[#0B3B2E] text-white hover:bg-[#0B3B2E]/90 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
+                  className="bg-[#0B3B2E] cursor-pointer text-white hover:bg-[#0B3B2E]/90 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
                   style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}
                 >
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -151,7 +151,7 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
                 <Button
                   onClick={() => handleSelectUserType('speaker')}
                   variant="outline"
-                  className="border-2 border-[#0B3B2E] text-[#0B3B2E] hover:bg-[#0B3B2E] hover:text-white h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
+                  className="border-2 cursor-pointer border-[#0B3B2E] text-[#0B3B2E] hover:bg-[#0B3B2E] hover:text-white h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
                   style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}
                 >
                   <Mic className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -511,7 +511,7 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-lg mx-auto">
             <Button
               onClick={() => handleSelectUserType('organizer')}
-              className="bg-white text-[#0B3B2E] hover:bg-white/90 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
+              className="bg-white cursor-pointer text-[#0B3B2E] hover:bg-white/90 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}
             >
               <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -520,7 +520,7 @@ export default function WelcomeScreen({ formData, updateFormData, nextScreen, on
             <Button
               onClick={() => handleSelectUserType('speaker')}
               variant="outline"
-              className="border-2 border-white text-white bg-white/10 hover:bg-white hover:text-[#0B3B2E] h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
+              className="border-2 cursor-pointer border-white text-white bg-white/10 hover:bg-white hover:text-[#0B3B2E] h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto"
               style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}
             >
               <Mic className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />

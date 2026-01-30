@@ -61,7 +61,7 @@ function Icon() {
 
 function Button() {
   return (
-    <div className="bg-white h-[53.594px] relative rounded-[10px] shrink-0 w-full" data-name="Button">
+    <div className="bg-white cursor-pointer h-[53.594px] relative rounded-[10px] shrink-0 w-full" data-name="Button">
       <div aria-hidden="true" className="absolute border-2 border-black border-solid inset-0 pointer-events-none rounded-[10px]" />
       <Icon />
       <p className="absolute font-['Inter:Medium',sans-serif] font-medium leading-[25.6px] left-[240.14px] not-italic text-[16px] text-black text-center text-nowrap top-[12px] translate-x-[-50%]">Continue with LinkedIn</p>
@@ -86,7 +86,7 @@ function Icon1() {
 
 function Button1() {
   return (
-    <div className="bg-white h-[53.594px] relative rounded-[10px] shrink-0 w-full" data-name="Button">
+    <div className="bg-white cursor-pointer h-[53.594px] relative rounded-[10px] shrink-0 w-full" data-name="Button">
       <div aria-hidden="true" className="absolute border-2 border-black border-solid inset-0 pointer-events-none rounded-[10px]" />
       <Icon1 />
       <p className="absolute font-['Inter:Medium',sans-serif] font-medium leading-[25.6px] left-[239.64px] not-italic text-[16px] text-black text-center text-nowrap top-[12px] translate-x-[-50%]">Continue with Google</p>

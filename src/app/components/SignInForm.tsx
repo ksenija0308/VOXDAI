@@ -101,7 +101,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
           {/* LinkedIn Button */}
           <Button
             variant="outline"
-            className="w-full justify-center gap-3 h-12 border-[#d1d5db]"
+            className="w-full cursor-pointer justify-center gap-3 h-12 border-[#d1d5db]"
             onClick={() => handleOAuthSignIn('linkedin_oidc')}
           >
             <svg className="w-5 h-5" fill="#0A66C2" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
           {/* Google Button */}
           <Button
             variant="outline"
-            className="w-full justify-center gap-3 h-12 border-[#d1d5db]"
+            className="w-full cursor-pointer justify-center gap-3 h-12 border-[#d1d5db]"
             onClick={() => handleOAuthSignIn('google')}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
 
           {/* Sign In Button */}
           <Button
-            className="w-full bg-[#0B3B2E] text-white hover:bg-[#0B3B2E]/90 h-12 disabled:opacity-50"
+            className="w-full cursor-pointer bg-[#0B3B2E] text-white hover:bg-[#0B3B2E]/90 h-12 disabled:opacity-50"
             onClick={handleSignIn}
             disabled={isLoading}
             style={{ fontFamily: 'Inter, sans-serif', fontWeight: '600' }}
