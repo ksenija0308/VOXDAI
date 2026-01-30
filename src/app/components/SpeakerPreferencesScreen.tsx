@@ -13,6 +13,7 @@ interface SpeakerPreferencesScreenProps {
   goToScreen: (screen: number) => void;
   progress: number;
   isSaving?: boolean;
+  prevDisabled?: boolean;
 }
 
 const speakerFormatOptions = [
@@ -47,6 +48,7 @@ export default function SpeakerPreferencesScreen({
   goToScreen,
   progress,
   isSaving = false,
+  prevDisabled = false,
 }: SpeakerPreferencesScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -87,6 +89,7 @@ export default function SpeakerPreferencesScreen({
       onNext={handleNext}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Speaker Preferences"
       subtitle="Define what you're looking for to get better matches"

@@ -10,6 +10,7 @@ interface SpeakerVideoIntroductionScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 type VideoInputMethod = 'url' | 'upload' | 'record' | null;
@@ -21,6 +22,7 @@ export default function SpeakerVideoIntroductionScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: SpeakerVideoIntroductionScreenProps) {
   const [selectedMethod, setSelectedMethod] = useState<VideoInputMethod>('url');
   const [videoUrl, setVideoUrl] = useState('');
@@ -246,6 +248,7 @@ export default function SpeakerVideoIntroductionScreen({
       onNext={nextScreen}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       hideHeader={true}
       hideFooter={true}

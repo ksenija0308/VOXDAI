@@ -63,6 +63,10 @@ export default function SpeakerWizard({
   };
 
   // Render appropriate screen based on step
+  const stepOrder = ['basics', 'topics', 'experience', 'video', 'availability', 'success'];
+  const currentIndex = stepOrder.indexOf(step);
+  const isFirstStep = currentIndex === 0;
+
   switch (step) {
     case 'basics':
       return (
@@ -73,6 +77,7 @@ export default function SpeakerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'topics':
@@ -84,6 +89,7 @@ export default function SpeakerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'experience':
@@ -95,6 +101,7 @@ export default function SpeakerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'video':
@@ -106,6 +113,7 @@ export default function SpeakerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'availability':
@@ -118,6 +126,7 @@ export default function SpeakerWizard({
           goToScreen={goToScreen}
           progress={calculateProgress()}
           isSaving={isSaving}
+          prevDisabled={isFirstStep}
         />
       );
     case 'success':

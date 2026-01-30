@@ -11,6 +11,7 @@ interface EventTypesScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 const eventTypeOptions = [
@@ -38,6 +39,7 @@ export default function EventTypesScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: EventTypesScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [locationInput, setLocationInput] = useState('');
@@ -101,6 +103,7 @@ export default function EventTypesScreen({
       onNext={handleNext}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Event Types & Frequency"
       subtitle="Help speakers understand what kind of events you organize"

@@ -12,6 +12,7 @@ interface AboutScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 export default function AboutScreen({
@@ -21,6 +22,7 @@ export default function AboutScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: AboutScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -65,6 +67,7 @@ export default function AboutScreen({
       onNext={handleNext}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="About"
       subtitle="Share contact details so speakers can reach you easily"

@@ -12,6 +12,7 @@ interface FormLayoutProps {
   onSaveExit: () => void;
   nextLabel?: string;
   nextDisabled?: boolean;
+  prevDisabled?: boolean;
   progress: number;
   title: string;
   subtitle?: string;
@@ -37,6 +38,7 @@ export default function FormLayout({
   onSaveExit,
   nextLabel = 'Continue',
   nextDisabled = false,
+  prevDisabled = false,
   progress,
   title,
   subtitle,
@@ -151,7 +153,12 @@ export default function FormLayout({
           <div className="flex items-center justify-between pt-6 border-t border-[#e9ebef]">
             <button
               onClick={onPrev}
-              className="border-2 border-[#d1d5dc] rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-[#4a5565] hover:border-[#0b3b2e] hover:text-[#0b3b2e] transition-all"
+              disabled={prevDisabled}
+              className={`border-2 rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] transition-all ${
+                prevDisabled
+                  ? 'border-[#e9ebef] text-[#d1d5dc] cursor-not-allowed'
+                  : 'border-[#d1d5dc] text-[#4a5565] hover:border-[#0b3b2e] hover:text-[#0b3b2e]'
+              }`}
             >
               Back
             </button>
@@ -160,7 +167,7 @@ export default function FormLayout({
               disabled={nextDisabled || isLoading}
               className={`rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-white shadow-lg hover:shadow-xl transition-all ${
                 nextDisabled || isLoading
-                  ? 'bg-[#d1d5dc] cursor-not-allowed' 
+                  ? 'bg-[#d1d5dc] cursor-not-allowed'
                   : 'bg-[#0b3b2e] hover:bg-[#0b3b2e]/90'
               }`}
             >

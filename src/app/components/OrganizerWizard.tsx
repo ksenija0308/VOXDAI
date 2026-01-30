@@ -62,6 +62,10 @@ export default function OrganizerWizard({
   };
 
   // Render appropriate screen based on step
+  const stepOrder = ['basics', 'about', 'events', 'preferences', 'success'];
+  const currentIndex = stepOrder.indexOf(step);
+  const isFirstStep = currentIndex === 0;
+
   switch (step) {
     case 'basics':
       return (
@@ -72,6 +76,7 @@ export default function OrganizerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'about':
@@ -83,6 +88,7 @@ export default function OrganizerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'events':
@@ -94,6 +100,7 @@ export default function OrganizerWizard({
           prevScreen={prevScreen}
           goToScreen={goToScreen}
           progress={calculateProgress()}
+          prevDisabled={isFirstStep}
         />
       );
     case 'preferences':
@@ -106,6 +113,7 @@ export default function OrganizerWizard({
           goToScreen={goToScreen}
           progress={calculateProgress()}
           isSaving={isSaving}
+          prevDisabled={isFirstStep}
         />
       );
     case 'success':

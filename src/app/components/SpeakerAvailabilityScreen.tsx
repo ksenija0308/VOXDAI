@@ -12,6 +12,7 @@ interface SpeakerAvailabilityScreenProps {
   goToScreen: (screen: number) => void;
   progress: number;
   isSaving?: boolean;
+  prevDisabled?: boolean;
 }
 
 const geographicOptions = [
@@ -41,6 +42,7 @@ export default function SpeakerAvailabilityScreen({
   goToScreen,
   progress,
   isSaving = false,
+  prevDisabled = false,
 }: SpeakerAvailabilityScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showPeriodForm, setShowPeriodForm] = useState(false);
@@ -134,6 +136,7 @@ export default function SpeakerAvailabilityScreen({
       onPrev={prevScreen}
       onNext={handleContinue}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Availability & Preferences"
       subtitle="Help organizers understand where and when you're available to speak"

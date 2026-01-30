@@ -9,6 +9,7 @@ interface SpeakerExperienceScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 const speakingFormatOptions = [
@@ -36,6 +37,7 @@ export default function SpeakerExperienceScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: SpeakerExperienceScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -74,6 +76,7 @@ export default function SpeakerExperienceScreen({
       onPrev={prevScreen}
       onNext={handleContinue}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Speaking Experience"
       subtitle="Tell us about your speaking experience to help organizers understand your expertise"

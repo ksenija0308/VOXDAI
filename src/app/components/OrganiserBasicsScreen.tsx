@@ -12,6 +12,7 @@ interface OrganiserBasicsScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 const industries = [
@@ -71,6 +72,7 @@ export default function OrganiserBasicsScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: OrganiserBasicsScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -158,6 +160,7 @@ export default function OrganiserBasicsScreen({
       onNext={handleNext}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Organiser Basics"
       subtitle="Tell us about your organisation to help speakers understand who you are"

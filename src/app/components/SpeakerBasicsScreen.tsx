@@ -10,6 +10,7 @@ interface SpeakerBasicsScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 export default function SpeakerBasicsScreen({
@@ -19,6 +20,7 @@ export default function SpeakerBasicsScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: SpeakerBasicsScreenProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -61,6 +63,7 @@ export default function SpeakerBasicsScreen({
       onNext={nextScreen}
       onPrev={prevScreen}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       hideHeader={true}
       hideFooter={true}

@@ -10,6 +10,7 @@ interface SpeakerTopicsScreenProps {
   prevScreen: () => void;
   goToScreen: (screen: number) => void;
   progress: number;
+  prevDisabled?: boolean;
 }
 
 const suggestedTopics = [
@@ -37,6 +38,7 @@ export default function SpeakerTopicsScreen({
   prevScreen,
   goToScreen,
   progress,
+  prevDisabled = false,
 }: SpeakerTopicsScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [customTopic, setCustomTopic] = useState('');
@@ -92,6 +94,7 @@ export default function SpeakerTopicsScreen({
       onPrev={prevScreen}
       onNext={handleContinue}
       onSaveExit={() => goToScreen(0)}
+      prevDisabled={prevDisabled}
       progress={progress}
       title="Topics & Expertise"
       subtitle="Select the topics you speak about. This helps event organizers find you for relevant events. The more precise, niche topics you would add, the easier it would be to match you with the right opportunities."
