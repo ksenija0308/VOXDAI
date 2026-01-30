@@ -43,6 +43,8 @@ export default function SpeakerWizard({
       navigate(`/onboarding/speaker/${stepOrder[currentIndex + 1]}`, { replace: true });
     } else {
       // From success screen, go to dashboard
+      // Set flag in sessionStorage to bypass profile check
+      sessionStorage.setItem('voxd_profile_completed', 'true');
       navigate('/dashboard', { replace: true });
     }
   };

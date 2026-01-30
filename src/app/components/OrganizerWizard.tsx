@@ -42,6 +42,8 @@ export default function OrganizerWizard({
       navigate(`/onboarding/organizer/${stepOrder[currentIndex + 1]}`, { replace: true });
     } else {
       // From success screen, go to dashboard
+      // Set flag in sessionStorage to bypass profile check
+      sessionStorage.setItem('voxd_profile_completed', 'true');
       navigate('/dashboard', { replace: true });
     }
   };

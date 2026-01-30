@@ -49,6 +49,19 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
 
         if (isDashboard) {
+          // Check if profile was just completed
+          const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
+          if (profileCompleted === 'true') {
+            // Clear the flag and allow access
+            sessionStorage.removeItem('voxd_profile_completed');
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: true
+            });
+            return;
+          }
+
           // Check if profile exists before allowing dashboard access
           try {
             const profile = userType === 'organizer'

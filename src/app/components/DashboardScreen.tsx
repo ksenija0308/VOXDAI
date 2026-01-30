@@ -335,7 +335,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       if (onLogout) {
                         try {
                           await authAPI.signOut();
-                          toast.success('Logged out successfully');
                           onLogout();
                         } catch (error: any) {
                           console.error('Logout error:', error);
