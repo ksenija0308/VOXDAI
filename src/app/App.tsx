@@ -8,7 +8,7 @@ export default function App() {
     <BrowserRouter>
       <FormProvider>
         <div className="min-h-screen bg-white">
-          <Toaster position="top-right" />
+          <Toaster position="top-right" closeButton />
           <AppContent />
         </div>
       </FormProvider>

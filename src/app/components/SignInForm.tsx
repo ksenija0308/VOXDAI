@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Users, Mic } from 'lucide-react';
+import { Mail, Lock, Users, Mic, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
@@ -19,6 +19,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showUserTypeModal, setShowUserTypeModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -174,7 +175,7 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => {
@@ -182,8 +183,20 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
                   setErrors({ ...errors, password: '' });
                 }}
                 onKeyPress={handleKeyPress}
-                className="pl-11 bg-[#f3f3f5] border-none h-12"
+                className="pl-11 pr-11 bg-[#f3f3f5] border-none h-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] hover:text-[#0B3B2E] transition-colors bg-transparent border-none cursor-pointer p-0"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             {errors.password && (
               <p className="text-[#d4183d] mt-1" style={{ fontSize: '14px' }}>{errors.password}</p>

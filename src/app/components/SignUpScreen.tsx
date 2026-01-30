@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
@@ -17,6 +17,8 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Get user type friendly name
   const userTypeName = formData.userType === 'organizer' ? 'Event Organizer' : 'Speaker';
@@ -182,15 +184,27 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => {
                   updateFormData({ password: e.target.value });
                   setErrors({ ...errors, password: '' });
                 }}
-                className="pl-11 bg-[#f3f3f5] border-none h-12"
+                className="pl-11 pr-11 bg-[#f3f3f5] border-none h-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] hover:text-[#0B3B2E] transition-colors bg-transparent border-none cursor-pointer p-0"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             <p className="text-[#717182] mt-1" style={{ fontSize: '12px' }}>
               Min. 8 characters, 1 uppercase, 1 number
@@ -207,15 +221,27 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#717182]" />
               <Input
                 id="confirmPassword"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
                   setErrors({ ...errors, confirmPassword: '' });
                 }}
-                className="pl-11 bg-[#f3f3f5] border-none h-12"
+                className="pl-11 pr-11 bg-[#f3f3f5] border-none h-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] hover:text-[#0B3B2E] transition-colors bg-transparent border-none cursor-pointer p-0"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
             {errors.confirmPassword && (
               <p className="text-[#d4183d] mt-1" style={{ fontSize: '14px' }}>{errors.confirmPassword}</p>
