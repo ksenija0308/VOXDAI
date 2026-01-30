@@ -1,4 +1,4 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, Globe, DollarSign, LogOut, Settings } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, Settings } from 'lucide-react';
 import { Button } from './ui/button';
 import { FormData } from '../App';
 import { useState, useEffect } from 'react';
@@ -63,8 +63,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           setProfileData({ ...formData, ...profile });
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
-        // Use formData as fallback
         setProfileData(formData);
       } finally {
         setIsLoading(false);
