@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import svgPaths from '../../imports/svg-5axqc4zoph';
 
@@ -27,10 +27,10 @@ export default function SpeakerBasicsScreen({
 
   const handleLinkedInImport = async () => {
     setIsImporting(true);
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     // Fill form with sample LinkedIn data
     updateFormData({
       firstName: 'Sarah',
@@ -40,7 +40,7 @@ export default function SpeakerBasicsScreen({
       speakerLocation: 'United States',
       speakerCity: 'San Francisco',
     });
-    
+
     setIsImporting(false);
   };
 
@@ -58,6 +58,7 @@ export default function SpeakerBasicsScreen({
 
   return (
     <FormLayout
+      title=""
       currentStep={2}
       totalSteps={11}
       onNext={nextScreen}
@@ -132,10 +133,10 @@ export default function SpeakerBasicsScreen({
                       {photoPreview ? (
                         <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
-                        <img 
-                          src="a154ef5f8e9c9bba91eca0a43f8beb65ca7469a1.png" 
-                          alt="Default profile" 
-                          className="w-full h-full object-cover" 
+                        <img
+                          src="a154ef5f8e9c9bba91eca0a43f8beb65ca7469a1.png"
+                          alt="Default profile"
+                          className="w-full h-full object-cover"
                         />
                       )}
                     </div>
@@ -178,7 +179,7 @@ export default function SpeakerBasicsScreen({
                 value={`${formData.firstName} ${formData.lastName}`.trim()}
                 onChange={(e) => {
                   const parts = e.target.value.split(' ');
-                  updateFormData({ 
+                  updateFormData({
                     firstName: parts[0] || '',
                     lastName: parts.slice(1).join(' ') || ''
                   });
@@ -217,7 +218,7 @@ export default function SpeakerBasicsScreen({
                 rows={8}
                 className="w-full px-4 py-3.5 border border-[#d1d5dc] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-[rgba(0,0,0,0.5)] resize-none focus:border-[#0b3b2e] focus:ring-2 focus:ring-[#0b3b2e]/10 transition-all outline-none"
               />
-              
+
               {/* Character count and Auto-fill button */}
               <div className="flex justify-between items-center mt-3">
                 <p className="text-[#6a7282] text-[16px]">

@@ -1,13 +1,4 @@
-import { projectId, publicAnonKey, apiBaseUrl } from '../../utils/supabase/info';
-import { createClient } from '@supabase/supabase-js';
-
-const API_BASE_URL = apiBaseUrl;
-
-// Create Supabase client singleton
-const supabase = createClient(
-  `https://${projectId}.supabase.co`,
-  publicAnonKey
-);
+import { supabase } from '@/lib/supabaseClient';
 
 // Types
 export interface User {
@@ -41,19 +32,23 @@ export const clearAuthToken = () => {
 // Auth API
 export const authAPI = {
   signUp: async (email: string, password: string, name: string, userType: 'organizer' | 'speaker') => {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${publicAnonKey}`,
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          userType,
+        },
       },
-      body: JSON.stringify({ email, password, name, userType }),
     });
 
-    const data = await response.json();
+    if (error) {
+      throw new Error(error.message);
+    }
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Sign up failed');
+    if (data.session?.access_token) {
+      setAuthToken(data.session.access_token);
     }
 
     return data;
@@ -182,127 +177,143 @@ export const authAPI = {
 // File Upload API
 export const fileAPI = {
   upload: async (file: File, type: 'photo' | 'logo'): Promise<string> => {
-    const token = getAuthToken();
-    if (!token) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
+    const { uploadToProfileMedia } = await import('@/lib/storage');
 
-    const response = await fetch(`${API_BASE_URL}/upload`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
+    const prefix = type === 'photo' ? 'profile' : 'intro';
+    const storagePath = await uploadToProfileMedia({
+      userId: user.id,
+      file,
+      prefix: prefix as 'profile' | 'intro',
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'File upload failed');
-    }
-
-    return data.url; // Return the signed URL
+    return storagePath;
   }
 };
 
 // Organizer Profile API
 export const organizerAPI = {
   saveProfile: async (profileData: any) => {
-    const token = getAuthToken();
-    if (!token) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/organizer/profile`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
+    await supabase
+      .from('user_profiles')
+      .upsert({
+        id: user.id,
+        user_type: 'organizer',
+      }, {
+        onConflict: 'id',
+      });
 
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('organizer_profiles')
+      .upsert({
+        id: user.id,
+        ...profileData,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+      .select()
+      .single();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to save profile');
+    if (error) {
+      throw new Error(error.message);
     }
 
     return data;
   },
 
   getProfile: async () => {
-    const token = getAuthToken();
-    if (!token) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/organizer/profile`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const { data, error } = await supabase
+      .from('organizer_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch profile');
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw new Error(error.message);
     }
 
-    return data.profile;
+    return data;
   }
 };
 
 // Speaker Profile API
 export const speakerAPI = {
   saveProfile: async (profileData: any) => {
-    const token = getAuthToken();
-    if (!token) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/speaker/profile`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
+    await supabase
+      .from('user_profiles')
+      .upsert({
+        id: user.id,
+        user_type: 'speaker',
+      }, {
+        onConflict: 'id',
+      });
 
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('speaker_profiles')
+      .upsert({
+        id: user.id,
+        ...profileData,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'id',
+      })
+      .select()
+      .single();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to save profile');
+    if (error) {
+      throw new Error(error.message);
     }
 
     return data;
   },
 
   getProfile: async () => {
-    const token = getAuthToken();
-    if (!token) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
       throw new Error('Not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/speaker/profile`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const { data, error } = await supabase
+      .from('speaker_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch profile');
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw new Error(error.message);
     }
 
-    return data.profile;
+    return data;
   }
 };
