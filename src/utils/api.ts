@@ -15,9 +15,9 @@ export interface AuthResponse {
 }
 
 // Helper to get auth token from localStorage
-const getAuthToken = (): string | null => {
-  return localStorage.getItem('voxd_access_token');
-};
+// const getAuthToken = (): string | null => {
+//   return localStorage.getItem('voxd_access_token');
+// };
 
 // Helper to set auth token
 export const setAuthToken = (token: string) => {
@@ -354,26 +354,69 @@ export const speakerAPI = {
       updated_at: new Date().toISOString(),
     };
 
-    // Map fields from FormData to database columns
+    // Basic Info (Screen: Speaker Basics)
+    if (profileData.firstName) speakerData.first_name = profileData.firstName;
+    if (profileData.lastName) speakerData.last_name = profileData.lastName;
     if (profileData.firstName && profileData.lastName) {
       speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
     }
-    if (profileData.professionalTitle) speakerData.professional_headline = profileData.professionalTitle;
-    if (profileData.speakerTagline) speakerData.professional_headline = profileData.speakerTagline;
-    if (profileData.topics) speakerData.topics = profileData.topics;
-    if (profileData.customTopics && profileData.customTopics.length > 0) {
-      speakerData.topics = [...(profileData.topics || []), ...profileData.customTopics];
+    if (profileData.professionalTitle) {
+      speakerData.professional_title = profileData.professionalTitle;
+      speakerData.professional_headline = profileData.professionalTitle;
     }
+    if (profileData.speakerLocation) speakerData.speaker_location = profileData.speakerLocation;
+    if (profileData.speakerCity) speakerData.speaker_city = profileData.speakerCity;
+    if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
+      speakerData.profile_photo = profileData.profilePhoto;
+    }
+    if (profileData.speakerTagline) {
+      speakerData.speaker_tagline = profileData.speakerTagline;
+      speakerData.professional_headline = profileData.speakerTagline;
+    }
+
+    // Topics & Expertise (Screen: Speaker Topics)
+    if (profileData.topics) speakerData.topics = profileData.topics;
+    if (profileData.customTopics) speakerData.custom_topics = profileData.customTopics;
+    if (profileData.topics && profileData.customTopics && profileData.customTopics.length > 0) {
+      speakerData.topics = [...profileData.topics, ...profileData.customTopics];
+    }
+
+    // Experience (Screen: Speaker Experience)
     if (profileData.speakingFormats) speakerData.speaking_formats = profileData.speakingFormats;
     if (profileData.yearsOfExperience) speakerData.years_of_experience = profileData.yearsOfExperience;
     if (profileData.pastEngagements !== undefined) speakerData.past_engagements = profileData.pastEngagements;
     if (profileData.notableClients) speakerData.notable_clients = profileData.notableClients;
-    if (profileData.videoIntroUrl) speakerData.video_intro = profileData.videoIntroUrl;
+
+    // Bio & Portfolio (Screen: Speaker Bio & Portfolio)
+    if (profileData.bio) speakerData.bio = profileData.bio;
+    if (profileData.speakerWebsite) speakerData.speaker_website = profileData.speakerWebsite;
+    if (profileData.speakerLinkedIn) speakerData.speaker_linked_in = profileData.speakerLinkedIn;
+    if (profileData.speakerTwitter) speakerData.speaker_twitter = profileData.speakerTwitter;
+    if (profileData.speakerInstagram) speakerData.speaker_instagram = profileData.speakerInstagram;
+    if (profileData.speakerYoutube) speakerData.speaker_youtube = profileData.speakerYoutube;
+    if (profileData.demoVideoUrl) speakerData.demo_video_url = profileData.demoVideoUrl;
+
+    // Availability & Preferences (Screen: Speaker Availability & Preferences)
     if (profileData.geographicReach) speakerData.geographic_reach = profileData.geographicReach;
-    if (profileData.availabilityPeriods) speakerData.availability_periods = profileData.availabilityPeriods;
-    if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
-      speakerData.profile_photo = profileData.profilePhoto;
+    if (profileData.willingToTravel !== undefined) speakerData.willing_to_travel = profileData.willingToTravel;
+    if (profileData.preferredEventTypes) speakerData.preferred_event_types = profileData.preferredEventTypes;
+    if (profileData.preferredAudienceSizes) speakerData.preferred_audience_sizes = profileData.preferredAudienceSizes;
+
+    // Requirements & Pricing (Screen: Speaker Requirements & Pricing)
+    if (profileData.speakingFeeRange) speakerData.speaking_fee_range = profileData.speakingFeeRange;
+    if (profileData.feeMin !== undefined) speakerData.fee_min = profileData.feeMin;
+    if (profileData.feeMax !== undefined) speakerData.fee_max = profileData.feeMax;
+    if (profileData.technicalRequirements) speakerData.technical_requirements = profileData.technicalRequirements;
+    if (profileData.specialAccommodations) speakerData.special_accommodations = profileData.specialAccommodations;
+
+    // Video Introduction (Screen: Speaker Video Introduction)
+    if (profileData.videoIntroUrl) {
+      speakerData.video_intro_url = profileData.videoIntroUrl;
+      speakerData.video_intro = profileData.videoIntroUrl;
     }
+
+    // Availability Periods
+    if (profileData.availabilityPeriods) speakerData.availability_periods = profileData.availabilityPeriods;
 
     const { data, error } = await supabase
       .from('speaker_profiles')
