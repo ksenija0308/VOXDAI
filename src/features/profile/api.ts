@@ -80,7 +80,7 @@ export async function saveOrganizationProfile(
     .from('user_profiles')
     .upsert({
       id: userId,
-      user_type: 'organization',
+      user_type: 'organizer',
     }, {
       onConflict: 'id',
     });

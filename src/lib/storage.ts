@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 
-const BUCKET_NAME = 'profile-media';
+const BUCKET_NAME = 'profile_media';
 
 export interface UploadToProfileMediaParams {
   userId: string;

@@ -214,13 +214,86 @@ export const organizerAPI = {
         onConflict: 'id',
       });
 
+    // Only include fields that exist in organization_profiles table
+    const organizationData: any = {
+      id: user.id,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Screen 2 - Organiser Basics
+    if (profileData.organisationName) {
+      organizationData.organisation_name = profileData.organisationName;
+      organizationData.full_name = profileData.organisationName;
+    }
+    if (profileData.website) organizationData.website = profileData.website;
+    if (profileData.country) organizationData.country = profileData.country;
+    if (profileData.city) organizationData.city = profileData.city;
+    if (profileData.industries) organizationData.industries = profileData.industries;
+    if (profileData.logo && typeof profileData.logo === 'string') {
+      organizationData.logo = profileData.logo;
+      organizationData.profile_photo = profileData.logo;
+    }
+    if (profileData.tagline) {
+      organizationData.tagline = profileData.tagline;
+      organizationData.professional_headline = profileData.tagline;
+    }
+
+    // Screen 3 - About / Contact
+    if (profileData.contactName) organizationData.contact_name = profileData.contactName;
+    if (profileData.contactEmail) organizationData.contact_email = profileData.contactEmail;
+    if (profileData.contactPhone) organizationData.contact_phone = profileData.contactPhone;
+    if (profileData.calendarLink) organizationData.calendar_link = profileData.calendarLink;
+    if (profileData.calendarType) organizationData.calendar_type = profileData.calendarType;
+    if (profileData.linkedIn) organizationData.linked_in = profileData.linkedIn;
+    if (profileData.instagram) organizationData.instagram = profileData.instagram;
+    if (profileData.youtube) organizationData.youtube = profileData.youtube;
+    if (profileData.twitter) organizationData.twitter = profileData.twitter;
+    if (profileData.authorised !== undefined) organizationData.authorised = profileData.authorised;
+
+    // Screen 4 - Event Types & Frequency
+    if (profileData.eventTypes) organizationData.event_types = profileData.eventTypes;
+    if (profileData.frequency) organizationData.frequency = profileData.frequency;
+    if (profileData.eventSizes) organizationData.event_sizes = profileData.eventSizes;
+    if (profileData.formats) organizationData.formats = profileData.formats;
+    if (profileData.locations) organizationData.locations = profileData.locations;
+
+    // Screen 5 - Speaker Preferences
+    if (profileData.speakerFormats) {
+      organizationData.speaker_formats = profileData.speakerFormats;
+      organizationData.speaking_formats = profileData.speakerFormats;
+    }
+    if (profileData.diversityGoals !== undefined) organizationData.diversity_goals = profileData.diversityGoals;
+    if (profileData.diversityTargets) organizationData.diversity_targets = profileData.diversityTargets;
+    if (profileData.languages) organizationData.languages = profileData.languages;
+    if (profileData.budgetRange) organizationData.budget_range = profileData.budgetRange;
+    if (profileData.budgetMin !== undefined) organizationData.budget_min = profileData.budgetMin;
+    if (profileData.budgetMax !== undefined) organizationData.budget_max = profileData.budgetMax;
+    if (profileData.leadTime) organizationData.lead_time = profileData.leadTime;
+
+    // Screen 6 - Review & Publish
+    if (profileData.visibility) organizationData.visibility = profileData.visibility;
+
+    // Additional fields (if used from CompleteOrganizationProfile or other sources)
+    if (profileData.firstName && profileData.lastName) {
+      organizationData.full_name = `${profileData.firstName} ${profileData.lastName}`;
+    }
+    if (profileData.professionalTitle) organizationData.professional_headline = profileData.professionalTitle;
+    if (profileData.topics) organizationData.topics = profileData.topics;
+    if (profileData.speakingFormats) organizationData.speaking_formats = profileData.speakingFormats;
+    if (profileData.yearsOfExperience) organizationData.years_of_experience = profileData.yearsOfExperience;
+    if (profileData.pastEngagements !== undefined) organizationData.past_engagements = profileData.pastEngagements;
+    if (profileData.notableClients) organizationData.notable_clients = profileData.notableClients;
+    if (profileData.videoIntroUrl) organizationData.video_intro = profileData.videoIntroUrl;
+    if (profileData.geographicReach) organizationData.geographic_reach = profileData.geographicReach;
+    if (profileData.preferredEventTypes) organizationData.preferred_event_types = profileData.preferredEventTypes;
+    if (profileData.availabilityPeriods) organizationData.availability_periods = profileData.availabilityPeriods;
+    if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
+      organizationData.profile_photo = profileData.profilePhoto;
+    }
+
     const { data, error } = await supabase
-      .from('organizer_profiles')
-      .upsert({
-        id: user.id,
-        ...profileData,
-        updated_at: new Date().toISOString(),
-      }, {
+      .from('organization_profiles')
+      .upsert(organizationData, {
         onConflict: 'id',
       })
       .select()
@@ -241,7 +314,7 @@ export const organizerAPI = {
     }
 
     const { data, error } = await supabase
-      .from('organizer_profiles')
+      .from('organization_profiles')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -275,13 +348,36 @@ export const speakerAPI = {
         onConflict: 'id',
       });
 
+    // Only include fields that exist in speaker_profiles table
+    const speakerData: any = {
+      id: user.id,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Map fields from FormData to database columns
+    if (profileData.firstName && profileData.lastName) {
+      speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
+    }
+    if (profileData.professionalTitle) speakerData.professional_headline = profileData.professionalTitle;
+    if (profileData.speakerTagline) speakerData.professional_headline = profileData.speakerTagline;
+    if (profileData.topics) speakerData.topics = profileData.topics;
+    if (profileData.customTopics && profileData.customTopics.length > 0) {
+      speakerData.topics = [...(profileData.topics || []), ...profileData.customTopics];
+    }
+    if (profileData.speakingFormats) speakerData.speaking_formats = profileData.speakingFormats;
+    if (profileData.yearsOfExperience) speakerData.years_of_experience = profileData.yearsOfExperience;
+    if (profileData.pastEngagements !== undefined) speakerData.past_engagements = profileData.pastEngagements;
+    if (profileData.notableClients) speakerData.notable_clients = profileData.notableClients;
+    if (profileData.videoIntroUrl) speakerData.video_intro = profileData.videoIntroUrl;
+    if (profileData.geographicReach) speakerData.geographic_reach = profileData.geographicReach;
+    if (profileData.availabilityPeriods) speakerData.availability_periods = profileData.availabilityPeriods;
+    if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
+      speakerData.profile_photo = profileData.profilePhoto;
+    }
+
     const { data, error } = await supabase
       .from('speaker_profiles')
-      .upsert({
-        id: user.id,
-        ...profileData,
-        updated_at: new Date().toISOString(),
-      }, {
+      .upsert(speakerData, {
         onConflict: 'id',
       })
       .select()

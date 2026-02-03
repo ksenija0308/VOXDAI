@@ -1,8 +1,8 @@
 import { CircleCheck, Search, FileText, LayoutDashboard } from 'lucide-react';
-import { Button } from './ui/button';
 import { useState, useEffect, useMemo } from 'react';
 import EventBriefForm from './EventBriefForm';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
+import { useNavigate } from "react-router-dom";
 
 interface SuccessScreenProps {
   nextScreen: () => void;
@@ -12,7 +12,8 @@ interface SuccessScreenProps {
 export default function SuccessScreen({ nextScreen, formData }: SuccessScreenProps) {
   const [showEventBrief, setShowEventBrief] = useState(false);
   const isSpeaker = formData?.userType === 'speaker';
-  
+  const navigate = useNavigate();
+
   // Create profile photo URL with proper cleanup
   const profilePhotoUrl = useMemo(() => {
     if (formData?.profilePhoto instanceof File) {
@@ -29,7 +30,7 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
       }
     };
   }, [profilePhotoUrl]);
-  
+
   // Get user's name
   const getUserName = () => {
     if (isSpeaker && formData?.firstName && formData?.lastName) {
@@ -53,7 +54,7 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-6 py-16">
         <div className="bg-white rounded-[16px] border border-[#e5e7eb] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] p-12 text-center">
-          
+
           {/* Success Checkmark */}
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-[#0B3B2E] rounded-full flex items-center justify-center">
@@ -65,8 +66,8 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
           {profilePhotoUrl && (
             <div className="flex justify-center mb-6">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#0B3B2E] shadow-lg">
-                <img 
-                  src={profilePhotoUrl} 
+                <img
+                  src={profilePhotoUrl}
                   alt={getUserName()}
                   className="w-full h-full object-cover"
                 />
@@ -84,7 +85,7 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
           </p>
 
           <p className="text-[#717182] mb-10 max-w-lg mx-auto" style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
-            {isSpeaker 
+            {isSpeaker
               ? "Your speaker profile is now live. Event organizers can discover you and you can start receiving speaking opportunities."
               : "Your event organiser profile is now live. Speakers can discover your organisation and you can start building your speaker network."
             }
@@ -94,7 +95,7 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
             <button
               className="bg-[#0b3b2e] rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-white hover:bg-[#0b3b2e]/90 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-              onClick={nextScreen}
+              onClick={() => navigate('/dashboard')}
             >
               <LayoutDashboard className="w-5 h-5" />
               Go to Dashboard

@@ -48,8 +48,8 @@ export function useFormData() {
 
     try {
       // Upload files first if they exist
-      let logoUrl = null;
-      let photoUrl = null;
+      let logoUrl: string | null = null;
+      let photoUrl: string | null = null;
 
       if (dataToSave.logo instanceof File) {
         if (showLoading) toast.loading('Uploading logo...', { id: 'upload-logo' });
@@ -106,7 +106,6 @@ export function useFormData() {
       const fields = {
         email: formData.email,
         password: formData.password,
-        acceptTerms: formData.acceptTerms,
         organisationName: formData.organisationName,
         website: formData.website,
         country: formData.country,
@@ -133,7 +132,6 @@ export function useFormData() {
       const fields = {
         email: formData.email,
         password: formData.password,
-        acceptTerms: formData.acceptTerms,
         firstName: formData.firstName,
         lastName: formData.lastName,
         professionalTitle: formData.professionalTitle,
