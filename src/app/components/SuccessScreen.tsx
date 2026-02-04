@@ -95,7 +95,10 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
             <button
               className="bg-[#0b3b2e] rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-white hover:bg-[#0b3b2e]/90 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => {
+                console.log('[SuccessScreen] Go to Dashboard clicked');
+                nextScreen();
+              }}
             >
               <LayoutDashboard className="w-5 h-5" />
               Go to Dashboard

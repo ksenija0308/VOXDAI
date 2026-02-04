@@ -95,7 +95,6 @@ export const authAPI = {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,
       options: {
-        scopes: 'openid profile email',
         redirectTo: window.location.origin,
       },
     });

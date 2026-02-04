@@ -30,20 +30,29 @@ export default function OrganizerWizard({
     const stepOrder = ['basics', 'about', 'events', 'preferences', 'success'];
     const currentIndex = stepOrder.indexOf(step);
 
+    console.log('[OrganizerWizard] nextScreen called, current step:', step, 'currentIndex:', currentIndex);
+
     // Check if we're moving to success screen
     if (step === 'preferences') {
+      console.log('[OrganizerWizard] On preferences screen, saving profile...');
       const saved = await saveProfile(formData, true);
       if (saved) {
+        console.log('[OrganizerWizard] Profile saved successfully, navigating to success screen');
         // Clear localStorage after successful save
         clearOnboardingData();
         navigate(`/onboarding/organizer/${stepOrder[currentIndex + 1]}`, { replace: true });
+      } else {
+        console.error('[OrganizerWizard] Profile save failed');
       }
     } else if (currentIndex < stepOrder.length - 1) {
+      console.log('[OrganizerWizard] Moving to next screen');
       navigate(`/onboarding/organizer/${stepOrder[currentIndex + 1]}`, { replace: true });
     } else {
       // From success screen, go to dashboard
+      console.log('[OrganizerWizard] On success screen, setting flag and navigating to dashboard');
       // Set flag in sessionStorage to bypass profile check
       sessionStorage.setItem('voxd_profile_completed', 'true');
+      console.log('[OrganizerWizard] Flag set, navigating to /dashboard');
       navigate('/dashboard', { replace: true });
     }
   };
@@ -122,7 +131,7 @@ export default function OrganizerWizard({
       return <SuccessScreen nextScreen={nextScreen} formData={formData} />;
     default:
       // Unknown step, redirect to basics
-      navigate('/onboarding/organizer/basics', { replace: true });
+      // navigate('/onboarding/organizer/basics', { replace: true });
       return null;
   }
 }
