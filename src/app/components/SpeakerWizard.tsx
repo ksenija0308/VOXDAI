@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import SpeakerBasicsScreen from './SpeakerBasicsScreen';
 import SpeakerTopicsScreen from './SpeakerTopicsScreen';
 import SpeakerExperienceScreen from './SpeakerExperienceScreen';
@@ -31,29 +31,21 @@ export default function SpeakerWizard({
     const stepOrder = ['basics', 'topics', 'experience', 'video', 'availability', 'success'];
     const currentIndex = stepOrder.indexOf(step);
 
-    console.log('[SpeakerWizard] nextScreen called, current step:', step, 'currentIndex:', currentIndex);
-
     // Check if we're moving to success screen
     if (step === 'availability') {
-      console.log('[SpeakerWizard] On availability screen, saving profile...');
       const saved = await saveProfile(formData, true);
       if (saved) {
-        console.log('[SpeakerWizard] Profile saved successfully, navigating to success screen');
-        // Clear localStorage after successful save
         clearOnboardingData();
         navigate(`/onboarding/speaker/${stepOrder[currentIndex + 1]}`, { replace: true });
       } else {
         console.error('[SpeakerWizard] Profile save failed');
       }
     } else if (currentIndex < stepOrder.length - 1) {
-      console.log('[SpeakerWizard] Moving to next screen');
       navigate(`/onboarding/speaker/${stepOrder[currentIndex + 1]}`, { replace: true });
     } else {
       // From success screen, go to dashboard
-      console.log('[SpeakerWizard] On success screen, setting flag and navigating to dashboard');
       // Set flag in sessionStorage to bypass profile check
       sessionStorage.setItem('voxd_profile_completed', 'true');
-      console.log('[SpeakerWizard] Flag set, navigating to /dashboard');
       navigate('/dashboard', { replace: true });
     }
   };

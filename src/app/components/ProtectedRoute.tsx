@@ -51,22 +51,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           return;
         }
 
-        // Only check for profile existence if accessing dashboard
-        // Skip this check for onboarding routes to avoid unnecessary 404 errors
         const isDashboard = location.pathname === '/dashboard';
         const isOnboarding = location.pathname.startsWith('/onboarding/');
-
-        if (isOnboarding) {
-          console.log('[ProtectedRoute] On onboarding route, allowing access');
-          // User is in onboarding, don't check profile - assume it doesn't exist yet
-          setAuthState({
-            isAuthenticated: true,
-            userType,
-            hasProfile: false
-          });
-          isCheckingRef.current = false;
-          return;
-        }
 
         if (isDashboard) {
           // Check if profile was just completed or saved
@@ -116,6 +102,51 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           } catch (error) {
             // Profile doesn't exist
             console.error('[ProtectedRoute] Error loading profile:', error);
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: false
+            });
+          }
+          isCheckingRef.current = false;
+          return;
+        }
+
+        if (isOnboarding) {
+          console.log('[ProtectedRoute] On onboarding route, checking if profile already exists');
+
+          // If the user has just completed/saved their profile in this tab,
+          // treat them as having a profile and let the render logic redirect
+          // them back to the dashboard.
+          const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
+          const profileSaved = sessionStorage.getItem('voxd_profile_saved');
+
+          if (profileCompleted === 'true' || profileSaved === 'true') {
+            console.log('[ProtectedRoute] Onboarding route but completion flag found, marking hasProfile=true');
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: true
+            });
+            isCheckingRef.current = false;
+            return;
+          }
+
+          // Otherwise, check via API whether a profile already exists.
+          // If it does, we should not allow access to onboarding.
+          try {
+            const profile = userType === 'organizer'
+              ? await organizerAPI.getProfile()
+              : await speakerAPI.getProfile();
+
+            console.log('[ProtectedRoute] Onboarding profile check result:', !!profile);
+            setAuthState({
+              isAuthenticated: true,
+              userType,
+              hasProfile: !!profile
+            });
+          } catch (error) {
+            console.error('[ProtectedRoute] Error loading profile on onboarding route:', error);
             setAuthState({
               isAuthenticated: true,
               userType,
@@ -186,6 +217,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       ? '/onboarding/organizer/basics'
       : '/onboarding/speaker/basics';
     return <Navigate to={onboardingPath} replace />;
+  }
+
+  // If user already has a profile, block access to onboarding routes
+  if (isOnboardingRoute && authState.hasProfile && authState.userType) {
+    console.log('[ProtectedRoute] User has profile, blocking onboarding and redirecting to dashboard');
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Authenticated and authorized, render children
