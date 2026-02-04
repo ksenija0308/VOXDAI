@@ -65,8 +65,6 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
   const handleOAuthSignIn = async (provider: 'google' | 'linkedin_oidc') => {
     try {
       await authAPI.signInWithOAuth(provider);
-      // Supabase will redirect to the OAuth provider
-      // After successful auth, user will be redirected back to the app
     } catch (error: any) {
       console.error('OAuth sign in error:', error);
       toast.error(error.message || 'Failed to sign in with OAuth');
