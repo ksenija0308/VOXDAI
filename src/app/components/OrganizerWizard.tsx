@@ -121,7 +121,7 @@ export default function OrganizerWizard({
       return <SuccessScreen nextScreen={nextScreen} formData={formData} />;
     default:
       // Unknown step, redirect to basics
-      // navigate('/onboarding/organizer/basics', { replace: true });
+      navigate('/onboarding/organizer/basics', { replace: true });
       return null;
   }
 }

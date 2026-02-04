@@ -53,6 +53,9 @@ export default function AppRoutes({
 
           if (profile) {
             setFormData(prev => ({ ...prev, ...profile }));
+            // Mark profile as completed in this tab so onboarding is blocked
+            // when returning users go straight to the dashboard.
+            sessionStorage.setItem('voxd_profile_completed', 'true');
             // Go to dashboard
             navigate('/dashboard', { replace: true });
           } else {

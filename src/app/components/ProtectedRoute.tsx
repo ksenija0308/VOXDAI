@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { authAPI, organizerAPI, speakerAPI } from '../../utils/api';
+import { authAPI } from '../../utils/api';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,174 +9,46 @@ interface ProtectedRouteProps {
 interface AuthState {
   isAuthenticated: boolean;
   userType: string | null;
-  hasProfile: boolean;
+  hasCompletedProfile: boolean;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [authState, setAuthState] = useState<AuthState | null>(null);
   const location = useLocation();
-  const hasCheckedFlagRef = useRef(false);
-  const isCheckingRef = useRef(false);
 
   useEffect(() => {
-    // Prevent double-checking (React Strict Mode)
-    // Check BEFORE calling async function so both calls don't start
-    if (isCheckingRef.current) {
-      console.log('[ProtectedRoute] Already checking, skipping duplicate check');
-      return;
-    }
-    isCheckingRef.current = true;
-
-    // Reset authState to null when location changes to show loading and prevent stale state redirects
-    setAuthState(null);
-
     const checkAuthAndProfile = async () => {
-      console.log('[ProtectedRoute] Checking auth, pathname:', location.pathname);
       try {
         const session = await authAPI.getSession();
 
         if (!session) {
-          console.log('[ProtectedRoute] No session found');
-          setAuthState({ isAuthenticated: false, userType: null, hasProfile: false });
-          isCheckingRef.current = false;
+          setAuthState({ isAuthenticated: false, userType: null, hasCompletedProfile: false });
           return;
         }
 
         const userType = session.user?.user_metadata?.userType;
-        console.log('[ProtectedRoute] User type:', userType);
 
         if (!userType) {
-          setAuthState({ isAuthenticated: true, userType: null, hasProfile: false });
-          isCheckingRef.current = false;
+          setAuthState({ isAuthenticated: true, userType: null, hasCompletedProfile: false });
           return;
         }
 
-        const isDashboard = location.pathname === '/dashboard';
-        const isOnboarding = location.pathname.startsWith('/onboarding/');
+        const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
+        const profileSaved = sessionStorage.getItem('voxd_profile_saved');
+        const hasCompletedProfile = profileCompleted === 'true' || profileSaved === 'true';
 
-        if (isDashboard) {
-          // Check if profile was just completed or saved
-          const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
-          const profileSaved = sessionStorage.getItem('voxd_profile_saved');
-
-          console.log('[ProtectedRoute] Dashboard access, flags:', {
-            profileCompleted,
-            profileSaved,
-            hasCheckedFlag: hasCheckedFlagRef.current
-          });
-
-          if (profileCompleted === 'true' || profileSaved === 'true') {
-            console.log('[ProtectedRoute] Flag found, allowing dashboard access without API check');
-
-            // NOTE:
-            // We intentionally do NOT clear the flags here.
-            // In React Strict Mode, effects can run twice on mount,
-            // which was causing a race where the first run consumed
-            // and cleared the flag, and the second run fell back to
-            // the API check and redirected back to onboarding.
-            // Keeping the flags for the lifetime of the tab avoids
-            // that issue while still scoping them to the session.
-
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: true
-            });
-            isCheckingRef.current = false;
-            return;
-          }
-
-          // Check if profile exists before allowing dashboard access
-          console.log('[ProtectedRoute] No flag found, checking profile via API...');
-          try {
-            const profile = userType === 'organizer'
-              ? await organizerAPI.getProfile()
-              : await speakerAPI.getProfile();
-
-            console.log('[ProtectedRoute] Profile check result:', !!profile);
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: !!profile
-            });
-          } catch (error) {
-            // Profile doesn't exist
-            console.error('[ProtectedRoute] Error loading profile:', error);
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: false
-            });
-          }
-          isCheckingRef.current = false;
-          return;
-        }
-
-        if (isOnboarding) {
-          console.log('[ProtectedRoute] On onboarding route, checking if profile already exists');
-
-          // If the user has just completed/saved their profile in this tab,
-          // treat them as having a profile and let the render logic redirect
-          // them back to the dashboard.
-          const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
-          const profileSaved = sessionStorage.getItem('voxd_profile_saved');
-
-          if (profileCompleted === 'true' || profileSaved === 'true') {
-            console.log('[ProtectedRoute] Onboarding route but completion flag found, marking hasProfile=true');
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: true
-            });
-            isCheckingRef.current = false;
-            return;
-          }
-
-          // Otherwise, check via API whether a profile already exists.
-          // If it does, we should not allow access to onboarding.
-          try {
-            const profile = userType === 'organizer'
-              ? await organizerAPI.getProfile()
-              : await speakerAPI.getProfile();
-
-            console.log('[ProtectedRoute] Onboarding profile check result:', !!profile);
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: !!profile
-            });
-          } catch (error) {
-            console.error('[ProtectedRoute] Error loading profile on onboarding route:', error);
-            setAuthState({
-              isAuthenticated: true,
-              userType,
-              hasProfile: false
-            });
-          }
-          isCheckingRef.current = false;
-          return;
-        }
-
-        // For any other route, just authenticate without profile check
         setAuthState({
           isAuthenticated: true,
           userType,
-          hasProfile: true // Assume true for other routes
+          hasCompletedProfile
         });
-        isCheckingRef.current = false;
       } catch (error) {
         console.error('[ProtectedRoute] Error checking authentication:', error);
-        setAuthState({ isAuthenticated: false, userType: null, hasProfile: false });
-        isCheckingRef.current = false;
+        setAuthState({ isAuthenticated: false, userType: null, hasCompletedProfile: false });
       }
     };
 
     checkAuthAndProfile();
-
-    // Reset the checking flag when location changes
-    return () => {
-      isCheckingRef.current = false;
-    };
   }, [location.pathname]);
 
   // Still loading
@@ -200,28 +72,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const isDashboardRoute = location.pathname === '/dashboard';
   const isOnboardingRoute = location.pathname.startsWith('/onboarding/');
 
-  if (isDashboardRoute && !authState.hasProfile && authState.userType) {
-    // Before redirecting, re-check the in-memory flags to avoid
-    // redirect loops when coming straight from the success screen.
-    const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
-    const profileSaved = sessionStorage.getItem('voxd_profile_saved');
+  if (isDashboardRoute && !authState.hasCompletedProfile && authState.userType) {
 
-    if (profileCompleted === 'true' || profileSaved === 'true') {
-      // User has just completed or saved their profile in this tab,
-      // so allow dashboard access even if authState is still stale.
-      return <>{children}</>;
-    }
-
-    // Redirect to appropriate onboarding flow if no completion/save flag
     const onboardingPath = authState.userType === 'organizer'
       ? '/onboarding/organizer/basics'
       : '/onboarding/speaker/basics';
     return <Navigate to={onboardingPath} replace />;
   }
 
-  // If user already has a profile, block access to onboarding routes
-  if (isOnboardingRoute && authState.hasProfile && authState.userType) {
-    console.log('[ProtectedRoute] User has profile, blocking onboarding and redirecting to dashboard');
+  // If user has completed their profile in this tab, block access to onboarding routes
+  if (isOnboardingRoute && authState.hasCompletedProfile && authState.userType) {
     return <Navigate to="/dashboard" replace />;
   }
 
