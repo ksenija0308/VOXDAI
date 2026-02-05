@@ -93,9 +93,6 @@ export function useFormData() {
         toast.success('Profile saved successfully!', { id: 'save-profile' });
       }
 
-      // Store a flag that profile was successfully saved
-      sessionStorage.setItem('voxd_profile_saved', 'true');
-
       return true;
     } catch (error: any) {
       console.error('Error saving profile:', error);

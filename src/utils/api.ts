@@ -456,3 +456,34 @@ export const speakerAPI = {
     return data;
   }
 };
+
+// Search API
+export const searchAPI = {
+  searchOrganizations: async (searchQuery: string) => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const apiUrl = `${supabaseUrl}/rest/v1/organization_profiles_public?select=*&search_text=ilike.*${encodeURIComponent(searchQuery)}*`;
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Search error:', error);
+      throw error;
+    }
+  }
+};

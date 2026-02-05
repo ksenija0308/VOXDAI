@@ -34,8 +34,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
 
         const profileCompleted = sessionStorage.getItem('voxd_profile_completed');
-        const profileSaved = sessionStorage.getItem('voxd_profile_saved');
-        const hasCompletedProfile = profileCompleted === 'true' || profileSaved === 'true';
+        const hasCompletedProfile = profileCompleted === 'true';
 
         setAuthState({
           isAuthenticated: true,

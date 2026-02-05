@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
-import { organizerAPI, speakerAPI, authAPI } from '@/utils/api';
+import { organizerAPI, speakerAPI, authAPI, searchAPI } from '@/utils/api';
 import { toast } from 'sonner';
 
 interface DashboardScreenProps {
@@ -199,81 +199,37 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     { name: 'Declined', count: 1, color: '#d4183d' },
   ];
 
-  // Mock AI search function
-  const handleSearch = () => {
+  // Real API search function
+  const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
 
-    // Simulate AI processing
-    setTimeout(() => {
-      // Mock AI matchmaking results
-      const mockResults = [
-        {
-          name: 'Dr. Emily Watson',
-          topic: 'AI Ethics & Governance',
-          match: 96,
-          expertise: '15+ years in AI policy and ethics',
-          availability: 'Available for Q1 2024',
-          hasVideo: true,
-          speakingFormat: ['Keynote', 'Panel'],
-          experienceLevel: 'Expert',
-          language: ['English'],
-          feeRange: 'High'
-        },
-        {
-          name: 'James Park',
-          topic: 'Machine Learning Applications',
-          match: 92,
-          expertise: 'Former Google AI researcher',
-          availability: 'Available March onwards',
-          hasVideo: false,
-          speakingFormat: ['Workshop'],
-          experienceLevel: 'Expert',
-          language: ['English'],
-          feeRange: 'Medium'
-        },
-        {
-          name: 'Dr. Aisha Patel',
-          topic: 'AI in Healthcare',
-          match: 89,
-          expertise: 'Medical AI specialist with 200+ talks',
-          availability: 'Limited availability',
-          hasVideo: true,
-          speakingFormat: ['Keynote'],
-          experienceLevel: 'Expert',
-          language: ['English'],
-          feeRange: 'High'
-        },
-        {
-          name: 'Robert Chen',
-          topic: 'Future of AI',
-          match: 87,
-          expertise: 'Tech futurist and AI thought leader',
-          availability: 'Available for virtual events',
-          hasVideo: true,
-          speakingFormat: ['Keynote'],
-          experienceLevel: 'Expert',
-          language: ['English'],
-          feeRange: 'Medium'
-        },
-        {
-          name: 'Sofia Martinez',
-          topic: 'Responsible AI Development',
-          match: 85,
-          expertise: 'AI safety researcher at leading lab',
-          availability: 'Available Q2 2024',
-          hasVideo: false,
-          speakingFormat: ['Panel'],
-          experienceLevel: 'Expert',
-          language: ['English'],
-          feeRange: 'Medium'
-        }
-      ];
+    try {
+      const results = await searchAPI.searchOrganizations(searchQuery);
 
-      setSearchResults(mockResults);
+      // Transform API results to match the expected format
+      const transformedResults = results.map((org: any) => ({
+        name: org.organisation_name || org.full_name || 'Unknown Organization',
+        topic: org.topics?.[0] || org.professional_headline || 'No topic specified',
+        match: 85, // Default match score - you may want to implement a matching algorithm
+        expertise: org.tagline || org.professional_headline || 'No expertise provided',
+        availability: 'Contact for availability',
+        hasVideo: !!org.video_intro,
+        speakingFormat: org.speaking_formats || org.speaker_formats || [],
+        experienceLevel: org.years_of_experience > 10 ? 'Expert' : org.years_of_experience > 5 ? 'Experienced' : 'Emerging',
+        language: org.languages || ['English'],
+        feeRange: org.budget_range || 'Contact for pricing'
+      }));
+
+      setSearchResults(transformedResults);
+    } catch (error: any) {
+      console.error('Search error:', error);
+      toast.error(`Failed to search: ${error.message}`);
+      setSearchResults([]);
+    } finally {
       setIsSearching(false);
-    }, 1500);
+    }
   };
 
   const handleSendMessage = () => {
