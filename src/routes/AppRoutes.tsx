@@ -106,6 +106,9 @@ export default function AppRoutes({
               updateFormData={updateFormData}
               nextScreen={() => {
                 // After signup, navigate to appropriate onboarding
+                // Ensure profile completion flag is cleared for new users
+                sessionStorage.removeItem('voxd_profile_completed');
+
                 if (formData.userType === 'organizer') {
                   navigate('/onboarding/organizer/basics');
                 } else if (formData.userType === 'speaker') {

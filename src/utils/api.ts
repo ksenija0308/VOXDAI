@@ -464,7 +464,7 @@ export const searchAPI = {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const apiUrl = `${supabaseUrl}/rest/v1/organization_profiles_public?select=*&search_text=ilike.*${encodeURIComponent(searchQuery)}*`;
+      const apiUrl = `${supabaseUrl}/rest/v1/organization_profiles?select=*&search_text=ilike.*${encodeURIComponent(searchQuery)}*`;
 
       const response = await fetch(apiUrl, {
         method: 'GET',

@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from './ui/button';
-import { Progress } from './ui/progress';
 
 interface FormLayoutProps {
   children: ReactNode;
@@ -32,7 +31,6 @@ const steps = [
 export default function FormLayout({
   children,
   currentStep,
-  totalSteps,
   onNext,
   onPrev,
   onSaveExit,
@@ -78,7 +76,7 @@ export default function FormLayout({
             </span>
           </div>
           <div className="relative w-full h-2 bg-[#e9ebef] rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-[#0B3B2E] transition-all duration-300"
               style={{ width: `${progress}%` }}
             />

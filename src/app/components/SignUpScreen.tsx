@@ -76,6 +76,10 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
         );
 
         await authAPI.signIn(formData.email, formData.password);
+
+        // Clear any stale profile completion flags before starting onboarding
+        sessionStorage.removeItem('voxd_profile_completed');
+
         nextScreen();
       } catch (error: any) {
         console.error('Signup error:', error);

@@ -54,6 +54,9 @@ export function FormProvider({ children }: FormProviderProps) {
               console.error('Failed to update user metadata:', error);
             }
 
+            // Clear any stale profile completion flags before starting onboarding
+            sessionStorage.removeItem('voxd_profile_completed');
+
             toast.success('Account created successfully! Please complete your profile.');
             // Navigate to first profile creation screen
             if (signupUserType === 'organizer') {
@@ -82,6 +85,8 @@ export function FormProvider({ children }: FormProviderProps) {
 
               if (profile) {
                 formMethods.setFormData(prev => ({ ...prev, ...profile }));
+                // Mark profile as completed so returning users can access dashboard
+                sessionStorage.setItem('voxd_profile_completed', 'true');
               }
             } catch (err) {
               // Profile doesn't exist or failed to load - ProtectedRoute will handle navigation
