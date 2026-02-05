@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 
 interface SpeakerPreferencesScreenProps {
