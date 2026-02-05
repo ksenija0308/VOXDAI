@@ -1,5 +1,5 @@
 import { Button } from './ui/button';
-import { Users, Mic, Sparkles, Search, MessageCircle, Calendar, CircleCheck, Globe, TrendingUp, Shield, Zap, Star, ArrowRight, Play, X, Mail } from 'lucide-react';
+import { Users, Mic, Sparkles, Search, MessageCircle, Calendar, CircleCheck, Globe, TrendingUp, Shield, Zap, Star, ArrowRight, X, Mail } from 'lucide-react';
 import { FormData } from "@/types/formData.ts";
 import { useState, useEffect } from 'react';
 import voxdLogo from '../../assets/9f82f23acc7a74a7bee4d1a8435c26568326a05d.png';

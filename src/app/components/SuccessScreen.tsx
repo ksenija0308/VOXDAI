@@ -2,7 +2,6 @@ import { CircleCheck, Search, FileText, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import EventBriefForm from './EventBriefForm';
 import { FormData } from "@/types/formData.ts";
-import { useNavigate } from "react-router-dom";
 
 interface SuccessScreenProps {
   nextScreen: () => void;
@@ -12,7 +11,6 @@ interface SuccessScreenProps {
 export default function SuccessScreen({ nextScreen, formData }: SuccessScreenProps) {
   const [showEventBrief, setShowEventBrief] = useState(false);
   const isSpeaker = formData?.userType === 'speaker';
-  const navigate = useNavigate();
 
   // Create profile photo URL with proper cleanup
   const profilePhotoUrl = useMemo(() => {
