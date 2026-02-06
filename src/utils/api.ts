@@ -432,6 +432,21 @@ export const speakerAPI = {
       throw new Error(error.message);
     }
 
+    // Trigger embedding update after successful save
+    try {
+      const accessToken = await authAPI.getAccessToken();
+
+      await fetch(`https://api.voxdai.com/functions/v1/update-embedding?user_id=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+    } catch (embeddingError) {
+      // Log but don't throw - embedding update is non-critical
+      console.warn('Failed to update embedding:', embeddingError);
+    }
+
     return data;
   },
 
