@@ -176,14 +176,8 @@ export default function SpeakerBasicsScreen({
               </label>
               <input
                 type="text"
-                value={`${formData.firstName} ${formData.lastName}`.trim()}
-                onChange={(e) => {
-                  const parts = e.target.value.split(' ');
-                  updateFormData({
-                    firstName: parts[0] || '',
-                    lastName: parts.slice(1).join(' ') || ''
-                  });
-                }}
+                value={formData.full_name}
+                onChange={(e) => updateFormData({ full_name: e.target.value })}
                 placeholder="Sarah Johnson"
                 className="w-full px-4 py-3.5 border border-[#d1d5dc] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-[rgba(0,0,0,0.5)] focus:border-[#0b3b2e] focus:ring-2 focus:ring-[#0b3b2e]/10 transition-all outline-none"
               />

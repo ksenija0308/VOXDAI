@@ -31,8 +31,8 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
 
   // Get user's name
   const getUserName = () => {
-    if (isSpeaker && formData?.firstName && formData?.lastName) {
-      return `${formData.firstName} ${formData.lastName}`;
+    if (isSpeaker && formData?.full_name) {
+      return formData?.full_name;
     }
     if (!isSpeaker && formData?.organisationName) {
       return formData.organisationName;

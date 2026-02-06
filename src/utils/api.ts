@@ -360,6 +360,8 @@ export const speakerAPI = {
     if (profileData.firstName && profileData.lastName) {
       speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
     }
+    // Direct full_name mapping (takes precedence if provided)
+    if (profileData.full_name) speakerData.full_name = profileData.full_name;
     if (profileData.professionalTitle) {
       speakerData.professional_title = profileData.professionalTitle;
       speakerData.professional_headline = profileData.professionalTitle;

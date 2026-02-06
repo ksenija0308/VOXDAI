@@ -51,6 +51,7 @@ export interface FormData {
   // Speaker Profile Fields
   // Speaker Basics
   firstName: string;
+  full_name: string;
   lastName: string;
   professionalTitle: string;
   speakerLocation: string;
@@ -144,6 +145,7 @@ export const initialFormData: FormData = {
   leadTime: '',
   visibility: 'public',
   firstName: '',
+  full_name: '',
   lastName: '',
   professionalTitle: '',
   speakerLocation: '',

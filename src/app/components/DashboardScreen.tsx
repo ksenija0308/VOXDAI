@@ -69,6 +69,8 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       }
     };
 
+    console.log('profileData', profileData)
+
     loadProfile();
     // Only run on mount - formData.userType determines which API to call
     // We intentionally don't include formData to avoid re-fetching on every prop change
@@ -326,7 +328,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
             {/* Welcome */}
             <div className="mb-8">
               <h1 className="mb-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold' }}>
-                Welcome back, {profileData.organisationName || `${profileData.firstName} ${profileData.lastName}` || 'User'}
+                Welcome back, {profileData.organisationName || `${profileData.full_name}` || 'User'}
               </h1>
               <p className="text-[#717182]" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Manage your events and connect with speakers
