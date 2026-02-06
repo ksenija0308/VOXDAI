@@ -201,7 +201,7 @@ export default function SpeakerBasicsScreen({
             </div>
 
             {/* Biography */}
-            <div className="mb-8">
+            <div className="mb-6">
               <label className="block mb-3 font-['Inter',sans-serif] font-medium text-[14px]">
                 Biography <span className="text-[#e7000b]">*</span>
               </label>
@@ -227,6 +227,34 @@ export default function SpeakerBasicsScreen({
                   </svg>
                   Auto-fill Biography
                 </button>
+              </div>
+            </div>
+
+            {/* Location Fields */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div>
+                <label className="block mb-3 font-['Inter',sans-serif] font-medium text-[14px]">
+                  Country <span className="text-[#e7000b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.speakerLocation || ''}
+                  onChange={(e) => updateFormData({ speakerLocation: e.target.value })}
+                  placeholder="United States"
+                  className="w-full px-4 py-3.5 border border-[#d1d5dc] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-[rgba(0,0,0,0.5)] focus:border-[#0b3b2e] focus:ring-2 focus:ring-[#0b3b2e]/10 transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="block mb-3 font-['Inter',sans-serif] font-medium text-[14px]">
+                  City <span className="text-[#e7000b]">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.speakerCity || ''}
+                  onChange={(e) => updateFormData({ speakerCity: e.target.value })}
+                  placeholder="San Francisco"
+                  className="w-full px-4 py-3.5 border border-[#d1d5dc] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-[rgba(0,0,0,0.5)] focus:border-[#0b3b2e] focus:ring-2 focus:ring-[#0b3b2e]/10 transition-all outline-none"
+                />
               </div>
             </div>
 
