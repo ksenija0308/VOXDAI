@@ -260,14 +260,20 @@ export const organizerAPI = {
     // Screen 5 - Speaker Preferences
     if (profileData.speakerFormats) {
       organizationData.speaker_formats = profileData.speakerFormats;
-      organizationData.speaking_formats = profileData.speakerFormats;
     }
     if (profileData.diversityGoals !== undefined) organizationData.diversity_goals = profileData.diversityGoals;
     if (profileData.diversityTargets) organizationData.diversity_targets = profileData.diversityTargets;
     if (profileData.languages) organizationData.languages = profileData.languages;
-    if (profileData.budgetRange) organizationData.budget_range = profileData.budgetRange;
-    if (profileData.budgetMin !== undefined) organizationData.budget_min = profileData.budgetMin;
-    if (profileData.budgetMax !== undefined) organizationData.budget_max = profileData.budgetMax;
+    if (profileData.budgetRange) {
+      organizationData.budget_range = profileData.budgetRange;
+      if (profileData.budgetRange === 'unpaid') {
+        organizationData.budget_min = 0;
+        organizationData.budget_max = 0;
+      } else {
+        if (profileData.budgetMin !== undefined) organizationData.budget_min = profileData.budgetMin;
+        if (profileData.budgetMax !== undefined) organizationData.budget_max = profileData.budgetMax;
+      }
+    }
     if (profileData.leadTime) organizationData.lead_time = profileData.leadTime;
 
     // Screen 6 - Review & Publish
@@ -278,15 +284,10 @@ export const organizerAPI = {
       organizationData.full_name = `${profileData.firstName} ${profileData.lastName}`;
     }
     if (profileData.professionalTitle) organizationData.professional_headline = profileData.professionalTitle;
-    if (profileData.topics) organizationData.topics = profileData.topics;
-    if (profileData.speakingFormats) organizationData.speaking_formats = profileData.speakingFormats;
     if (profileData.yearsOfExperience) organizationData.years_of_experience = profileData.yearsOfExperience;
-    if (profileData.pastEngagements !== undefined) organizationData.past_engagements = profileData.pastEngagements;
     if (profileData.notableClients) organizationData.notable_clients = profileData.notableClients;
     if (profileData.videoIntroUrl) organizationData.video_intro = profileData.videoIntroUrl;
     if (profileData.geographicReach) organizationData.geographic_reach = profileData.geographicReach;
-    if (profileData.preferredEventTypes) organizationData.preferred_event_types = profileData.preferredEventTypes;
-    if (profileData.availabilityPeriods) organizationData.availability_periods = profileData.availabilityPeriods;
     if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
       organizationData.profile_photo = profileData.profilePhoto;
     }
