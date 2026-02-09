@@ -382,7 +382,7 @@ export const speakerAPI = {
       speakerData.professional_title = profileData.professionalTitle;
       speakerData.professional_headline = profileData.professionalTitle;
     }
-    if (profileData.speakerLocation) speakerData.speaker_location = profileData.speakerLocation;
+    if (profileData.speakerLocation) speakerData.speaker_country = profileData.speakerLocation;
     if (profileData.speakerCity) speakerData.speaker_city = profileData.speakerCity;
     if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
       speakerData.profile_photo = profileData.profilePhoto;
