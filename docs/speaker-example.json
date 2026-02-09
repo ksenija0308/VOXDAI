@@ -1,0 +1,59 @@
+{
+  "id": "3aa1e5e5-d4a2-4959-959a-a27f9a178c4c",
+  "first_name": "Sarah",
+  "last_name": "Johnson",
+  "full_name": "Sarah Johnson",
+  "professional_title": "Technology Innovation Speaker | AI & Digital Transformation Expert",
+  "speaker_location": "United States",
+  "speaker_city": "San Francisco",
+  "profile_photo": null,
+  "speaker_tagline": null,
+  "professional_headline": "Technology Innovation Speaker | AI & Digital Transformation Expert",
+  "topics": [
+    "Digital Transformation",
+    "Innovation",
+    "custom topic"
+  ],
+  "custom_topics": [
+    "custom topic"
+  ],
+  "speaking_formats": [
+    "Workshop",
+    "Panel Discussion"
+  ],
+  "years_of_experience": "3-5 years",
+  "past_engagements": 22,
+  "notable_clients": "TEDx",
+  "bio": "Sarah Johnson is a globally recognized speaker and thought leader in technology innovation, artificial intelligence, and digital transformation. With over 15 years of experience leading digital initiatives at Fortune 500 companies, she brings real-world insights and actionable strategies to every presentation.\n\nAs former Chief Innovation Officer at TechCorp Global, Sarah spearheaded the company's AI transformation journey, resulting in a 40% increase in operational efficiency. Her engaging speaking style combines data-driven insights with compelling storytelling, making complex technical concepts accessible to diverse audiences.\n\nSarah has delivered keynotes at major industry conferences including Web Summit, CES, and SXSW, reaching audiences of over 50,000 attendees worldwide. Her TED talk on \"The Human Side of AI\" has been viewed over 2 million times.\n\nShe holds an MBA from Stanford Graduate School of Business and a Master's degree in Computer Science from MIT.",
+  "speaker_website": null,
+  "speaker_linked_in": null,
+  "speaker_twitter": null,
+  "speaker_instagram": null,
+  "speaker_youtube": null,
+  "demo_video_url": null,
+  "geographic_reach": "Regional (within my country)",
+  "willing_to_travel": true,
+  "preferred_event_types": [
+    "Corporate Event"
+  ],
+  "preferred_audience_sizes": [],
+  "speaking_fee_range": null,
+  "fee_min": 0,
+  "fee_max": 10000,
+  "technical_requirements": null,
+  "special_accommodations": null,
+  "video_intro_url": null,
+  "video_intro": null,
+  "availability_periods": [
+    {
+      "id": "1770204893770",
+      "endDate": "2026-02-28",
+      "ongoing": false,
+      "startDate": "2026-02-07"
+    }
+  ],
+  "created_at": "2026-02-04T11:34:55.287217+00:00",
+  "updated_at": "2026-02-04T11:34:55.133+00:00"
+}
+
+

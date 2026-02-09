@@ -89,13 +89,29 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     feeRange: string;
     location: string;
     llmExplanation: string;
+    bio: string;
     profilePhoto: string | null;
   }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
-  const [viewingSpeaker, setViewingSpeaker] = useState<{ name: string; topic: string; match?: number } | null>(null);
+  const [viewingSpeaker, setViewingSpeaker] = useState<{
+    name: string;
+    topic: string;
+    match?: number;
+    expertise?: string;
+    availability?: string;
+    hasVideo?: boolean;
+    speakingFormat?: string[];
+    experienceLevel?: string;
+    language?: string[];
+    feeRange?: string;
+    location?: string;
+    llmExplanation?: string;
+    bio?: string;
+    profilePhoto?: string | null;
+  } | null>(null);
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ name: string; topic: string } | null>(null);
@@ -235,6 +251,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           feeRange: speaker.speaking_fee_range || (speaker.fee_min != null && speaker.fee_max != null ? `$${speaker.fee_min} - $${speaker.fee_max}` : 'Contact for pricing'),
           location: speaker.speaker_city && speaker.speaker_location ? `${speaker.speaker_city}, ${speaker.speaker_location}` : speaker.speaker_location || '',
           llmExplanation: result.llmScoreExplanation || '',
+          bio: speaker.bio || '',
           profilePhoto: speaker.profile_photo || null,
         };
       });
@@ -649,7 +666,21 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         <Button
                           className="bg-black text-white hover:bg-[#0B3B2E] flex-1"
                           style={{ fontSize: '14px' }}
-                          onClick={() => setViewingSpeaker({ name: result.name, topic: result.topic, match: result.match })}
+                          onClick={() => setViewingSpeaker({
+                            name: result.name,
+                            topic: result.topic,
+                            match: result.match,
+                            expertise: result.expertise,
+                            availability: result.availability,
+                            hasVideo: result.hasVideo,
+                            speakingFormat: result.speakingFormat,
+                            experienceLevel: result.experienceLevel,
+                            language: result.language,
+                            feeRange: result.feeRange,
+                            location: result.location,
+                            bio: result.bio,
+                            profilePhoto: result.profilePhoto,
+                          })}
                         >
                           View full profile
                         </Button>
