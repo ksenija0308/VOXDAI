@@ -539,7 +539,6 @@ export const searchAPI = {
       body: JSON.stringify({
         user_id: user.id,
         user_prompt: userPrompt,
-        user_role: user.user_metadata?.userType || '',
       }),
     });
 
