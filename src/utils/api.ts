@@ -418,12 +418,9 @@ export const speakerAPI = {
     if (profileData.geographicReach) speakerData.geographic_reach = profileData.geographicReach;
     if (profileData.willingToTravel !== undefined) speakerData.willing_to_travel = profileData.willingToTravel;
     if (profileData.preferredEventTypes) speakerData.preferred_event_types = profileData.preferredEventTypes;
-    if (profileData.preferredAudienceSizes) speakerData.preferred_audience_sizes = profileData.preferredAudienceSizes;
 
     // Requirements & Pricing (Screen: Speaker Requirements & Pricing)
     if (profileData.speakingFeeRange) speakerData.speaking_fee_range = profileData.speakingFeeRange;
-    if (profileData.feeMin !== undefined) speakerData.fee_min = profileData.feeMin;
-    if (profileData.feeMax !== undefined) speakerData.fee_max = profileData.feeMax;
     if (profileData.technicalRequirements) speakerData.technical_requirements = profileData.technicalRequirements;
     if (profileData.specialAccommodations) speakerData.special_accommodations = profileData.specialAccommodations;
 
