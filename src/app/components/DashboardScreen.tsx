@@ -207,12 +207,30 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     }
   ]);
 
-  // Mock data for matches and pipeline
-  const recentMatches = [
-    { name: 'Dr. Sarah Chen', topic: 'AI & Machine Learning', match: 95 },
-    { name: 'Marcus Johnson', topic: 'Leadership & Culture', match: 88 },
-    { name: 'Elena Rodriguez', topic: 'Sustainability', match: 82 },
-  ];
+  const [recentMatches, setRecentMatches] = useState<Array<{
+    id: string;
+    name: string;
+    topic: string;
+    match: number;
+    expertise: string;
+    availability: string;
+    hasVideo: boolean;
+    speakingFormat: string[];
+    experienceLevel: string;
+    language: string[];
+    feeRange: string;
+    location: string;
+    llmExplanation: string;
+    bio: string;
+    profilePhoto: string | null;
+  }>>(() => {
+    try {
+      const saved = localStorage.getItem('voxd_recent_matches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const pipelineStages = [
     { name: 'Contacted', count: 8, color: '#717182' },
@@ -257,6 +275,12 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       });
 
       setSearchResults(transformedResults);
+
+      // Save to recent matches (persisted in localStorage)
+      setRecentMatches(transformedResults);
+      try {
+        localStorage.setItem('voxd_recent_matches', JSON.stringify(transformedResults));
+      } catch { /* ignore storage errors */ }
     } catch (error: any) {
       console.error('Search error:', error);
       toast.error(`Failed to search: ${error.message}`);
@@ -803,13 +827,22 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 <TrendingUp className="w-5 h-5 text-[#0B3B2E]" />
               </div>
 
+              {recentMatches.length === 0 ? (
+                <p className="text-[#717182] text-center py-6" style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+                  No matches yet. Use AI Speaker Matchmaking above to find speakers.
+                </p>
+              ) : (
               <div className="space-y-4">
                 {recentMatches.map((match, index) => (
                   <div key={index} className="p-4 bg-[#f3f3f5] rounded-lg">
-                    <div className="flex items-start gap-3 mb-4">
-                      <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
-                        {match.name.charAt(0)}
-                      </div>
+                    <div className="flex items-start gap-3 mb-3">
+                      {match.profilePhoto ? (
+                        <img src={match.profilePhoto} alt={match.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
+                          {match.name.charAt(0)}
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <p style={{ fontWeight: '500' }}>{match.name}</p>
@@ -817,9 +850,19 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                             {match.match}% match
                           </span>
                         </div>
-                        <p className="text-[#717182]" style={{ fontSize: '14px' }}>
+                        <p className="text-[#0B3B2E] mb-1" style={{ fontSize: '14px', fontWeight: '500' }}>
                           {match.topic}
                         </p>
+                        {match.expertise && (
+                          <p className="text-[#717182]" style={{ fontSize: '13px' }}>
+                            {match.expertise}
+                          </p>
+                        )}
+                        {match.llmExplanation && (
+                          <p className="text-[#717182] italic mt-1" style={{ fontSize: '12px' }}>
+                            {match.llmExplanation}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -860,7 +903,21 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         variant="outline"
                         className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] flex-1 min-w-[140px]"
                         style={{ fontSize: '14px' }}
-                        onClick={() => setViewingSpeaker({ name: match.name, topic: match.topic, match: match.match })}
+                        onClick={() => setViewingSpeaker({
+                          name: match.name,
+                          topic: match.topic,
+                          match: match.match,
+                          expertise: match.expertise,
+                          availability: match.availability,
+                          hasVideo: match.hasVideo,
+                          speakingFormat: match.speakingFormat,
+                          experienceLevel: match.experienceLevel,
+                          language: match.language,
+                          feeRange: match.feeRange,
+                          location: match.location,
+                          bio: match.bio,
+                          profilePhoto: match.profilePhoto,
+                        })}
                       >
                         View Profile
                       </Button>
@@ -868,6 +925,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Outreach Pipeline */}
