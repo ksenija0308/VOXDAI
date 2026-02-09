@@ -303,6 +303,21 @@ export const organizerAPI = {
       throw new Error(error.message);
     }
 
+    // Trigger embedding update after successful save
+    try {
+      const accessToken = await authAPI.getAccessToken();
+
+      await fetch(`https://api.voxdai.com/functions/v1/create-organization-embedding?user_id=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+    } catch (embeddingError) {
+      // Log but don't throw - embedding update is non-critical
+      console.warn('Failed to update organization embedding:', embeddingError);
+    }
+
     return data;
   },
 
@@ -436,7 +451,7 @@ export const speakerAPI = {
     try {
       const accessToken = await authAPI.getAccessToken();
 
-      await fetch(`https://api.voxdai.com/functions/v1/update-embedding?user_id=${user.id}`, {
+      await fetch(`https://api.voxdai.com/functions/v1/create-speaker-embedding?user_id=${user.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -502,5 +517,36 @@ export const searchAPI = {
       console.error('Search error:', error);
       throw error;
     }
+  },
+
+  searchSpeakers: async (userPrompt: string) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
+    const accessToken = await authAPI.getAccessToken();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/search-speakers`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        user_prompt: userPrompt,
+        user_role: user.user_metadata?.userType || '',
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
   }
 };

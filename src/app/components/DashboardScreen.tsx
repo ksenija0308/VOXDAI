@@ -76,6 +76,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     // We intentionally don't include formData to avoid re-fetching on every prop change
   }, [formData.userType]); // eslint-disable-line react-hooks/exhaustive-deps
   const [searchResults, setSearchResults] = useState<Array<{
+    id: string;
     name: string;
     topic: string;
     match: number;
@@ -86,6 +87,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     experienceLevel: string;
     language: string[];
     feeRange: string;
+    location: string;
+    llmExplanation: string;
+    profilePhoto: string | null;
   }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -208,21 +212,32 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     setIsSearching(true);
 
     try {
-      const results = await searchAPI.searchOrganizations(searchQuery);
+      const response = await searchAPI.searchSpeakers(searchQuery);
+
+      // API returns { ok, results: [{ id, score, profile, llmScore, llmScoreExplanation }] }
+      const results = response?.results || [];
 
       // Transform API results to match the expected format
-      const transformedResults = results.map((org: any) => ({
-        name: org.organisation_name || org.full_name || 'Unknown Organization',
-        topic: org.topics?.[0] || org.professional_headline || 'No topic specified',
-        match: 85, // Default match score - you may want to implement a matching algorithm
-        expertise: org.tagline || org.professional_headline || 'No expertise provided',
-        availability: 'Contact for availability',
-        hasVideo: !!org.video_intro,
-        speakingFormat: org.speaking_formats || org.speaker_formats || [],
-        experienceLevel: org.years_of_experience > 10 ? 'Expert' : org.years_of_experience > 5 ? 'Experienced' : 'Emerging',
-        language: org.languages || ['English'],
-        feeRange: org.budget_range || 'Contact for pricing'
-      }));
+      const transformedResults = results.map((result: any) => {
+        const speaker = result.profile || {};
+        const matchScore = Math.round((result.llmScore ?? result.score ?? 0.5) * 100);
+        return {
+          id: result.id || speaker.id,
+          name: speaker.full_name || speaker.first_name || 'Unknown Speaker',
+          topic: speaker.topics?.[0] || speaker.professional_headline || 'No topic specified',
+          match: matchScore,
+          expertise: speaker.professional_headline || speaker.speaker_tagline || speaker.bio || 'No expertise provided',
+          availability: speaker.availability_periods?.length ? 'Available' : 'Contact for availability',
+          hasVideo: !!speaker.video_intro || !!speaker.video_intro_url || !!speaker.demo_video_url,
+          speakingFormat: speaker.speaking_formats || [],
+          experienceLevel: speaker.years_of_experience || 'Not specified',
+          language: speaker.languages || ['English'],
+          feeRange: speaker.speaking_fee_range || (speaker.fee_min != null && speaker.fee_max != null ? `$${speaker.fee_min} - $${speaker.fee_max}` : 'Contact for pricing'),
+          location: speaker.speaker_city && speaker.speaker_location ? `${speaker.speaker_city}, ${speaker.speaker_location}` : speaker.speaker_location || '',
+          llmExplanation: result.llmScoreExplanation || '',
+          profilePhoto: speaker.profile_photo || null,
+        };
+      });
 
       setSearchResults(transformedResults);
     } catch (error: any) {
@@ -522,7 +537,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                           Experience Level
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {['all', 'Emerging', 'Experienced', 'Expert'].map(level => (
+                          {['all', '0-2 years', '3-5 years', '5-10 years', '10+ years'].map(level => (
                             <button
                               key={level}
                               onClick={() => setFilters({ ...filters, experienceLevel: level })}
@@ -576,9 +591,13 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                     <div key={index} className="p-4 bg-[#f3f3f5] rounded-lg border-2 border-transparent hover:border-[#0B3B2E] transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-start gap-3 flex-1">
-                          <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
-                            {result.name.charAt(0)}
-                          </div>
+                          {result.profilePhoto ? (
+                            <img src={result.profilePhoto} alt={result.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
+                              {result.name.charAt(0)}
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
@@ -588,15 +607,41 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                                 {result.match}% match
                               </span>
                             </div>
-                            <p className="text-[#0B3B2E] mb-2" style={{ fontSize: '14px', fontWeight: '500' }}>
+                            <p className="text-[#0B3B2E] mb-1" style={{ fontSize: '14px', fontWeight: '500' }}>
                               {result.topic}
                             </p>
+                            {result.location && (
+                              <p className="text-[#717182] mb-1" style={{ fontSize: '13px' }}>
+                                {result.location}
+                              </p>
+                            )}
                             <p className="text-[#717182] mb-1" style={{ fontSize: '13px' }}>
                               {result.expertise}
                             </p>
-                            <p className="text-[#717182]" style={{ fontSize: '13px' }}>
-                              {result.availability}
-                            </p>
+                            <div className="flex items-center gap-3 mb-1">
+                              <p className="text-[#717182]" style={{ fontSize: '13px' }}>
+                                {result.availability}
+                              </p>
+                              {result.feeRange !== 'Contact for pricing' && (
+                                <p className="text-[#717182]" style={{ fontSize: '13px' }}>
+                                  {result.feeRange}
+                                </p>
+                              )}
+                            </div>
+                            {result.speakingFormat.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-1">
+                                {result.speakingFormat.map((format, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-white border border-[#e9ebef] rounded text-[#717182]" style={{ fontSize: '12px' }}>
+                                    {format}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {result.llmExplanation && (
+                              <p className="text-[#717182] italic mt-1" style={{ fontSize: '12px' }}>
+                                {result.llmExplanation}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
