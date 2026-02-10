@@ -261,7 +261,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         const matchScore = Math.round((result.llmScore ?? result.score ?? 0.5) * 100);
         return {
           id: result.id || speaker.id,
-          name: speaker.full_name || speaker.first_name || 'Unknown Speaker',
+          name: speaker.full_name || 'Unknown Speaker',
           topic: speaker.topics?.[0] || speaker.professional_headline || 'No topic specified',
           match: matchScore,
           expertise: speaker.professional_headline || speaker.speaker_tagline || speaker.bio || 'No expertise provided',

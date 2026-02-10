@@ -400,11 +400,11 @@ export const speakerAPI = {
     };
 
     // Basic Info (Screen: Speaker Basics)
-    if (profileData.firstName) speakerData.first_name = profileData.firstName;
-    if (profileData.lastName) speakerData.last_name = profileData.lastName;
-    if (profileData.firstName && profileData.lastName) {
-      speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
-    }
+    // if (profileData.firstName) speakerData.first_name = profileData.firstName;
+    // if (profileData.lastName) speakerData.last_name = profileData.lastName;
+    // if (profileData.firstName && profileData.lastName) {
+    //   speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
+    // }
     // Direct full_name mapping (takes precedence if provided)
     if (profileData.full_name) speakerData.full_name = profileData.full_name;
     if (profileData.professionalTitle) {
