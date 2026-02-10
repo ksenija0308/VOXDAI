@@ -246,7 +246,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     setIsSearching(true);
 
     try {
-      const response = await searchAPI.searchSpeakers(searchQuery);
+      const response = formData.userType === 'speaker'
+        ? await searchAPI.searchOrganizers(searchQuery)
+        : await searchAPI.searchSpeakers(searchQuery);
 
       // API returns { ok, results: [{ id, score, profile, llmScore, llmScoreExplanation }] }
       const results = response?.results || [];

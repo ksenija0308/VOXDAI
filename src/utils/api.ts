@@ -545,5 +545,35 @@ export const searchAPI = {
 
     const data = await response.json();
     return data;
+  },
+
+  searchOrganizers: async (userPrompt: string) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
+    const accessToken = await authAPI.getAccessToken();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/search-organizer`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        user_prompt: userPrompt,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
   }
 };
