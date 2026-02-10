@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, LogOut, User, Pencil, Save, X, Globe, Phone, MapPin, Briefcase, Calendar, DollarSign, Languages, Video } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Switch } from './ui/switch';
 import { FormData } from '@/types/formData';
 import { organizerAPI, speakerAPI, authAPI } from '@/utils/api';
 import { toast } from 'sonner';
@@ -307,6 +308,33 @@ export default function ProfileScreen({ formData, updateFormData, saveProfile, o
                     {renderField('Instagram', 'instagram')}
                     {renderField('YouTube', 'youtube')}
                     {renderField('Twitter / X', 'twitter')}
+                  </div>
+                  <div className="border-t border-[#e9ebef] pt-4 mt-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <label htmlFor="showInSpeakerSearch" className="block cursor-pointer" style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                          Allow speakers to find me
+                        </label>
+                        <p className="text-[#717182] mt-1" style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}>
+                          Make your profile visible in speaker search results
+                        </p>
+                      </div>
+                      <Switch
+                        id="showInSpeakerSearch"
+                        checked={profileData.showInSpeakerSearch}
+                        onCheckedChange={async (checked) => {
+                          setProfileData(prev => ({ ...prev, showInSpeakerSearch: checked }));
+                          updateFormData({ showInSpeakerSearch: checked });
+                          try {
+                            await organizerAPI.toggleSpeakerVisibility(checked);
+                          } catch (error: any) {
+                            toast.error('Failed to update visibility');
+                            setProfileData(prev => ({ ...prev, showInSpeakerSearch: !checked }));
+                            updateFormData({ showInSpeakerSearch: !checked });
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
