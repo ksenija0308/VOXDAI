@@ -91,6 +91,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         location: filled('speakerLocation', 'speaker_country'),
         city: filled('speakerCity', 'speaker_city'),
         tagline: filled('speakerTagline', 'speaker_tagline'),
+        languages: filled('speakerLanguages', 'speaker_languages'),
       };
       const topicsChecks = {
         topics: filled('topics', 'customTopics', 'custom_topics'),
@@ -169,6 +170,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     llmExplanation: string;
     bio: string;
     profilePhoto: string | null;
+    profilePhotoPath: string | null;
   }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -301,6 +303,7 @@ console.log('search results', searchResults)
     llmExplanation: string;
     bio: string;
     profilePhoto: string | null;
+    profilePhotoPath: string | null;
   }>>(() => {
     try {
       const saved = localStorage.getItem('voxd_recent_matches');
@@ -309,6 +312,28 @@ console.log('search results', searchResults)
       return [];
     }
   });
+
+  // Refresh signed URLs for cached recent matches on mount
+  useEffect(() => {
+    const refreshUrls = async () => {
+      const saved = recentMatches;
+      if (saved.length === 0 || !saved.some(m => m.profilePhotoPath)) return;
+
+      const refreshed = await Promise.all(saved.map(async (match) => {
+        if (!match.profilePhotoPath) return match;
+        try {
+          const freshUrl = await getSignedUrl(match.profilePhotoPath);
+          return { ...match, profilePhoto: freshUrl };
+        } catch {
+          return { ...match, profilePhoto: null };
+        }
+      }));
+
+      setRecentMatches(refreshed);
+    };
+
+    refreshUrls();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pipelineStages = [
     { name: 'Contacted', count: 8, color: '#717182' },
@@ -361,6 +386,7 @@ console.log('search results', searchResults)
           llmExplanation: result.llmScoreExplanation || '',
           bio: speaker.bio || '',
           profilePhoto: profilePhotoUrl,
+          profilePhotoPath: speaker.profile_photo || null,
         };
       }));
 

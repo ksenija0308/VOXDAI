@@ -31,6 +31,11 @@ const speakingFormatOptions = [
 
 const experienceOptions = ['0-2 years', '3-5 years', '6-10 years', '10+ years'];
 
+const languageOptions = [
+  'English', 'Spanish', 'French', 'German', 'Mandarin',
+  'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+];
+
 const geographicOptions = [
   'Local (within my city)', 'Regional (within my country)',
   'Continental (within my continent)', 'Global (anywhere in the world)',
@@ -57,6 +62,7 @@ const mapProfileToFormData = (profile: any): Partial<FormData> => ({
   pastEngagements: profile.past_engagements ?? 0,
   notableClients: profile.notable_clients ?? '',
   videoIntroUrl: profile.video_intro_url ?? '',
+  speakerLanguages: profile.speaker_languages ?? [],
   geographicReach: profile.geographic_reach ?? '',
   willingToTravel: profile.willing_to_travel ?? false,
   preferredEventTypes: profile.preferred_event_types ?? [],
@@ -553,6 +559,11 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                     </div>
                   </div>
 
+                  <div>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Languages</label>
+                    {renderToggleButtons('speakerLanguages', languageOptions)}
+                  </div>
+
                 </div>
               ) : (
                 <>
@@ -571,6 +582,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                     {renderField('Country', 'speakerLocation')}
                     {renderField('City', 'speakerCity')}
                   </div>
+                  {renderArrayField('Languages', 'speakerLanguages')}
                   <div className="mb-4">
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Biography</label>
                     <p className="text-sm whitespace-pre-wrap" style={{ fontFamily: 'Inter, sans-serif' }}>

@@ -3,6 +3,11 @@ import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import svgPaths from '../../imports/svg-5axqc4zoph';
 
+const languageOptions = [
+  'English', 'Spanish', 'French', 'German', 'Mandarin',
+  'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+];
+
 interface SpeakerBasicsScreenProps {
   formData: FormData;
   updateFormData: (data: Partial<FormData>) => void;
@@ -24,6 +29,24 @@ export default function SpeakerBasicsScreen({
 }: SpeakerBasicsScreenProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [languageError, setLanguageError] = useState('');
+
+  const toggleLanguage = (language: string) => {
+    const current = formData.speakerLanguages || [];
+    const updated = current.includes(language)
+      ? current.filter((l) => l !== language)
+      : [...current, language];
+    updateFormData({ speakerLanguages: updated });
+    if (updated.length > 0) setLanguageError('');
+  };
+
+  const handleContinue = () => {
+    if (!formData.speakerLanguages || formData.speakerLanguages.length === 0) {
+      setLanguageError('Please select at least one language');
+      return;
+    }
+    nextScreen();
+  };
 
   const handleLinkedInImport = async () => {
     setIsImporting(true);
@@ -258,6 +281,36 @@ export default function SpeakerBasicsScreen({
               </div>
             </div>
 
+            {/* Languages */}
+            <div className="mb-8">
+              <label className="block mb-3 font-['Inter',sans-serif] font-medium text-[14px]">
+                Languages <span className="text-[#e7000b]">*</span>
+              </label>
+              <p className="text-[#6a7282] text-[16px] mb-3">
+                Which languages can you present in?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {languageOptions.map((language) => (
+                  <button
+                    key={language}
+                    type="button"
+                    onClick={() => toggleLanguage(language)}
+                    className={`px-4 py-2 rounded-full border transition-colors ${
+                      (formData.speakerLanguages || []).includes(language)
+                        ? 'bg-[#0b3b2e] text-white border-[#0b3b2e]'
+                        : 'bg-white text-black border-[#d1d5dc] hover:border-[#0b3b2e]'
+                    }`}
+                    style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {language}
+                  </button>
+                ))}
+              </div>
+              {languageError && (
+                <p className="text-[#e7000b] mt-2" style={{ fontSize: '14px' }}>{languageError}</p>
+              )}
+            </div>
+
             {/* Pro Tip Box */}
             <div className="bg-gradient-to-br from-[rgba(11,59,46,0.04)] to-[rgba(11,59,46,0.08)] border border-[rgba(11,59,46,0.15)] rounded-[16px] p-5">
               <p className="text-[#0b3b2e] text-[16px]">
@@ -276,7 +329,7 @@ export default function SpeakerBasicsScreen({
               Back
             </button>
             <button
-              onClick={nextScreen}
+              onClick={handleContinue}
               className="bg-[#0b3b2e] rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-white hover:bg-[#0b3b2e]/90 shadow-lg hover:shadow-xl transition-all"
             >
               Continue

@@ -80,6 +80,7 @@ export interface FormData {
   demoVideoUrl: string;
 
   // Speaker Availability & Preferences
+  speakerLanguages: string[];
   geographicReach: string;
   willingToTravel: boolean;
   preferredEventTypes: string[];
@@ -167,6 +168,7 @@ export const initialFormData: FormData = {
   speakerInstagram: '',
   speakerYoutube: '',
   demoVideoUrl: '',
+  speakerLanguages: [],
   geographicReach: '',
   willingToTravel: false,
   preferredEventTypes: [],

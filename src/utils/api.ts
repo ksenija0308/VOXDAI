@@ -447,6 +447,9 @@ export const speakerAPI = {
     if (profileData.speakerYoutube) speakerData.speaker_youtube = profileData.speakerYoutube;
     if (profileData.demoVideoUrl) speakerData.demo_video_url = profileData.demoVideoUrl;
 
+    // Languages
+    if (profileData.speakerLanguages) speakerData.speaker_languages = profileData.speakerLanguages;
+
     // Availability & Preferences (Screen: Speaker Availability & Preferences)
     if (profileData.geographicReach) speakerData.geographic_reach = profileData.geographicReach;
     if (profileData.willingToTravel !== undefined) speakerData.willing_to_travel = profileData.willingToTravel;
