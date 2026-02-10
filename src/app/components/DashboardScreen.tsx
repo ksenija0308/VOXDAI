@@ -8,6 +8,7 @@ import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
 import { organizerAPI, speakerAPI, authAPI, searchAPI } from '@/utils/api';
 import { useLogoContext } from '@/context/LogoContext';
+import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
 
 interface DashboardScreenProps {
@@ -119,7 +120,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ name: string; topic: string } | null>(null);
-
+console.log('search results', searchResults)
   // Filter states
   const [filters, setFilters] = useState({
     hasVideo: false,
@@ -258,9 +259,19 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       const results = response?.results || [];
 
       // Transform API results to match the expected format
-      const transformedResults = results.map((result: any) => {
+      const transformedResults = await Promise.all(results.map(async (result: any) => {
         const speaker = result.profile || {};
         const matchScore = Math.round((result.llmScore ?? result.score ?? 0.5) * 100);
+
+        let profilePhotoUrl: string | null = null;
+        if (speaker.profile_photo && typeof speaker.profile_photo === 'string') {
+          try {
+            profilePhotoUrl = await getSignedUrl(speaker.profile_photo);
+          } catch {
+            profilePhotoUrl = null;
+          }
+        }
+
         return {
           id: result.id || speaker.id,
           name: speaker.full_name || 'Unknown Speaker',
@@ -276,9 +287,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           location: speaker.speaker_city && speaker.speaker_location ? `${speaker.speaker_city}, ${speaker.speaker_location}` : speaker.speaker_location || '',
           llmExplanation: result.llmScoreExplanation || '',
           bio: speaker.bio || '',
-          profilePhoto: speaker.profile_photo || null,
+          profilePhoto: profilePhotoUrl,
         };
-      });
+      }));
 
       setSearchResults(transformedResults);
 
