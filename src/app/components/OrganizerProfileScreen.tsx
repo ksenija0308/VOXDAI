@@ -67,13 +67,49 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showUserMenu]);
 
+  // Map snake_case API response to camelCase FormData keys
+  const mapProfileToFormData = (profile: any): Partial<FormData> => ({
+    organisationName: profile.organisation_name ?? '',
+    website: profile.website ?? '',
+    country: profile.country ?? '',
+    city: profile.city ?? '',
+    industries: profile.industries ?? [],
+    logo: profile.logo ?? null,
+    tagline: profile.tagline ?? '',
+    contactName: profile.contact_name ?? '',
+    contactEmail: profile.contact_email ?? '',
+    contactPhone: profile.contact_phone ?? '',
+    calendarLink: profile.calendar_link ?? '',
+    calendarType: profile.calendar_type ?? '',
+    linkedIn: profile.linked_in ?? '',
+    instagram: profile.instagram ?? '',
+    youtube: profile.youtube ?? '',
+    twitter: profile.twitter ?? '',
+    authorised: profile.authorised ?? false,
+    eventTypes: profile.event_types ?? [],
+    frequency: profile.frequency ?? [],
+    eventSizes: profile.event_sizes ?? [],
+    formats: profile.formats ?? [],
+    locations: profile.locations ?? [],
+    speakerFormats: profile.speaker_formats ?? [],
+    diversityGoals: profile.diversity_goals ?? false,
+    diversityTargets: profile.diversity_targets ?? '',
+    languages: profile.languages ?? [],
+    budgetRange: profile.budget_range ?? '',
+    budgetMin: profile.budget_min ?? 0,
+    budgetMax: profile.budget_max ?? 10000,
+    leadTime: profile.lead_time ?? '',
+    showInSpeakerSearch: profile.show_in_speaker_search ?? true,
+  });
+
   useEffect(() => {
     const loadProfile = async () => {
       setIsLoading(true);
       try {
         const profile = await organizerAPI.getProfile();
         if (profile) {
-          setProfileData({ ...formData, ...profile });
+          const mapped = mapProfileToFormData(profile);
+          setProfileData({ ...formData, ...mapped });
         }
       } catch (error) {
         setProfileData(formData);
