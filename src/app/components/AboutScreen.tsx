@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Linkedin, Instagram, Youtube, Twitter } from 'lucide-react';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
+import { Switch } from './ui/switch';
 import { FormData } from '../App';
 import FormLayout from './FormLayout';
+import { organizerAPI } from '../../utils/api';
+import { toast } from 'sonner';
 
 interface AboutScreenProps {
   formData: FormData;
@@ -201,6 +204,32 @@ export default function AboutScreen({
               className="pl-11 bg-[#f3f3f5] border-none"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="border-t border-[#e9ebef] pt-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <label htmlFor="showInSpeakerSearch" className="block cursor-pointer">
+              Allow speakers to find me
+            </label>
+            <p className="text-[#717182] mt-1" style={{ fontSize: '14px' }}>
+              Make your profile visible in speaker search results
+            </p>
+          </div>
+          <Switch
+            id="showInSpeakerSearch"
+            checked={formData.showInSpeakerSearch}
+            onCheckedChange={async (checked) => {
+              updateFormData({ showInSpeakerSearch: checked });
+              try {
+                await organizerAPI.toggleSpeakerVisibility(checked);
+              } catch (error: any) {
+                toast.error('Failed to update visibility');
+                updateFormData({ showInSpeakerSearch: !checked });
+              }
+            }}
+          />
         </div>
       </div>
 

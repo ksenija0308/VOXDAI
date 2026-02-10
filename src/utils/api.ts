@@ -343,6 +343,35 @@ export const organizerAPI = {
     }
 
     return data;
+  },
+
+  toggleSpeakerVisibility: async (showInSpeakerSearch: boolean) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
+    const accessToken = await authAPI.getAccessToken();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/toggle-org-speaker-visibility`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        show_in_speaker_search: showInSpeakerSearch,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Toggle visibility failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
   }
 };
 

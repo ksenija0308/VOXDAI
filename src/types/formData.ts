@@ -27,6 +27,7 @@ export interface FormData {
   youtube: string;
   twitter: string;
   authorised: boolean;
+  showInSpeakerSearch: boolean;
 
   // Screen 4 - Event Types & Frequency
   eventTypes: string[];
@@ -130,6 +131,7 @@ export const initialFormData: FormData = {
   youtube: '',
   twitter: '',
   authorised: false,
+  showInSpeakerSearch: true,
   eventTypes: [],
   frequency: [],
   eventSizes: [],
