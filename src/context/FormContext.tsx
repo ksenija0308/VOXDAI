@@ -89,10 +89,8 @@ export function FormProvider({ children }: FormProviderProps) {
                 formMethods.setFormData(prev => ({ ...prev, ...profile }));
                 // Mark profile as completed so returning users can access dashboard
                 sessionStorage.setItem('voxd_profile_completed', 'true');
-                // Resolve logo URL for organizers
-                if (userType === 'organizer') {
-                  refreshLogo();
-                }
+                // Resolve logo/photo URL for header avatar
+                refreshLogo(userType);
               }
             } catch (err) {
               // Profile doesn't exist or failed to load - ProtectedRoute will handle navigation

@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from '@/types/formData';
 import { speakerAPI, authAPI, fileAPI } from '@/utils/api';
+import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
 
@@ -67,6 +68,7 @@ const mapProfileToFormData = (profile: any): Partial<FormData> => ({
 
 export default function SpeakerProfileScreen({ formData, updateFormData, saveProfile, onLogout }: SpeakerProfileScreenProps) {
   const navigate = useNavigate();
+  const { logoUrl, refreshLogo } = useLogoContext();
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -157,6 +159,10 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
       const saved = await saveProfile(updatedData, false);
       if (saved) {
         toast.success('Profile updated successfully');
+        // Refresh the global logo/photo context if photo was changed
+        if ('profilePhoto' in editData) {
+          refreshLogo('speaker');
+        }
         setEditingSection(null);
         setEditData({});
         setPhotoPreview(null);
@@ -391,7 +397,9 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                 className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors overflow-hidden"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                {photoUrl ? (
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : photoUrl ? (
                   <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   profileData.full_name?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'

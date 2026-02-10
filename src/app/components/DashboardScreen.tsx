@@ -346,10 +346,10 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors overflow-hidden"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                {logoUrl && profileData.userType === 'organizer' ? (
+                {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
-                  profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'
+                  profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.full_name?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'
                 )}
               </button>
               {showUserMenu && (

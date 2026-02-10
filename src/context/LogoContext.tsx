@@ -1,10 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { organizerAPI } from '../utils/api';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { organizerAPI, speakerAPI } from '../utils/api';
 import { getSignedUrl } from '../lib/storage';
 
 interface LogoContextType {
   logoUrl: string | null;
-  refreshLogo: () => Promise<void>;
+  refreshLogo: (userType?: string) => Promise<void>;
 }
 
 const LogoContext = createContext<LogoContextType>({ logoUrl: null, refreshLogo: async () => {} });
@@ -16,14 +16,24 @@ export function useLogoContext() {
 export function LogoProvider({ children }: { children: ReactNode }) {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
-  const refreshLogo = async () => {
+  const refreshLogo = async (userType?: string) => {
     try {
-      const profile = await organizerAPI.getProfile();
-      if (profile?.logo && typeof profile.logo === 'string') {
-        const url = await getSignedUrl(profile.logo);
-        setLogoUrl(url);
+      if (userType === 'speaker') {
+        const profile = await speakerAPI.getProfile();
+        if (profile?.profile_photo && typeof profile.profile_photo === 'string') {
+          const url = await getSignedUrl(profile.profile_photo);
+          setLogoUrl(url);
+        } else {
+          setLogoUrl(null);
+        }
       } else {
-        setLogoUrl(null);
+        const profile = await organizerAPI.getProfile();
+        if (profile?.logo && typeof profile.logo === 'string') {
+          const url = await getSignedUrl(profile.logo);
+          setLogoUrl(url);
+        } else {
+          setLogoUrl(null);
+        }
       }
     } catch {
       // non-critical
