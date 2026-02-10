@@ -2,7 +2,7 @@ import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, 
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { FormData } from "@/types/formData.ts";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
@@ -39,7 +39,80 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const profileCompletion = 85; // Mock completion percentage
+  const { profileCompletion, profileSections } = useMemo(() => {
+    const p = profileData as any;
+
+    const filled = (...keys: string[]): boolean => {
+      for (const key of keys) {
+        const val = p[key];
+        if (val === null || val === undefined) continue;
+        if (typeof val === 'string' && val.trim().length > 0) return true;
+        if (Array.isArray(val) && val.length > 0) return true;
+        if (val instanceof File) return true;
+      }
+      return false;
+    };
+
+    if (profileData.userType === 'organizer') {
+      const basicChecks = {
+        name: filled('organisationName', 'organisation_name', 'full_name'),
+        website: filled('website'),
+        country: filled('country'),
+        city: filled('city'),
+        industries: filled('industries'),
+        tagline: filled('tagline'),
+      };
+      const eventChecks = {
+        eventTypes: filled('eventTypes', 'event_types'),
+        frequency: filled('frequency'),
+        eventSizes: filled('eventSizes', 'event_sizes'),
+        formats: filled('formats'),
+        speakerFormats: filled('speakerFormats', 'speaker_formats'),
+        languages: filled('languages'),
+        leadTime: filled('leadTime', 'lead_time'),
+      };
+      const hasLogo = filled('logo', 'profile_photo');
+
+      const allFields = [...Object.values(basicChecks), ...Object.values(eventChecks), hasLogo];
+      const completion = Math.round((allFields.filter(Boolean).length / allFields.length) * 100);
+
+      return {
+        profileCompletion: completion,
+        profileSections: [
+          { name: 'Basic information', complete: Object.values(basicChecks).every(Boolean) },
+          { name: 'Event preferences', complete: Object.values(eventChecks).every(Boolean) },
+          { name: 'Add logo', complete: hasLogo, recommended: true },
+        ],
+      };
+    } else {
+      const basicChecks = {
+        name: filled('full_name', 'firstName'),
+        title: filled('professionalTitle', 'professional_title', 'professional_headline'),
+        location: filled('speakerLocation', 'speaker_country'),
+        city: filled('speakerCity', 'speaker_city'),
+        tagline: filled('speakerTagline', 'speaker_tagline'),
+      };
+      const topicsChecks = {
+        topics: filled('topics', 'customTopics', 'custom_topics'),
+        formats: filled('speakingFormats', 'speaking_formats'),
+        experience: filled('yearsOfExperience', 'years_of_experience'),
+        bio: filled('bio'),
+      };
+      const hasPhoto = filled('profilePhoto', 'profile_photo');
+
+      const allFields = [...Object.values(basicChecks), ...Object.values(topicsChecks), hasPhoto];
+      const completion = Math.round((allFields.filter(Boolean).length / allFields.length) * 100);
+
+      return {
+        profileCompletion: completion,
+        profileSections: [
+          { name: 'Basic information', complete: Object.values(basicChecks).every(Boolean) },
+          { name: 'Topics & experience', complete: Object.values(topicsChecks).every(Boolean) },
+          { name: 'Profile photo', complete: hasPhoto, recommended: true },
+        ],
+      };
+    }
+  }, [profileData]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Close user menu when clicking outside
@@ -814,29 +887,21 @@ console.log('search results', searchResults)
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-start gap-2">
-                  <CircleCheck className="w-5 h-5 text-[#0B3B2E] mt-0.5" />
-                  <div className="flex-1">
-                    <p style={{ fontSize: '14px' }}>Basic information</p>
-                    <p className="text-[#717182]" style={{ fontSize: '12px' }}>Complete</p>
+                {profileSections.map((section, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    {section.complete ? (
+                      <CircleCheck className="w-5 h-5 text-[#0B3B2E] mt-0.5" />
+                    ) : (
+                      <div className="w-5 h-5 border-2 border-[#e9ebef] rounded-full mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <p style={{ fontSize: '14px' }}>{section.name}</p>
+                      <p className="text-[#717182]" style={{ fontSize: '12px' }}>
+                        {section.complete ? 'Complete' : section.recommended ? 'Recommended' : 'Incomplete'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <CircleCheck className="w-5 h-5 text-[#0B3B2E] mt-0.5" />
-                  <div className="flex-1">
-                    <p style={{ fontSize: '14px' }}>Event preferences</p>
-                    <p className="text-[#717182]" style={{ fontSize: '12px' }}>Complete</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 border-2 border-[#e9ebef] rounded-full mt-0.5" />
-                  <div className="flex-1">
-                    <p style={{ fontSize: '14px' }}>Add logo</p>
-                    <p className="text-[#717182]" style={{ fontSize: '12px' }}>Recommended</p>
-                  </div>
-                </div>
+                ))}
               </div>
 
               <Button
