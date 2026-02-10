@@ -6,6 +6,7 @@ import SignInForm from '../app/components/SignInForm';
 import ForgotPasswordScreen from '../app/components/ForgotPasswordScreen';
 import DashboardScreen from '../app/components/DashboardScreen';
 import ProfileScreen from '../app/components/ProfileScreen';
+import OrganizerProfileScreen from '../app/components/OrganizerProfileScreen';
 import OrganizerWizard from '../app/components/OrganizerWizard';
 import SpeakerWizard from '../app/components/SpeakerWizard';
 import ProtectedRoute from '../app/components/ProtectedRoute';
@@ -187,12 +188,21 @@ export default function AppRoutes({
         path="/profile"
         element={
           <ProtectedRoute>
-            <ProfileScreen
-              formData={formData}
-              updateFormData={updateFormData}
-              saveProfile={saveProfile}
-              onLogout={handleLogout}
-            />
+            {formData.userType === 'organizer' ? (
+              <OrganizerProfileScreen
+                formData={formData}
+                updateFormData={updateFormData}
+                saveProfile={saveProfile}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <ProfileScreen
+                formData={formData}
+                updateFormData={updateFormData}
+                saveProfile={saveProfile}
+                onLogout={handleLogout}
+              />
+            )}
           </ProtectedRoute>
         }
       />

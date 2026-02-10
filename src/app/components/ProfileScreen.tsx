@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, LogOut, User, Pencil, Save, X, Globe, Phone, MapPin, Briefcase, Calendar, DollarSign, Languages, Video } from 'lucide-react';
+import { ArrowLeft, LogOut, User, Pencil, Save, X, Globe, Phone, Briefcase, Calendar, DollarSign } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
