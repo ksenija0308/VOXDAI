@@ -7,7 +7,8 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from '@/types/formData';
-import { organizerAPI, authAPI } from '@/utils/api';
+import { organizerAPI, authAPI, fileAPI } from '@/utils/api';
+import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
 
 interface OrganizerProfileScreenProps {
@@ -54,6 +55,8 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [locationInput, setLocationInput] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoRemoved, setLogoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -110,6 +113,16 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
         if (profile) {
           const mapped = mapProfileToFormData(profile);
           setProfileData({ ...formData, ...mapped });
+
+          // Resolve logo storage path to a signed URL
+          if (profile.logo && typeof profile.logo === 'string') {
+            try {
+              const url = await getSignedUrl(profile.logo);
+              setLogoUrl(url);
+            } catch {
+              setLogoUrl(null);
+            }
+          }
         }
       } catch (error) {
         setProfileData(formData);
@@ -130,20 +143,38 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     setEditData({});
     setLocationInput('');
     setLogoPreview(null);
+    setLogoRemoved(false);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updatedData = { ...profileData, ...editData };
+      const saveData = { ...editData };
+
+      // If a new logo File was selected, upload it first
+      if (saveData.logo instanceof File) {
+        const storagePath = await fileAPI.upload(saveData.logo, 'logo');
+        saveData.logo = storagePath;
+        // Refresh the displayed signed URL
+        try {
+          const url = await getSignedUrl(storagePath);
+          setLogoUrl(url);
+        } catch {
+          // non-critical
+        }
+      }
+
+      const updatedData = { ...profileData, ...saveData };
       setProfileData(updatedData);
-      updateFormData(editData);
+      updateFormData(saveData);
       const saved = await saveProfile(updatedData, false);
       if (saved) {
         toast.success('Profile updated successfully');
         setEditingSection(null);
         setEditData({});
         setLocationInput('');
+        setLogoPreview(null);
+        setLogoRemoved(false);
       } else {
         toast.error('Failed to save profile');
       }
@@ -182,6 +213,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     const file = e.target.files?.[0];
     if (file) {
       updateEditData('logo', file);
+      setLogoRemoved(false);
       const reader = new FileReader();
       reader.onloadend = () => setLogoPreview(reader.result as string);
       reader.readAsDataURL(file);
@@ -191,6 +223,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
   const removeLogo = () => {
     updateEditData('logo', null);
     setLogoPreview(null);
+    setLogoRemoved(true);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -236,14 +269,37 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     </div>
   );
 
+  const linkFields: Set<keyof FormData> = new Set([
+    'website', 'calendarLink', 'linkedIn', 'instagram', 'youtube', 'twitter',
+  ]);
+
+  const ensureUrl = (url: string): string => {
+    if (/^https?:\/\//i.test(url)) return url;
+    return `https://${url}`;
+  };
+
   const renderField = (label: string, field: keyof FormData) => {
     const value = profileData[field];
+    const str = String(value || '');
+    const isLink = linkFields.has(field) && str && str !== '—';
     return (
       <div className="mb-4">
         <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>{label}</label>
-        <p className="text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-          {String(value || '—')}
-        </p>
+        {isLink ? (
+          <a
+            href={ensureUrl(str)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-[#0B3B2E] underline hover:text-black break-all"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            {str}
+          </a>
+        ) : (
+          <p className="text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            {str || '—'}
+          </p>
+        )}
       </div>
     );
   };
@@ -372,6 +428,37 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Logo
+                    </label>
+                    {!logoRemoved && (logoPreview || logoUrl) ? (
+                      <div className="relative inline-block">
+                        <img
+                          src={logoPreview || logoUrl!}
+                          alt="Logo preview"
+                          className="w-24 h-24 object-cover rounded-lg border border-[#e9ebef]"
+                        />
+                        <button
+                          onClick={removeLogo}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-[#d4183d] text-white rounded-full flex items-center justify-center hover:bg-[#b0142f]"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-[#e9ebef] rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#0B3B2E] transition-colors"
+                      >
+                        <Upload className="w-6 h-6 text-[#717182] mb-1" />
+                        <p className="text-[#717182]" style={{ fontSize: '13px' }}>Click to upload</p>
+                        <p className="text-[#717182]" style={{ fontSize: '11px' }}>PNG, JPG up to 5MB</p>
+                      </div>
+                    )}
+                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handleLogoUpload} className="hidden" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Organisation/Brand name
                     </label>
                     <Input
@@ -380,6 +467,24 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                       placeholder="e.g., Tech Summit Global"
                       className="text-sm"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Short tagline
+                    </label>
+                    <Input
+                      value={String(getDisplayValue('tagline') || '')}
+                      onChange={(e) => updateEditData('tagline', e.target.value)}
+                      placeholder="e.g., Connecting tech leaders for innovation"
+                      maxLength={80}
+                      className="text-sm"
+                    />
+                    <div className="flex justify-end mt-1">
+                      <span className="text-[#717182]" style={{ fontSize: '12px' }}>
+                        {String(getDisplayValue('tagline') || '').length}/80
+                      </span>
+                    </div>
                   </div>
 
                   <div>
@@ -430,58 +535,20 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                     </label>
                     {renderToggleButtons('industries', industries)}
                   </div>
-
-                  <div>
-                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Logo
-                    </label>
-                    {logoPreview || (typeof getDisplayValue('logo') === 'string' && getDisplayValue('logo')) ? (
-                      <div className="relative inline-block">
-                        <img
-                          src={logoPreview || String(getDisplayValue('logo'))}
-                          alt="Logo preview"
-                          className="w-24 h-24 object-cover rounded-lg border border-[#e9ebef]"
-                        />
-                        <button
-                          onClick={removeLogo}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-[#d4183d] text-white rounded-full flex items-center justify-center hover:bg-[#b0142f]"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-[#e9ebef] rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-[#0B3B2E] transition-colors"
-                      >
-                        <Upload className="w-6 h-6 text-[#717182] mb-1" />
-                        <p className="text-[#717182]" style={{ fontSize: '13px' }}>Click to upload</p>
-                        <p className="text-[#717182]" style={{ fontSize: '11px' }}>PNG, JPG up to 5MB</p>
-                      </div>
-                    )}
-                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg" onChange={handleLogoUpload} className="hidden" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Short tagline
-                    </label>
-                    <Input
-                      value={String(getDisplayValue('tagline') || '')}
-                      onChange={(e) => updateEditData('tagline', e.target.value)}
-                      placeholder="e.g., Connecting tech leaders for innovation"
-                      maxLength={80}
-                      className="text-sm"
-                    />
-                    <div className="flex justify-end mt-1">
-                      <span className="text-[#717182]" style={{ fontSize: '12px' }}>
-                        {String(getDisplayValue('tagline') || '').length}/80
-                      </span>
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <>
+                  <div className="mb-4">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Organisation logo"
+                        className="w-24 h-24 object-cover rounded-lg border border-[#e9ebef]"
+                      />
+                    ) : (
+                      <span className="text-sm text-[#717182]">No logo uploaded</span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                     {renderField('Organisation Name', 'organisationName')}
                     {renderField('Tagline', 'tagline')}
