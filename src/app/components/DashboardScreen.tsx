@@ -843,6 +843,7 @@ console.log('search results', searchResults)
                 variant="outline"
                 className="w-full mt-4"
                 style={{ fontFamily: 'Inter, sans-serif' }}
+                onClick={() => navigate('/profile')}
               >
                 Complete profile
               </Button>
