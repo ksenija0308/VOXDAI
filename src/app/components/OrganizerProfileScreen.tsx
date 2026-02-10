@@ -8,7 +8,7 @@ import { Slider } from './ui/slider';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from '@/types/formData';
 import { organizerAPI, authAPI, fileAPI } from '@/utils/api';
-import { getSignedUrl } from '@/lib/storage';
+import { useLogoContext } from '@/context/LogoContext';
 import { toast } from 'sonner';
 
 interface OrganizerProfileScreenProps {
@@ -47,6 +47,7 @@ const leadTimeOptions = ['0–2 weeks', '3–4 weeks', '1–3 months', '3+ month
 
 export default function OrganizerProfileScreen({ formData, updateFormData, saveProfile, onLogout }: OrganizerProfileScreenProps) {
   const navigate = useNavigate();
+  const { logoUrl, refreshLogo } = useLogoContext();
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -55,7 +56,6 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [locationInput, setLocationInput] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoRemoved, setLogoRemoved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,16 +113,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
         if (profile) {
           const mapped = mapProfileToFormData(profile);
           setProfileData({ ...formData, ...mapped });
-
-          // Resolve logo storage path to a signed URL
-          if (profile.logo && typeof profile.logo === 'string') {
-            try {
-              const url = await getSignedUrl(profile.logo);
-              setLogoUrl(url);
-            } catch {
-              setLogoUrl(null);
-            }
-          }
+          refreshLogo();
         }
       } catch (error) {
         setProfileData(formData);
@@ -155,13 +146,6 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
       if (saveData.logo instanceof File) {
         const storagePath = await fileAPI.upload(saveData.logo, 'logo');
         saveData.logo = storagePath;
-        // Refresh the displayed signed URL
-        try {
-          const url = await getSignedUrl(storagePath);
-          setLogoUrl(url);
-        } catch {
-          // non-critical
-        }
       }
 
       const updatedData = { ...profileData, ...saveData };
@@ -175,6 +159,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
         setLocationInput('');
         setLogoPreview(null);
         setLogoRemoved(false);
+        refreshLogo();
       } else {
         toast.error('Failed to save profile');
       }
@@ -354,10 +339,14 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
           <div className="flex items-center gap-4">
             <div className="relative user-menu-container">
               <button
-                className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+                className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors overflow-hidden"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                {profileData.organisationName?.charAt(0)?.toUpperCase() || 'U'}
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  profileData.organisationName?.charAt(0)?.toUpperCase() || 'U'
+                )}
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg overflow-hidden z-50">

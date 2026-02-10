@@ -7,6 +7,7 @@ import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
 import { organizerAPI, speakerAPI, authAPI, searchAPI } from '@/utils/api';
+import { useLogoContext } from '@/context/LogoContext';
 import { toast } from 'sonner';
 
 interface DashboardScreenProps {
@@ -33,6 +34,7 @@ interface Conversation {
 
 export default function DashboardScreen({ formData, onLogout }: DashboardScreenProps) {
   const navigate = useNavigate();
+  const { logoUrl } = useLogoContext();
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -341,10 +343,14 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
             </button>
             <div className="relative user-menu-container">
               <button
-                className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+                className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors overflow-hidden"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                {profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                {logoUrl && profileData.userType === 'organizer' ? (
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  profileData.organisationName?.charAt(0)?.toUpperCase() || profileData.firstName?.charAt(0)?.toUpperCase() || 'U'
+                )}
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg overflow-hidden z-50">
