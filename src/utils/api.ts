@@ -417,7 +417,6 @@ export const speakerAPI = {
       speakerData.profile_photo = profileData.profilePhoto;
     }
     if (profileData.speakerTagline) {
-      speakerData.speaker_tagline = profileData.speakerTagline;
       speakerData.professional_headline = profileData.speakerTagline;
     }
 
