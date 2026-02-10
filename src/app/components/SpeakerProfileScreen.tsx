@@ -161,6 +161,9 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
         toast.success('Profile updated successfully');
         // Refresh the global logo/photo context if photo was changed
         if ('profilePhoto' in editData) {
+          if (editData.profilePhoto === null) {
+            setPhotoUrl(null);
+          }
           refreshLogo('speaker');
         }
         setEditingSection(null);

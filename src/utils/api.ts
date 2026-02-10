@@ -229,7 +229,10 @@ export const organizerAPI = {
     if (profileData.country) organizationData.country = profileData.country;
     if (profileData.city) organizationData.city = profileData.city;
     if (profileData.industries) organizationData.industries = profileData.industries;
-    if (profileData.logo && typeof profileData.logo === 'string') {
+    if (profileData.logo === null) {
+      organizationData.logo = null;
+      organizationData.profile_photo = null;
+    } else if (profileData.logo && typeof profileData.logo === 'string') {
       organizationData.logo = profileData.logo;
       organizationData.profile_photo = profileData.logo;
     }
@@ -413,7 +416,9 @@ export const speakerAPI = {
     }
     if (profileData.speakerLocation) speakerData.speaker_country = profileData.speakerLocation;
     if (profileData.speakerCity) speakerData.speaker_city = profileData.speakerCity;
-    if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
+    if (profileData.profilePhoto === null) {
+      speakerData.profile_photo = null;
+    } else if (profileData.profilePhoto && typeof profileData.profilePhoto === 'string') {
       speakerData.profile_photo = profileData.profilePhoto;
     }
     if (profileData.speakerTagline) {
