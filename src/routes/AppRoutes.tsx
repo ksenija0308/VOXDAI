@@ -5,6 +5,7 @@ import SignUpScreen from '../app/components/SignUpScreen';
 import SignInForm from '../app/components/SignInForm';
 import ForgotPasswordScreen from '../app/components/ForgotPasswordScreen';
 import DashboardScreen from '../app/components/DashboardScreen';
+import ProfileScreen from '../app/components/ProfileScreen';
 import OrganizerWizard from '../app/components/OrganizerWizard';
 import SpeakerWizard from '../app/components/SpeakerWizard';
 import ProtectedRoute from '../app/components/ProtectedRoute';
@@ -179,6 +180,19 @@ export default function AppRoutes({
         element={
           <ProtectedRoute>
             <DashboardScreen formData={formData} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfileScreen
+              formData={formData}
+              updateFormData={updateFormData}
+              saveProfile={saveProfile}
+              onLogout={handleLogout}
+            />
           </ProtectedRoute>
         }
       />

@@ -1,4 +1,5 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { FormData } from "@/types/formData.ts";
 import { useState, useEffect } from 'react';
@@ -31,6 +32,7 @@ interface Conversation {
 }
 
 export default function DashboardScreen({ formData, onLogout }: DashboardScreenProps) {
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState<FormData>(formData);
   const [isLoading, setIsLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -346,6 +348,18 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      navigate('/profile');
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-[#f3f3f5] transition-colors flex items-center gap-3"
+                  >
+                    <User className="w-4 h-4 text-[#717182]" />
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
+                      Profile
+                    </span>
+                  </button>
                   <button
                     onClick={async () => {
                       if (onLogout) {
