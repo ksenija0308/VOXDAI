@@ -7,6 +7,7 @@ import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
 import { organizerAPI, speakerAPI, authAPI, searchAPI } from '@/utils/api';
+import { trackRecentMatchView, loadRecentMatches } from '@/utils/recentMatches';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
@@ -304,36 +305,24 @@ console.log('search results', searchResults)
     bio: string;
     profilePhoto: string | null;
     profilePhotoPath: string | null;
-  }>>(() => {
-    try {
-      const saved = localStorage.getItem('voxd_recent_matches');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  }>>([]);
 
-  // Refresh signed URLs for cached recent matches on mount
+  // Load recent matches from database on mount
   useEffect(() => {
-    const refreshUrls = async () => {
-      const saved = recentMatches;
-      if (saved.length === 0 || !saved.some(m => m.profilePhotoPath)) return;
-
-      const refreshed = await Promise.all(saved.map(async (match) => {
-        if (!match.profilePhotoPath) return match;
-        try {
-          const freshUrl = await getSignedUrl(match.profilePhotoPath);
-          return { ...match, profilePhoto: freshUrl };
-        } catch {
-          return { ...match, profilePhoto: null };
+    const fetchRecentMatches = async () => {
+      try {
+        const viewerRole = formData.userType === 'speaker' ? 'speaker' as const : 'organizer' as const;
+        const matches = await loadRecentMatches(viewerRole);
+        if (matches.length > 0) {
+          setRecentMatches(matches as any);
         }
-      }));
-
-      setRecentMatches(refreshed);
+      } catch (error) {
+        console.error('Failed to load recent matches:', error);
+      }
     };
 
-    refreshUrls();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchRecentMatches();
+  }, [formData.userType]);
 
   const pipelineStages = [
     { name: 'Contacted', count: 8, color: '#717182' },
@@ -391,12 +380,6 @@ console.log('search results', searchResults)
       }));
 
       setSearchResults(transformedResults);
-
-      // Save to recent matches (persisted in localStorage)
-      setRecentMatches(transformedResults);
-      try {
-        localStorage.setItem('voxd_recent_matches', JSON.stringify(transformedResults));
-      } catch { /* ignore storage errors */ }
     } catch (error: any) {
       console.error('Search error:', error);
       toast.error(`Failed to search: ${error.message}`);
@@ -822,21 +805,30 @@ console.log('search results', searchResults)
                         <Button
                           className="bg-black text-white hover:bg-[#0B3B2E] flex-1"
                           style={{ fontSize: '14px' }}
-                          onClick={() => setViewingSpeaker({
-                            name: result.name,
-                            topic: result.topic,
-                            match: result.match,
-                            expertise: result.expertise,
-                            availability: result.availability,
-                            hasVideo: result.hasVideo,
-                            speakingFormat: result.speakingFormat,
-                            experienceLevel: result.experienceLevel,
-                            language: result.language,
-                            feeRange: result.feeRange,
-                            location: result.location,
-                            bio: result.bio,
-                            profilePhoto: result.profilePhoto,
-                          })}
+                          onClick={() => {
+                            setViewingSpeaker({
+                              name: result.name,
+                              topic: result.topic,
+                              match: result.match,
+                              expertise: result.expertise,
+                              availability: result.availability,
+                              hasVideo: result.hasVideo,
+                              speakingFormat: result.speakingFormat,
+                              experienceLevel: result.experienceLevel,
+                              language: result.language,
+                              feeRange: result.feeRange,
+                              location: result.location,
+                              bio: result.bio,
+                              profilePhoto: result.profilePhoto,
+                            });
+                            const viewerRole = formData.userType === 'speaker' ? 'speaker' as const : 'organizer' as const;
+                            const targetRole = viewerRole === 'organizer' ? 'speaker' as const : 'organizer' as const;
+                            trackRecentMatchView({
+                              viewerRole,
+                              targetRole,
+                              targetProfileId: result.id,
+                            }).catch(err => console.error('Failed to track match view:', err));
+                          }}
                         >
                           View full profile
                         </Button>
@@ -1028,21 +1020,30 @@ console.log('search results', searchResults)
                         variant="outline"
                         className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] flex-1 min-w-[140px]"
                         style={{ fontSize: '14px' }}
-                        onClick={() => setViewingSpeaker({
-                          name: match.name,
-                          topic: match.topic,
-                          match: match.match,
-                          expertise: match.expertise,
-                          availability: match.availability,
-                          hasVideo: match.hasVideo,
-                          speakingFormat: match.speakingFormat,
-                          experienceLevel: match.experienceLevel,
-                          language: match.language,
-                          feeRange: match.feeRange,
-                          location: match.location,
-                          bio: match.bio,
-                          profilePhoto: match.profilePhoto,
-                        })}
+                        onClick={() => {
+                          setViewingSpeaker({
+                            name: match.name,
+                            topic: match.topic,
+                            match: match.match,
+                            expertise: match.expertise,
+                            availability: match.availability,
+                            hasVideo: match.hasVideo,
+                            speakingFormat: match.speakingFormat,
+                            experienceLevel: match.experienceLevel,
+                            language: match.language,
+                            feeRange: match.feeRange,
+                            location: match.location,
+                            bio: match.bio,
+                            profilePhoto: match.profilePhoto,
+                          });
+                          const viewerRole = formData.userType === 'speaker' ? 'speaker' as const : 'organizer' as const;
+                          const targetRole = viewerRole === 'organizer' ? 'speaker' as const : 'organizer' as const;
+                          trackRecentMatchView({
+                            viewerRole,
+                            targetRole,
+                            targetProfileId: match.id,
+                          }).catch(err => console.error('Failed to track match view:', err));
+                        }}
                       >
                         View Profile
                       </Button>
