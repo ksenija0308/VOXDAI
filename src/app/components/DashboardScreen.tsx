@@ -827,6 +827,7 @@ console.log('search results', searchResults)
                               viewerRole,
                               targetRole,
                               targetProfileId: result.id,
+                              matchScore: result.match,
                             }).catch(err => console.error('Failed to track match view:', err));
                           }}
                         >
@@ -1042,6 +1043,7 @@ console.log('search results', searchResults)
                             viewerRole,
                             targetRole,
                             targetProfileId: match.id,
+                            matchScore: match.match,
                           }).catch(err => console.error('Failed to track match view:', err));
                         }}
                       >

@@ -5,10 +5,12 @@ export async function trackRecentMatchView({
   viewerRole,
   targetRole,
   targetProfileId,
+  matchScore
 }: {
   viewerRole: "speaker" | "organizer";
   targetRole: "speaker" | "organizer";
   targetProfileId: string;
+  matchScore: number;
 }) {
   const { data: auth } = await supabase.auth.getUser();
   const viewerUserId = auth.user?.id;
@@ -22,6 +24,7 @@ export async function trackRecentMatchView({
         viewer_role: viewerRole,
         target_profile_id: targetProfileId,
         target_role: targetRole,
+        match_score: matchScore,
         last_viewed_at: new Date().toISOString(),
       },
       { onConflict: "viewer_user_id,viewer_role,target_profile_id" }
@@ -37,7 +40,7 @@ export async function loadRecentMatches(viewerRole: "speaker" | "organizer") {
 
     const { data: recentViews, error } = await supabase
         .from("recent_matches")
-        .select("target_profile_id, target_role, last_viewed_at")
+        .select("target_profile_id, target_role, match_score, last_viewed_at")
         .eq("viewer_user_id", viewerUserId)
         .eq("viewer_role", viewerRole)
         .order("last_viewed_at", { ascending: false })
@@ -92,7 +95,7 @@ export async function loadRecentMatches(viewerRole: "speaker" | "organizer") {
                     profile.topics?.[0] ||
                     profile.professional_headline ||
                     "No topic specified",
-                match: 0,
+                match: Number(view.match_score ?? 0),
                 expertise:
                     profile.professional_headline ||
                     profile.speaker_tagline ||
