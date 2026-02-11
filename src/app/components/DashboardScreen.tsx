@@ -828,6 +828,12 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                               targetRole,
                               targetProfileId: result.id,
                               matchScore: result.match,
+                            }).then(() => {
+                              return loadRecentMatches(viewerRole);
+                            }).then((matches) => {
+                              if (matches.length > 0) {
+                                setRecentMatches(matches as any);
+                              }
                             }).catch(err => console.error('Failed to track match view:', err));
                           }}
                         >
@@ -1044,6 +1050,12 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                             targetRole,
                             targetProfileId: match.id,
                             matchScore: match.match,
+                          }).then(() => {
+                            return loadRecentMatches(viewerRole);
+                          }).then((matches) => {
+                            if (matches.length > 0) {
+                              setRecentMatches(matches as any);
+                            }
                           }).catch(err => console.error('Failed to track match view:', err));
                         }}
                       >
