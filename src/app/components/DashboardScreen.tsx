@@ -196,7 +196,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ name: string; topic: string } | null>(null);
-console.log('search results', searchResults)
+
   // Filter states
   const [filters, setFilters] = useState({
     hasVideo: false,

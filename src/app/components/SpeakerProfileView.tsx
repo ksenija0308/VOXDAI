@@ -22,7 +22,7 @@ interface SpeakerProfileProps {
 }
 
 export default function SpeakerProfileView({ speaker, onClose, onContact }: SpeakerProfileProps) {
-
+console.log('speaker', speaker)
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -198,8 +198,7 @@ export default function SpeakerProfileView({ speaker, onClose, onContact }: Spea
               </Button>
               <Button
                 onClick={onClose}
-                variant="outline"
-                className="border-2 border-white text-white hover:bg-white/10 px-8 py-6"
+                className="bg-white text-[#0B3B2E] hover:bg-[#f3f3f5] px-8 py-6"
                 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}
               >
                 Close Preview
