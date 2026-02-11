@@ -399,16 +399,10 @@ export const speakerAPI = {
     // Only include fields that exist in speaker_profiles table
     const speakerData: any = {
       id: user.id,
+      user_id: user.id,
       updated_at: new Date().toISOString(),
     };
 
-    // Basic Info (Screen: Speaker Basics)
-    // if (profileData.firstName) speakerData.first_name = profileData.firstName;
-    // if (profileData.lastName) speakerData.last_name = profileData.lastName;
-    // if (profileData.firstName && profileData.lastName) {
-    //   speakerData.full_name = `${profileData.firstName} ${profileData.lastName}`;
-    // }
-    // Direct full_name mapping (takes precedence if provided)
     if (profileData.full_name) speakerData.full_name = profileData.full_name;
     if (profileData.professionalTitle) {
       speakerData.professional_title = profileData.professionalTitle;
@@ -474,6 +468,7 @@ export const speakerAPI = {
       .upsert(speakerData, {
         onConflict: 'id',
       })
+      .eq("user_id", user.id)
       .select()
       .single();
 
@@ -521,6 +516,34 @@ export const speakerAPI = {
 
     return data;
   }
+};
+
+// Conversation API
+export const conversationAPI = {
+  getOrCreateConversation: async (matchId: string) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
+    const accessToken = await authAPI.getAccessToken();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/get-or-create-conversation`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ speaker_profile_id: matchId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get or create conversation: ${response.status}`);
+    }
+
+    return response.json();
+  },
 };
 
 // Search API

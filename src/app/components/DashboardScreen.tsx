@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
-import { organizerAPI, speakerAPI, authAPI, searchAPI } from '@/utils/api';
+import { organizerAPI, speakerAPI, authAPI, searchAPI, conversationAPI } from '@/utils/api';
 import { trackRecentMatchView, loadRecentMatches } from '@/utils/recentMatches';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
@@ -849,25 +849,31 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                           variant="outline"
                           className="border-2 border-black hover:bg-[#f3f3f5]"
                           style={{ fontSize: '14px' }}
-                          onClick={() => {
-                            // Create a new conversation with this speaker
-                            const newConvId = result.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-                            const existingConv = conversations.find(conv => conv.speakerId === newConvId);
+                          onClick={async () => {
+                            try {
+                              await conversationAPI.getOrCreateConversation(result.id);
 
-                            if (!existingConv) {
-                              setConversations([...conversations, {
-                                speakerId: newConvId,
-                                speakerName: result.name,
-                                speakerTopic: result.topic,
-                                lastMessage: '',
-                                timestamp: 'Now',
-                                unread: 0,
-                                messages: []
-                              }]);
+                              const newConvId = result.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
+                              const existingConv = conversations.find(conv => conv.speakerId === newConvId);
+
+                              if (!existingConv) {
+                                setConversations([...conversations, {
+                                  speakerId: newConvId,
+                                  speakerName: result.name,
+                                  speakerTopic: result.topic,
+                                  lastMessage: '',
+                                  timestamp: 'Now',
+                                  unread: 0,
+                                  messages: []
+                                }]);
+                              }
+
+                              setActiveConversation(newConvId);
+                              setIsChatOpen(true);
+                            } catch (error: any) {
+                              console.error('Failed to create conversation:', error);
+                              toast.error('Failed to start conversation. Please try again.');
                             }
-
-                            setActiveConversation(newConvId);
-                            setIsChatOpen(true);
                           }}
                         >
                           Contact
@@ -1000,24 +1006,31 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         variant="outline"
                         className="border-2 border-black hover:bg-[#f3f3f5] flex-1 min-w-[140px]"
                         style={{ fontSize: '14px' }}
-                        onClick={() => {
-                          const speakerId = match.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-                          const existingConv = conversations.find(conv => conv.speakerId === speakerId);
+                        onClick={async () => {
+                          try {
+                            await conversationAPI.getOrCreateConversation(match.id);
 
-                          if (!existingConv) {
-                            setConversations([...conversations, {
-                              speakerId: speakerId,
-                              speakerName: match.name,
-                              speakerTopic: match.topic,
-                              lastMessage: '',
-                              timestamp: 'Now',
-                              unread: 0,
-                              messages: []
-                            }]);
+                            const speakerId = match.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
+                            const existingConv = conversations.find(conv => conv.speakerId === speakerId);
+
+                            if (!existingConv) {
+                              setConversations([...conversations, {
+                                speakerId: speakerId,
+                                speakerName: match.name,
+                                speakerTopic: match.topic,
+                                lastMessage: '',
+                                timestamp: 'Now',
+                                unread: 0,
+                                messages: []
+                              }]);
+                            }
+
+                            setActiveConversation(speakerId);
+                            setIsChatOpen(true);
+                          } catch (error: any) {
+                            console.error('Failed to create conversation:', error);
+                            toast.error('Failed to start conversation. Please try again.');
                           }
-
-                          setActiveConversation(speakerId);
-                          setIsChatOpen(true);
                         }}
                       >
                         Contact
