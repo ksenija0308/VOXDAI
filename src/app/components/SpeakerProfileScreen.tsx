@@ -85,6 +85,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [customTopicInput, setCustomTopicInput] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Availability period editing state
@@ -134,18 +135,53 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
   const startEditing = (section: string) => {
     setEditingSection(section);
     setEditData({});
+    setErrors({});
   };
 
   const cancelEditing = () => {
     setEditingSection(null);
     setEditData({});
+    setErrors({});
     setPhotoPreview(null);
     setPhotoRemoved(false);
     setCustomTopicInput('');
     setShowAddPeriod(false);
   };
 
+  const validateSection = (section: string, merged: FormData): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    if (section === 'basics') {
+      if (!String(merged.full_name || '').trim()) newErrors.full_name = 'Full name is required';
+      if (!String(merged.professionalTitle || '').trim()) newErrors.professionalTitle = 'Professional title is required';
+      if (!String(merged.bio || '').trim()) newErrors.bio = 'Biography is required';
+      if (!String(merged.speakerLocation || '').trim()) newErrors.speakerLocation = 'Country is required';
+      if (!String(merged.speakerCity || '').trim()) newErrors.speakerCity = 'City is required';
+      if (!merged.speakerLanguages || merged.speakerLanguages.length === 0) newErrors.speakerLanguages = 'Select at least one language';
+    }
+    if (section === 'topics') {
+      if (!merged.topics || merged.topics.length === 0) newErrors.topics = 'Select at least one topic';
+    }
+    if (section === 'experience') {
+      if (!merged.speakingFormats || merged.speakingFormats.length === 0) newErrors.speakingFormats = 'Select at least one speaking format';
+    }
+    if (section === 'availability') {
+      if (!String(merged.geographicReach || '').trim()) newErrors.geographicReach = 'Geographic reach is required';
+      if (!merged.preferredEventTypes || merged.preferredEventTypes.length === 0) newErrors.preferredEventTypes = 'Select at least one event type';
+      if (!merged.availabilityPeriods || merged.availabilityPeriods.length === 0) newErrors.availabilityPeriods = 'Add at least one availability period';
+    }
+    return newErrors;
+  };
+
   const handleSave = async () => {
+    if (editingSection) {
+      const merged = { ...profileData, ...editData } as FormData;
+      const validationErrors = validateSection(editingSection, merged);
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const saveData = { ...editData };
@@ -210,6 +246,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
       ? current.filter(item => item !== value)
       : [...current, value];
     updateEditData(field, updated);
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,6 +296,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
       ongoing: periodOngoing,
     };
     updateEditData('availabilityPeriods', [...current, newPeriod]);
+    if (errors.availabilityPeriods) setErrors(prev => ({ ...prev, availabilityPeriods: '' }));
     setPeriodStart('');
     setPeriodEnd('');
     setPeriodOngoing(false);
@@ -377,7 +415,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
         {options.map((option) => (
           <button
             key={option}
-            onClick={() => updateEditData(field, option)}
+            onClick={() => { updateEditData(field, option); if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' })); }}
             className={`px-4 py-2 rounded-full border transition-colors ${
               current === option
                 ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
@@ -508,60 +546,66 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Full Name</label>
+                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Full Name <span className="text-[#d4183d]">*</span></label>
                     <Input
                       value={String(getDisplayValue('full_name') || '')}
-                      onChange={(e) => updateEditData('full_name', e.target.value)}
+                      onChange={(e) => { updateEditData('full_name', e.target.value); setErrors(prev => ({ ...prev, full_name: '' })); }}
                       placeholder="e.g., Alex Carter"
-                      className="text-sm"
+                      className={`text-sm ${errors.full_name ? 'border-[#d4183d]' : ''}`}
                     />
+                    {errors.full_name && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.full_name}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Professional Title</label>
+                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Professional Title <span className="text-[#d4183d]">*</span></label>
                     <Input
                       value={String(getDisplayValue('professionalTitle') || '')}
-                      onChange={(e) => updateEditData('professionalTitle', e.target.value)}
+                      onChange={(e) => { updateEditData('professionalTitle', e.target.value); setErrors(prev => ({ ...prev, professionalTitle: '' })); }}
                       placeholder="e.g., Growth and Motivation Strategist"
-                      className="text-sm"
+                      className={`text-sm ${errors.professionalTitle ? 'border-[#d4183d]' : ''}`}
                     />
+                    {errors.professionalTitle && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.professionalTitle}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Biography</label>
+                    <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Biography <span className="text-[#d4183d]">*</span></label>
                     <textarea
                       value={String(getDisplayValue('bio') || '')}
-                      onChange={(e) => updateEditData('bio', e.target.value)}
-                      className="w-full px-3 py-2 border border-[#e9ebef] rounded-lg focus:outline-none focus:border-[#0B3B2E] text-sm resize-none"
+                      onChange={(e) => { updateEditData('bio', e.target.value); setErrors(prev => ({ ...prev, bio: '' })); }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-[#0B3B2E] text-sm resize-none ${errors.bio ? 'border-[#d4183d]' : 'border-[#e9ebef]'}`}
                       rows={6}
                       style={{ fontFamily: 'Inter, sans-serif' }}
                     />
+                    {errors.bio && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.bio}</p>}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Country</label>
+                      <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>Country <span className="text-[#d4183d]">*</span></label>
                       <Input
                         value={String(getDisplayValue('speakerLocation') || '')}
-                        onChange={(e) => updateEditData('speakerLocation', e.target.value)}
+                        onChange={(e) => { updateEditData('speakerLocation', e.target.value); setErrors(prev => ({ ...prev, speakerLocation: '' })); }}
                         placeholder="e.g., Germany"
-                        className="text-sm"
+                        className={`text-sm ${errors.speakerLocation ? 'border-[#d4183d]' : ''}`}
                       />
+                      {errors.speakerLocation && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakerLocation}</p>}
                     </div>
                     <div>
-                      <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>City</label>
+                      <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>City <span className="text-[#d4183d]">*</span></label>
                       <Input
                         value={String(getDisplayValue('speakerCity') || '')}
-                        onChange={(e) => updateEditData('speakerCity', e.target.value)}
+                        onChange={(e) => { updateEditData('speakerCity', e.target.value); setErrors(prev => ({ ...prev, speakerCity: '' })); }}
                         placeholder="e.g., Berlin"
-                        className="text-sm"
+                        className={`text-sm ${errors.speakerCity ? 'border-[#d4183d]' : ''}`}
                       />
+                      {errors.speakerCity && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakerCity}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Languages</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Languages <span className="text-[#d4183d]">*</span></label>
                     {renderToggleButtons('speakerLanguages', languageOptions)}
+                    {errors.speakerLanguages && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakerLanguages}</p>}
                   </div>
 
                 </div>
@@ -600,8 +644,9 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
               {isEditing('topics') ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Suggested Topics</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Suggested Topics <span className="text-[#d4183d]">*</span></label>
                     {renderToggleButtons('topics', topicOptions)}
+                    {errors.topics && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.topics}</p>}
                   </div>
 
                   <div>
@@ -645,8 +690,9 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
               {isEditing('experience') ? (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Speaking Formats</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Speaking Formats <span className="text-[#d4183d]">*</span></label>
                     {renderToggleButtons('speakingFormats', speakingFormatOptions)}
+                    {errors.speakingFormats && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakingFormats}</p>}
                   </div>
 
                   <div>
@@ -722,8 +768,9 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
               {isEditing('availability') ? (
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Geographic Reach</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Geographic Reach <span className="text-[#d4183d]">*</span></label>
                     {renderSingleSelect('geographicReach', geographicOptions)}
+                    {errors.geographicReach && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.geographicReach}</p>}
                   </div>
 
                   <div className="flex items-start gap-3">
@@ -739,12 +786,13 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Preferred Event Types</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Preferred Event Types <span className="text-[#d4183d]">*</span></label>
                     {renderToggleButtons('preferredEventTypes', preferredEventTypeOptions)}
+                    {errors.preferredEventTypes && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.preferredEventTypes}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Availability Periods</label>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Availability Periods <span className="text-[#d4183d]">*</span></label>
                     {(() => {
                       const periods = getDisplayValue('availabilityPeriods') as FormData['availabilityPeriods'];
                       const currentPeriods = Array.isArray(periods) ? periods : [];
@@ -800,6 +848,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                         </>
                       );
                     })()}
+                    {errors.availabilityPeriods && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.availabilityPeriods}</p>}
                   </div>
                 </div>
               ) : (
