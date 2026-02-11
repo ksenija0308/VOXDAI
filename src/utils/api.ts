@@ -68,6 +68,17 @@ export const authAPI = {
       setAuthToken(data.session.access_token);
     }
 
+    // Ensure user_profiles row exists
+    const userType = data.user?.user_metadata?.userType;
+    if (data.user?.id) {
+      await supabase
+        .from('user_profiles')
+        .upsert({
+          id: data.user.id,
+          ...(userType ? { user_type: userType } : {}),
+        }, { onConflict: 'id' });
+    }
+
     return data;
   },
 
