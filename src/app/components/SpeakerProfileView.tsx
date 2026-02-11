@@ -22,7 +22,6 @@ interface SpeakerProfileProps {
 }
 
 export default function SpeakerProfileView({ speaker, onClose, onContact }: SpeakerProfileProps) {
-console.log('speaker', speaker)
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-8">
