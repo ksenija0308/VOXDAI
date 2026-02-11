@@ -588,6 +588,76 @@ export const conversationAPI = {
     if (error) throw error;
     return (data ?? []).reverse();
   },
+
+  subscribeToMessages: (conversationId: string, onNewMessage: (m: any) => void) => {
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          onNewMessage(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
+
+  loadMyConversations: async () => {
+    const { data, error } = await supabase
+      .from('conversation_participants')
+      .select(`
+        conversation_id,
+        last_read_at,
+        conversations:conversations (
+          id,
+          last_message_at,
+          organizer_user_id,
+          speaker_user_id
+        )
+      `)
+      .order('conversations(last_message_at)', { ascending: false });
+
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  loadUnreadCount: async () => {
+    const { data, error } = await supabase.rpc('my_total_unread_messages');
+    if (error) throw error;
+    return Number(data ?? 0);
+  },
+
+  markRead: async (conversationId: string) => {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) throw new Error('Not authenticated');
+
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('conversation_participants')
+      .update({ last_read_at: now })
+      .eq('conversation_id', conversationId)
+      .eq('user_id', userId)
+      .select('conversation_id,user_id,last_read_at');
+
+    console.log('markRead result:', data, error);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      throw new Error('markRead updated 0 rows. Participant row not found or blocked by RLS.');
+    }
+  },
 };
 
 // Search API

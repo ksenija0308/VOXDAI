@@ -179,6 +179,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
+  const [totalUnread, setTotalUnread] = useState(0);
   const [viewingSpeaker, setViewingSpeaker] = useState<{
     id: string;
     name: string;
@@ -231,6 +232,86 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     profilePhotoPath: string | null;
   }>>([]);
 
+  // Load unread count on mount
+  useEffect(() => {
+    conversationAPI.loadUnreadCount()
+      .then(count => setTotalUnread(count))
+      .catch(err => console.error('Failed to load unread count:', err));
+  }, []);
+
+  // Load conversations on mount
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const currentUserId = auth.user?.id;
+        if (!currentUserId) return;
+
+        const rows = await conversationAPI.loadMyConversations();
+
+        const isOrganizer = formData.userType === 'organizer';
+
+        // Collect the other participant's user IDs
+        const otherUserIds = rows.map((r: any) => {
+          const conv = r.conversations;
+          return isOrganizer ? conv.speaker_user_id : conv.organizer_user_id;
+        }).filter(Boolean);
+
+        if (otherUserIds.length === 0) return;
+
+        // Load profiles for other participants
+        const table = isOrganizer ? 'speaker_profiles' : 'organization_profiles';
+        const { data: profiles } = await supabase
+          .from(table)
+          .select('id, full_name, topics, professional_headline, organisation_name')
+          .in('id', otherUserIds);
+
+        const profileMap = new Map<string, any>();
+        (profiles ?? []).forEach((p: any) => profileMap.set(p.id, p));
+
+        // Load last message for each conversation
+        const convIds = rows.map((r: any) => r.conversation_id);
+        const { data: lastMessages } = await supabase
+          .from('messages')
+          .select('conversation_id, body, created_at')
+          .in('conversation_id', convIds)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false });
+
+        const lastMsgMap = new Map<string, any>();
+        (lastMessages ?? []).forEach((m: any) => {
+          if (!lastMsgMap.has(m.conversation_id)) {
+            lastMsgMap.set(m.conversation_id, m);
+          }
+        });
+
+        const mapped: Conversation[] = rows.map((r: any) => {
+          const conv = r.conversations;
+          const otherUserId = isOrganizer ? conv.speaker_user_id : conv.organizer_user_id;
+          const profile = profileMap.get(otherUserId);
+          const lastMsg = lastMsgMap.get(r.conversation_id);
+
+          return {
+            conversationId: r.conversation_id,
+            speakerId: otherUserId,
+            speakerName: profile?.full_name || profile?.organisation_name || 'Unknown',
+            speakerTopic: profile?.topics?.[0] || profile?.professional_headline || '',
+            lastMessage: lastMsg?.body || '',
+            timestamp: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString() : '',
+            unread: 0,
+            messages: [],
+          };
+        });
+
+        setConversations(mapped);
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+    };
+
+    fetchConversations();
+  }, [formData.userType]);
+
   // Load recent matches from database on mount
   useEffect(() => {
     const fetchRecentMatches = async () => {
@@ -248,14 +329,16 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     fetchRecentMatches();
   }, [formData.userType]);
 
-  // Load messages when a conversation is opened
+  // Load messages and subscribe to realtime when a conversation is opened
   useEffect(() => {
     if (!activeConversation) return;
+
+    let currentUserId: string | undefined;
 
     const fetchMessages = async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        const currentUserId = auth.user?.id;
+        currentUserId = auth.user?.id;
 
         const msgs = await conversationAPI.loadMessages(activeConversation);
 
@@ -279,9 +362,53 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       } catch (error) {
         console.error('Failed to load messages:', error);
       }
+
+      // Mark conversation as read and refresh badge
+      try {
+        await conversationAPI.markRead(activeConversation);
+      } catch (error) {
+        console.error('markRead failed:', error);
+      }
+      try {
+        const count = await conversationAPI.loadUnreadCount();
+        setTotalUnread(count);
+      } catch (error) {
+        console.error('Failed to refresh unread count:', error);
+      }
     };
 
     fetchMessages();
+
+    const unsubscribe = conversationAPI.subscribeToMessages(activeConversation, (newMsg) => {
+      if (newMsg.sender_id === currentUserId) return;
+
+      const mapped: Message = {
+        id: newMsg.id,
+        sender: 'speaker',
+        content: newMsg.body,
+        timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
+      };
+
+      setConversations(prev => prev.map(c => {
+        if (c.conversationId === activeConversation) {
+          return {
+            ...c,
+            messages: [...c.messages, mapped],
+            lastMessage: mapped.content,
+            timestamp: mapped.timestamp,
+          };
+        }
+        return c;
+      }));
+
+      conversationAPI.loadUnreadCount()
+        .then(count => setTotalUnread(count))
+        .catch(() => {});
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [activeConversation]);
 
   const pipelineStages = [
@@ -394,9 +521,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
               onClick={() => setIsChatOpen(!isChatOpen)}
             >
               <Mail className="w-5 h-5" />
-              {conversations.some(conv => conv.unread > 0) && (
+              {totalUnread > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                  {conversations.reduce((sum, conv) => sum + conv.unread, 0)}
+                  {totalUnread}
                 </span>
               )}
             </button>
