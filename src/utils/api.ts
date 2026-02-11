@@ -544,6 +544,50 @@ export const conversationAPI = {
 
     return response.json();
   },
+
+  sendMessage: async (conversationId: string, text: string) => {
+    const body = text.trim();
+    if (!body) return;
+
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) throw new Error('Not authenticated');
+
+    const { error } = await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: userId,
+      body,
+    });
+
+    if (error) throw error;
+  },
+
+  loadMessages: async (conversationId: string, limit = 50) => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id,conversation_id,sender_id,body,created_at,edited_at,deleted_at,metadata')
+      .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []).reverse();
+  },
+
+  loadOlderMessages: async (conversationId: string, oldestCreatedAt: string, limit = 50) => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id,conversation_id,sender_id,body,created_at,edited_at,deleted_at,metadata')
+      .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
+      .lt('created_at', oldestCreatedAt)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return (data ?? []).reverse();
+  },
 };
 
 // Search API

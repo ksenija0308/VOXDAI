@@ -10,6 +10,7 @@ import { organizerAPI, speakerAPI, authAPI, searchAPI, conversationAPI } from '@
 import { trackRecentMatchView, loadRecentMatches } from '@/utils/recentMatches';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
 interface DashboardScreenProps {
@@ -25,6 +26,7 @@ interface Message {
 }
 
 interface Conversation {
+  conversationId: string;
   speakerId: string;
   speakerName: string;
   speakerTopic: string;
@@ -178,6 +180,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [viewingSpeaker, setViewingSpeaker] = useState<{
+    id: string;
     name: string;
     topic: string;
     match?: number;
@@ -207,86 +210,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     feeRange: 'all'
   });
 
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      speakerId: 'sarah-chen',
-      speakerName: 'Dr. Sarah Chen',
-      speakerTopic: 'AI & Machine Learning',
-      lastMessage: 'I would love to speak at your conference! Let me know the details.',
-      timestamp: '2 hours ago',
-      unread: 2,
-      messages: [
-        {
-          id: 1,
-          sender: 'user',
-          content: 'Hi Dr. Chen, we would love to have you speak at our upcoming AI conference in March.',
-          timestamp: '10:30 AM'
-        },
-        {
-          id: 2,
-          sender: 'speaker',
-          content: 'Thank you for reaching out! I\'d be very interested. Could you share more details about the event?',
-          timestamp: '11:15 AM'
-        },
-        {
-          id: 3,
-          sender: 'user',
-          content: 'Of course! It\'s a 2-day conference with 500+ attendees, mostly tech professionals. We\'re looking for a 45-minute keynote on AI ethics.',
-          timestamp: '11:30 AM'
-        },
-        {
-          id: 4,
-          sender: 'speaker',
-          content: 'I would love to speak at your conference! Let me know the details.',
-          timestamp: '2:45 PM'
-        }
-      ]
-    },
-    {
-      speakerId: 'marcus-johnson',
-      speakerName: 'Marcus Johnson',
-      speakerTopic: 'Leadership & Culture',
-      lastMessage: 'That sounds perfect. What are the next steps?',
-      timestamp: '1 day ago',
-      unread: 0,
-      messages: [
-        {
-          id: 1,
-          sender: 'user',
-          content: 'Hi Marcus, your profile caught my attention. Would you be available for a leadership workshop in April?',
-          timestamp: 'Yesterday 3:20 PM'
-        },
-        {
-          id: 2,
-          sender: 'speaker',
-          content: 'That sounds perfect. What are the next steps?',
-          timestamp: 'Yesterday 4:05 PM'
-        }
-      ]
-    },
-    {
-      speakerId: 'elena-rodriguez',
-      speakerName: 'Elena Rodriguez',
-      speakerTopic: 'Sustainability',
-      lastMessage: 'Thank you for considering me!',
-      timestamp: '3 days ago',
-      unread: 1,
-      messages: [
-        {
-          id: 1,
-          sender: 'user',
-          content: 'Hi Elena, we\'re organizing a sustainability summit and would love to have you as a speaker.',
-          timestamp: 'Mon 2:15 PM'
-        },
-        {
-          id: 2,
-          sender: 'speaker',
-          content: 'Thank you for considering me!',
-          timestamp: 'Mon 3:30 PM'
-        }
-      ]
-    }
-  ]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const [recentMatches, setRecentMatches] = useState<Array<{
     id: string;
@@ -323,6 +247,42 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
     fetchRecentMatches();
   }, [formData.userType]);
+
+  // Load messages when a conversation is opened
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    const fetchMessages = async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const currentUserId = auth.user?.id;
+
+        const msgs = await conversationAPI.loadMessages(activeConversation);
+
+        const mapped: Message[] = msgs.map((m: any) => ({
+          id: m.id,
+          sender: m.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
+          content: m.body,
+          timestamp: new Date(m.created_at).toLocaleTimeString(),
+        }));
+
+        setConversations(prev => prev.map(c => {
+          if (c.conversationId === activeConversation) {
+            return {
+              ...c,
+              messages: mapped,
+              lastMessage: mapped.length > 0 ? mapped[mapped.length - 1].content : c.lastMessage,
+            };
+          }
+          return c;
+        }));
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    };
+
+    fetchMessages();
+  }, [activeConversation]);
 
   const pipelineStages = [
     { name: 'Contacted', count: 8, color: '#717182' },
@@ -389,31 +349,37 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     }
   };
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeConversation) return;
+
+    const text = messageInput;
+    setMessageInput('');
 
     const newMessage: Message = {
       id: Date.now(),
       sender: 'user',
-      content: messageInput,
+      content: text,
       timestamp: new Date().toLocaleTimeString()
     };
 
-    const updatedConversations = conversations.map(conversation => {
-      if (conversation.speakerId === activeConversation) {
+    setConversations(prev => prev.map(conversation => {
+      if (conversation.conversationId === activeConversation) {
         return {
           ...conversation,
           messages: [...conversation.messages, newMessage],
           lastMessage: newMessage.content,
           timestamp: newMessage.timestamp,
-          unread: conversation.unread + 1
         };
       }
       return conversation;
-    });
+    }));
 
-    setConversations(updatedConversations);
-    setMessageInput('');
+    try {
+      await conversationAPI.sendMessage(activeConversation, text);
+    } catch (error: any) {
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
   };
 
   return (
@@ -813,6 +779,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                           style={{ fontSize: '14px' }}
                           onClick={() => {
                             setViewingSpeaker({
+                              id: result.id,
                               name: result.name,
                               topic: result.topic,
                               match: result.match,
@@ -851,14 +818,15 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                           style={{ fontSize: '14px' }}
                           onClick={async () => {
                             try {
-                              await conversationAPI.getOrCreateConversation(result.id);
+                              const conv = await conversationAPI.getOrCreateConversation(result.id);
+                              const conversationId = conv.id ?? conv.conversation_id;
 
-                              const newConvId = result.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-                              const existingConv = conversations.find(conv => conv.speakerId === newConvId);
+                              const existingConv = conversations.find(c => c.conversationId === conversationId);
 
                               if (!existingConv) {
-                                setConversations([...conversations, {
-                                  speakerId: newConvId,
+                                setConversations(prev => [...prev, {
+                                  conversationId,
+                                  speakerId: result.id,
                                   speakerName: result.name,
                                   speakerTopic: result.topic,
                                   lastMessage: '',
@@ -868,7 +836,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                                 }]);
                               }
 
-                              setActiveConversation(newConvId);
+                              setActiveConversation(conversationId);
                               setIsChatOpen(true);
                             } catch (error: any) {
                               console.error('Failed to create conversation:', error);
@@ -1008,14 +976,15 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         style={{ fontSize: '14px' }}
                         onClick={async () => {
                           try {
-                            await conversationAPI.getOrCreateConversation(match.id);
+                            const conv = await conversationAPI.getOrCreateConversation(match.id);
+                            const conversationId = conv.id ?? conv.conversation_id;
 
-                            const speakerId = match.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-                            const existingConv = conversations.find(conv => conv.speakerId === speakerId);
+                            const existingConv = conversations.find(c => c.conversationId === conversationId);
 
                             if (!existingConv) {
-                              setConversations([...conversations, {
-                                speakerId: speakerId,
+                              setConversations(prev => [...prev, {
+                                conversationId,
+                                speakerId: match.id,
                                 speakerName: match.name,
                                 speakerTopic: match.topic,
                                 lastMessage: '',
@@ -1025,7 +994,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                               }]);
                             }
 
-                            setActiveConversation(speakerId);
+                            setActiveConversation(conversationId);
                             setIsChatOpen(true);
                           } catch (error: any) {
                             console.error('Failed to create conversation:', error);
@@ -1048,6 +1017,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         style={{ fontSize: '14px' }}
                         onClick={() => {
                           setViewingSpeaker({
+                            id: match.id,
                             name: match.name,
                             topic: match.topic,
                             match: match.match,
@@ -1155,9 +1125,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
               <div className="flex-1 overflow-y-auto">
                 {conversations.map((conversation) => (
                   <button
-                    key={conversation.speakerId}
+                    key={conversation.conversationId}
                     className="w-full p-4 border-b border-[#e9ebef] hover:bg-[#f3f3f5] transition-colors text-left"
-                    onClick={() => setActiveConversation(conversation.speakerId)}
+                    onClick={() => setActiveConversation(conversation.conversationId)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
@@ -1202,14 +1172,14 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       <XIcon className="w-5 h-5" />
                     </button>
                     <div className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white">
-                      {conversations.find(conv => conv.speakerId === activeConversation)?.speakerName.charAt(0)}
+                      {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName.charAt(0)}
                     </div>
                     <div>
                       <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                        {conversations.find(conv => conv.speakerId === activeConversation)?.speakerName}
+                        {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName}
                       </h4>
                       <p className="text-[#717182]" style={{ fontSize: '13px' }}>
-                        {conversations.find(conv => conv.speakerId === activeConversation)?.speakerTopic}
+                        {conversations.find(conv => conv.conversationId === activeConversation)?.speakerTopic}
                       </p>
                     </div>
                   </div>
@@ -1217,7 +1187,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {conversations.find(conv => conv.speakerId === activeConversation)?.messages.map(message => (
+                  {conversations.find(conv => conv.conversationId === activeConversation)?.messages.map(message => (
                     <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'bg-[#0B3B2E] text-white' : 'bg-[#f3f3f5]'}`}>
                         <p style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
@@ -1268,25 +1238,33 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         <SpeakerProfileView
           speaker={viewingSpeaker}
           onClose={() => setViewingSpeaker(null)}
-          onContact={() => {
-            const speakerId = viewingSpeaker.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-            const existingConv = conversations.find(conv => conv.speakerId === speakerId);
+          onContact={async () => {
+            try {
+              const conv = await conversationAPI.getOrCreateConversation(viewingSpeaker.id);
+              const conversationId = conv.id ?? conv.conversation_id;
 
-            if (!existingConv) {
-              setConversations([...conversations, {
-                speakerId: speakerId,
-                speakerName: viewingSpeaker.name,
-                speakerTopic: viewingSpeaker.topic,
-                lastMessage: '',
-                timestamp: 'Now',
-                unread: 0,
-                messages: []
-              }]);
+              const existingConv = conversations.find(c => c.conversationId === conversationId);
+
+              if (!existingConv) {
+                setConversations(prev => [...prev, {
+                  conversationId,
+                  speakerId: viewingSpeaker.id,
+                  speakerName: viewingSpeaker.name,
+                  speakerTopic: viewingSpeaker.topic,
+                  lastMessage: '',
+                  timestamp: 'Now',
+                  unread: 0,
+                  messages: []
+                }]);
+              }
+
+              setActiveConversation(conversationId);
+              setViewingSpeaker(null);
+              setIsChatOpen(true);
+            } catch (error: any) {
+              console.error('Failed to create conversation:', error);
+              toast.error('Failed to start conversation. Please try again.');
             }
-
-            setActiveConversation(speakerId);
-            setViewingSpeaker(null);
-            setIsChatOpen(true);
           }}
         />
       )}
