@@ -214,6 +214,18 @@ export const organizerAPI = {
         onConflict: 'id',
       });
 
+    // Keep profiles.display_name in sync for messaging
+    const displayName = profileData.organisationName || profileData.full_name || '';
+    if (displayName) {
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          display_name: displayName,
+          role: 'organizer',
+        }, { onConflict: 'user_id' });
+    }
+
     // Only include fields that exist in organization_profiles table
     const organizationData: any = {
       id: user.id,
@@ -396,6 +408,18 @@ export const speakerAPI = {
         onConflict: 'id',
       });
 
+    // Keep profiles.display_name in sync for messaging
+    const displayName = profileData.full_name || '';
+    if (displayName) {
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          display_name: displayName,
+          role: 'speaker',
+        }, { onConflict: 'user_id' });
+    }
+
     // Only include fields that exist in speaker_profiles table
     const speakerData: any = {
       id: user.id,
@@ -565,7 +589,10 @@ export const conversationAPI = {
   loadMessages: async (conversationId: string, limit = 50) => {
     const { data, error } = await supabase
       .from('messages')
-      .select('id,conversation_id,sender_id,body,created_at,edited_at,deleted_at,metadata')
+      .select(`
+        id, body, created_at, sender_id,
+        sender:profiles!messages_sender_id_fkey (display_name, avatar_url, role)
+      `)
       .eq('conversation_id', conversationId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -612,22 +639,42 @@ export const conversationAPI = {
   },
 
   loadMyConversations: async () => {
-    const { data, error } = await supabase
-      .from('conversation_participants')
-      .select(`
-        conversation_id,
-        last_read_at,
-        conversations:conversations (
-          id,
-          last_message_at,
-          organizer_user_id,
-          speaker_user_id
-        )
-      `)
-      .order('conversations(last_message_at)', { ascending: false });
+    const { data: auth } = await supabase.auth.getUser();
+    const currentUserId = auth.user?.id;
+    if (!currentUserId) throw new Error('Not authenticated');
 
-    if (error) throw error;
-    return data ?? [];
+    // Get my conversation IDs
+    const { data: myRows, error: myErr } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, last_read_at')
+      .eq('user_id', currentUserId);
+
+    if (myErr) throw myErr;
+    if (!myRows?.length) return [];
+
+    const convIds = myRows.map(r => r.conversation_id);
+
+    // Get ALL participants for those conversations (includes me + other person)
+    const { data: allParticipants, error: partErr } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id, user_id')
+      .in('conversation_id', convIds);
+
+    if (partErr) throw partErr;
+
+    // Build a map: conversationId -> other user's ID
+    const otherUserMap = new Map<string, string>();
+    (allParticipants ?? []).forEach((p: any) => {
+      if (p.user_id !== currentUserId) {
+        otherUserMap.set(p.conversation_id, p.user_id);
+      }
+    });
+
+    return myRows.map(r => ({
+      conversation_id: r.conversation_id,
+      last_read_at: r.last_read_at,
+      other_user_id: otherUserMap.get(r.conversation_id) ?? null,
+    }));
   },
 
   loadUnreadCount: async () => {

@@ -248,56 +248,64 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         if (!currentUserId) return;
 
         const rows = await conversationAPI.loadMyConversations();
+        if (rows.length === 0) return;
 
-        const isOrganizer = formData.userType === 'organizer';
-
-        // Collect the other participant's user IDs
-        const otherUserIds = rows.map((r: any) => {
-          const conv = r.conversations;
-          return isOrganizer ? conv.speaker_user_id : conv.organizer_user_id;
-        }).filter(Boolean);
-
-        if (otherUserIds.length === 0) return;
-
-        // Load profiles for other participants
-        const table = isOrganizer ? 'speaker_profiles' : 'organization_profiles';
-        const { data: profiles } = await supabase
-          .from(table)
-          .select('id, full_name, topics, professional_headline, organisation_name')
-          .in('id', otherUserIds);
-
-        const profileMap = new Map<string, any>();
-        (profiles ?? []).forEach((p: any) => profileMap.set(p.id, p));
-
-        // Load last message for each conversation
+        // Load all messages (with sender profile) for each conversation
         const convIds = rows.map((r: any) => r.conversation_id);
-        const { data: lastMessages } = await supabase
+        const { data: allMessages } = await supabase
           .from('messages')
-          .select('conversation_id, body, created_at')
+          .select(`
+            conversation_id, body, created_at, sender_id,
+            sender:profiles!messages_sender_id_fkey (display_name)
+          `)
           .in('conversation_id', convIds)
           .is('deleted_at', null)
           .order('created_at', { ascending: false });
 
-        const lastMsgMap = new Map<string, any>();
-        (lastMessages ?? []).forEach((m: any) => {
-          if (!lastMsgMap.has(m.conversation_id)) {
-            lastMsgMap.set(m.conversation_id, m);
+        // Group messages by conversation: last message + other participant's name
+        const convDataMap = new Map<string, { lastMsg: any; otherName: string }>();
+        (allMessages ?? []).forEach((m: any) => {
+          const cid = m.conversation_id;
+          const existing = convDataMap.get(cid);
+
+          if (!existing) {
+            convDataMap.set(cid, { lastMsg: m, otherName: '' });
+          }
+
+          // Pick up display_name from any message sent by the other participant
+          if (m.sender_id !== currentUserId && m.sender?.display_name) {
+            const entry = convDataMap.get(cid)!;
+            if (!entry.otherName) {
+              entry.otherName = m.sender.display_name;
+            }
           }
         });
 
+        // For conversations where the other person hasn't sent a message yet,
+        // fall back to loading their profile from the profiles table
+        const missingNameIds = rows
+          .filter((r: any) => !convDataMap.get(r.conversation_id)?.otherName && r.other_user_id)
+          .map((r: any) => r.other_user_id);
+
+        const fallbackMap = new Map<string, string>();
+        if (missingNameIds.length > 0) {
+          const { data: fallbackProfiles } = await supabase
+            .from('profiles')
+            .select('user_id, display_name')
+            .in('user_id', missingNameIds);
+          (fallbackProfiles ?? []).forEach((p: any) => fallbackMap.set(p.user_id, p.display_name));
+        }
+
         const mapped: Conversation[] = rows.map((r: any) => {
-          const conv = r.conversations;
-          const otherUserId = isOrganizer ? conv.speaker_user_id : conv.organizer_user_id;
-          const profile = profileMap.get(otherUserId);
-          const lastMsg = lastMsgMap.get(r.conversation_id);
+          const convData = convDataMap.get(r.conversation_id);
 
           return {
             conversationId: r.conversation_id,
-            speakerId: otherUserId,
-            speakerName: profile?.full_name || profile?.organisation_name || 'Unknown',
-            speakerTopic: profile?.topics?.[0] || profile?.professional_headline || '',
-            lastMessage: lastMsg?.body || '',
-            timestamp: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString() : '',
+            speakerId: r.other_user_id ?? '',
+            speakerName: convData?.otherName || fallbackMap.get(r.other_user_id) || 'Unknown',
+            speakerTopic: '',
+            lastMessage: convData?.lastMsg?.body || '',
+            timestamp: convData?.lastMsg ? new Date(convData.lastMsg.created_at).toLocaleTimeString() : '',
             unread: 0,
             messages: [],
           };
@@ -342,6 +350,10 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
         const msgs = await conversationAPI.loadMessages(activeConversation);
 
+        // Find the other participant's display_name from sender profiles
+        const otherMsg = msgs.find((m: any) => m.sender_id !== currentUserId);
+        const otherName = otherMsg?.sender?.display_name || null;
+
         const mapped: Message[] = msgs.map((m: any) => ({
           id: m.id,
           sender: m.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
@@ -353,6 +365,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           if (c.conversationId === activeConversation) {
             return {
               ...c,
+              speakerName: otherName || c.speakerName,
               messages: mapped,
               lastMessage: mapped.length > 0 ? mapped[mapped.length - 1].content : c.lastMessage,
             };
