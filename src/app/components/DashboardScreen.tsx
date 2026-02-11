@@ -502,7 +502,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 Welcome back, {profileData.organisationName || `${profileData.full_name}` || 'User'}
               </h1>
               <p className="text-[#717182]" style={{ fontFamily: 'Inter, sans-serif' }}>
-                Manage your events and connect with speakers
+                {profileData.userType === 'speaker'
+                  ? 'Manage your profile and discover speaking opportunities'
+                  : 'Manage your events and connect with speakers'}
               </p>
             </div>
 
@@ -515,10 +517,12 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
               </div>
               <div className="flex-1">
                 <h3 className="mb-1" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                  AI Speaker Matchmaking
+                  {profileData.userType === 'speaker' ? 'AI Event Matchmaking' : 'AI Speaker Matchmaking'}
                 </h3>
                 <p className="text-[#717182]" style={{ fontSize: '14px' }}>
-                  Describe who you're looking for in plain English
+                  {profileData.userType === 'speaker'
+                    ? 'Describe the type of events you want to speak at'
+                    : 'Describe who you\'re looking for in plain English'}
                 </p>
               </div>
             </div>
@@ -528,7 +532,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 <textarea
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="E.g., I need a speaker who can talk about AI ethics and governance for our tech conference in March. They should have experience speaking to technical audiences..."
+                  placeholder={profileData.userType === 'speaker'
+                    ? "E.g., I'm looking for tech conferences focused on AI and innovation happening in Europe. Ideally 500+ attendees with networking opportunities..."
+                    : "E.g., I need a speaker who can talk about AI ethics and governance for our tech conference in March. They should have experience speaking to technical audiences..."}
                   className="w-full p-4 border-2 border-[#e9ebef] rounded-lg resize-none focus:outline-none focus:border-[#0B3B2E] transition-colors"
                   rows={3}
                   style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}
