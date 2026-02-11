@@ -57,6 +57,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
   const [locationInput, setLocationInput] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoRemoved, setLogoRemoved] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -127,17 +128,56 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
   const startEditing = (section: string) => {
     setEditingSection(section);
     setEditData({});
+    setErrors({});
   };
 
   const cancelEditing = () => {
     setEditingSection(null);
     setEditData({});
+    setErrors({});
     setLocationInput('');
     setLogoPreview(null);
     setLogoRemoved(false);
   };
 
+  const validateSection = (section: string, merged: FormData): Record<string, string> => {
+    const newErrors: Record<string, string> = {};
+    if (section === 'basics') {
+      if (!String(merged.organisationName || '').trim()) newErrors.organisationName = 'Organisation name is required';
+      if (!String(merged.tagline || '').trim()) newErrors.tagline = 'Tagline is required';
+      if (!String(merged.country || '').trim()) newErrors.country = 'Country is required';
+      if (!String(merged.city || '').trim()) newErrors.city = 'City is required';
+      if (!merged.industries || merged.industries.length === 0) newErrors.industries = 'Select at least one industry';
+    }
+    if (section === 'contact') {
+      if (!String(merged.contactName || '').trim()) newErrors.contactName = 'Contact name is required';
+      if (!String(merged.contactEmail || '').trim()) newErrors.contactEmail = 'Contact email is required';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(merged.contactEmail))) newErrors.contactEmail = 'Enter a valid email address';
+    }
+    if (section === 'events') {
+      if (!merged.eventTypes || merged.eventTypes.length === 0) newErrors.eventTypes = 'Select at least one event type';
+      if (!merged.frequency || merged.frequency.length === 0) newErrors.frequency = 'Select at least one frequency';
+      if (!merged.eventSizes || merged.eventSizes.length === 0) newErrors.eventSizes = 'Select at least one event size';
+      if (!merged.formats || merged.formats.length === 0) newErrors.formats = 'Select at least one format';
+    }
+    if (section === 'preferences') {
+      if (!merged.speakerFormats || merged.speakerFormats.length === 0) newErrors.speakerFormats = 'Select at least one speaker format';
+      if (!merged.languages || merged.languages.length === 0) newErrors.languages = 'Select at least one language';
+    }
+    return newErrors;
+  };
+
   const handleSave = async () => {
+    // Validate before saving
+    if (editingSection) {
+      const merged = { ...profileData, ...editData } as FormData;
+      const validationErrors = validateSection(editingSection, merged);
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const saveData = { ...editData };
@@ -192,6 +232,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
       ? current.filter(item => item !== value)
       : [...current, value];
     updateEditData(field, updated);
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -448,28 +489,30 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Organisation/Brand name
+                      Organisation/Brand name <span className="text-[#d4183d]">*</span>
                     </label>
                     <Input
                       value={String(getDisplayValue('organisationName') || '')}
-                      onChange={(e) => updateEditData('organisationName', e.target.value)}
+                      onChange={(e) => { updateEditData('organisationName', e.target.value); setErrors(prev => ({ ...prev, organisationName: '' })); }}
                       placeholder="e.g., Tech Summit Global"
-                      className="text-sm"
+                      className={`text-sm ${errors.organisationName ? 'border-[#d4183d]' : ''}`}
                     />
+                    {errors.organisationName && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.organisationName}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Short tagline
+                      Short tagline <span className="text-[#d4183d]">*</span>
                     </label>
                     <Input
                       value={String(getDisplayValue('tagline') || '')}
-                      onChange={(e) => updateEditData('tagline', e.target.value)}
+                      onChange={(e) => { updateEditData('tagline', e.target.value); setErrors(prev => ({ ...prev, tagline: '' })); }}
                       placeholder="e.g., Connecting tech leaders for innovation"
                       maxLength={80}
-                      className="text-sm"
+                      className={`text-sm ${errors.tagline ? 'border-[#d4183d]' : ''}`}
                     />
-                    <div className="flex justify-end mt-1">
+                    <div className="flex justify-between mt-1">
+                      {errors.tagline ? <p className="text-[#d4183d] text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.tagline}</p> : <span />}
                       <span className="text-[#717182]" style={{ fontSize: '12px' }}>
                         {String(getDisplayValue('tagline') || '').length}/80
                       </span>
@@ -491,12 +534,12 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        Country
+                        Country <span className="text-[#d4183d]">*</span>
                       </label>
                       <select
                         value={String(getDisplayValue('country') || '')}
-                        onChange={(e) => updateEditData('country', e.target.value)}
-                        className="w-full h-10 px-3 rounded-md bg-[#f3f3f5] border-none text-sm"
+                        onChange={(e) => { updateEditData('country', e.target.value); setErrors(prev => ({ ...prev, country: '' })); }}
+                        className={`w-full h-10 px-3 rounded-md bg-[#f3f3f5] border-none text-sm ${errors.country ? 'ring-1 ring-[#d4183d]' : ''}`}
                         style={{ fontFamily: 'Inter, sans-serif' }}
                       >
                         <option value="">Select country</option>
@@ -504,25 +547,28 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
+                      {errors.country && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.country}</p>}
                     </div>
                     <div>
                       <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        City
+                        City <span className="text-[#d4183d]">*</span>
                       </label>
                       <Input
                         value={String(getDisplayValue('city') || '')}
-                        onChange={(e) => updateEditData('city', e.target.value)}
+                        onChange={(e) => { updateEditData('city', e.target.value); setErrors(prev => ({ ...prev, city: '' })); }}
                         placeholder="e.g., San Francisco"
-                        className="text-sm"
+                        className={`text-sm ${errors.city ? 'border-[#d4183d]' : ''}`}
                       />
+                      {errors.city && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.city}</p>}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Industry
+                      Industry <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('industries', industries)}
+                    {errors.industries && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.industries}</p>}
                   </div>
                 </div>
               ) : (
@@ -558,27 +604,29 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Primary contact name
+                      Primary contact name <span className="text-[#d4183d]">*</span>
                     </label>
                     <Input
                       value={String(getDisplayValue('contactName') || '')}
-                      onChange={(e) => updateEditData('contactName', e.target.value)}
+                      onChange={(e) => { updateEditData('contactName', e.target.value); setErrors(prev => ({ ...prev, contactName: '' })); }}
                       placeholder="e.g., Jane Smith"
-                      className="text-sm"
+                      className={`text-sm ${errors.contactName ? 'border-[#d4183d]' : ''}`}
                     />
+                    {errors.contactName && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.contactName}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Primary contact email
+                      Primary contact email <span className="text-[#d4183d]">*</span>
                     </label>
                     <Input
                       type="email"
                       value={String(getDisplayValue('contactEmail') || '')}
-                      onChange={(e) => updateEditData('contactEmail', e.target.value)}
+                      onChange={(e) => { updateEditData('contactEmail', e.target.value); setErrors(prev => ({ ...prev, contactEmail: '' })); }}
                       placeholder="e.g., jane@techsummit.com"
-                      className="text-sm"
+                      className={`text-sm ${errors.contactEmail ? 'border-[#d4183d]' : ''}`}
                     />
+                    {errors.contactEmail && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.contactEmail}</p>}
                   </div>
 
                   <div>
@@ -730,30 +778,34 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <div className="space-y-5">
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Event types
+                      Event types <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('eventTypes', eventTypeOptions)}
+                    {errors.eventTypes && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.eventTypes}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Frequency
+                      Frequency <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('frequency', frequencyOptions)}
+                    {errors.frequency && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.frequency}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Typical event size
+                      Typical event size <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('eventSizes', eventSizeOptions)}
+                    {errors.eventSizes && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.eventSizes}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Format
+                      Format <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('formats', formatOptions)}
+                    {errors.formats && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.formats}</p>}
                   </div>
 
                   <div>
@@ -804,16 +856,18 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <div className="space-y-5">
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Speaker formats
+                      Speaker formats <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('speakerFormats', speakerFormatOptions)}
+                    {errors.speakerFormats && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakerFormats}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Languages needed
+                      Languages needed <span className="text-[#d4183d]">*</span>
                     </label>
                     {renderToggleButtons('languages', languageOptions)}
+                    {errors.languages && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.languages}</p>}
                   </div>
 
                   <div>
