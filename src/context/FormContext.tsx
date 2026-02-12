@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FormData } from '../types/formData';
 import { useFormData } from '../hooks/useFormData';
 import { useLogoContext } from './LogoContext';
 import { authAPI, organizerAPI, speakerAPI } from '../utils/api';
+import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
 
 interface FormContextType {
@@ -36,10 +37,89 @@ export function FormProvider({ children }: FormProviderProps) {
   const location = useLocation();
   const formMethods = useFormData();
   const { refreshLogo } = useLogoContext();
+  const handledByAuthChange = useRef(false);
+
+  // Helper: load profile and navigate after OAuth sign-in
+  const handleOAuthSignIn = async (userType: string) => {
+    formMethods.setFormData(prev => ({ ...prev, userType }));
+
+    try {
+      const profile = userType === 'organizer'
+        ? await organizerAPI.getProfile()
+        : await speakerAPI.getProfile();
+
+      if (profile) {
+        formMethods.setFormData(prev => ({ ...prev, ...profile }));
+        sessionStorage.setItem('voxd_profile_completed', 'true');
+        refreshLogo(userType);
+        navigate('/dashboard', { replace: true });
+      } else {
+        // No profile yet, go to onboarding
+        const path = userType === 'organizer'
+          ? '/onboarding/organizer/basics'
+          : '/onboarding/speaker/basics';
+        navigate(path, { replace: true });
+      }
+    } catch {
+      const path = userType === 'organizer'
+        ? '/onboarding/organizer/basics'
+        : '/onboarding/speaker/basics';
+      navigate(path, { replace: true });
+    }
+  };
+
+  // Listen for Supabase auth state changes (handles OAuth callback reliably)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event !== 'SIGNED_IN' || !session) return;
+
+        // Only handle when on a public page (OAuth redirect lands on `/`)
+        const path = window.location.pathname;
+        if (path !== '/' && path !== '/login') return;
+
+        handledByAuthChange.current = true;
+
+        // Check if this is a sign-up flow
+        const signupUserType = authAPI.getAndClearSignupUserType();
+
+        if (signupUserType) {
+          formMethods.setFormData(prev => ({ ...prev, userType: signupUserType }));
+          try {
+            await authAPI.updateUserMetadata({ userType: signupUserType });
+          } catch (error) {
+            console.error('Failed to update user metadata:', error);
+          }
+          sessionStorage.removeItem('voxd_profile_completed');
+          toast.success('Account created successfully! Please complete your profile.');
+          if (signupUserType === 'organizer') {
+            navigate('/onboarding/organizer/basics', { replace: true });
+          } else {
+            navigate('/onboarding/speaker/basics', { replace: true });
+          }
+          return;
+        }
+
+        // Existing user OAuth sign-in
+        const userType = session.user?.user_metadata?.userType;
+        if (userType) {
+          await handleOAuthSignIn(userType);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Load profile on mount if user is authenticated
   useEffect(() => {
     const loadProfile = async () => {
+      // Skip if the onAuthStateChange handler already handled this
+      if (handledByAuthChange.current) {
+        handledByAuthChange.current = false;
+        return;
+      }
+
       try {
         const session = await authAPI.getSession();
         if (session) {
@@ -91,6 +171,11 @@ export function FormProvider({ children }: FormProviderProps) {
                 sessionStorage.setItem('voxd_profile_completed', 'true');
                 // Resolve logo/photo URL for header avatar
                 refreshLogo(userType);
+
+                // Redirect to dashboard if on a public page (e.g., page refresh while authenticated)
+                if (location.pathname === '/' || location.pathname === '/login') {
+                  navigate('/dashboard', { replace: true });
+                }
               }
             } catch (err) {
               // Profile doesn't exist or failed to load - ProtectedRoute will handle navigation
