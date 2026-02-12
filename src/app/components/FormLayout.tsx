@@ -53,13 +53,6 @@ export default function FormLayout({
             <div className="flex items-center gap-8">
               <h2 style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', color: '#0B3B2E' }}>VOXD</h2>
             </div>
-            <Button
-              variant="ghost"
-              onClick={onSaveExit}
-              style={{ fontFamily: 'Inter, sans-serif' }}
-            >
-              Save & exit
-            </Button>
           </div>
         </div>
       )}

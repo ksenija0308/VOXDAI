@@ -5,8 +5,6 @@ import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
 import { FormData } from '../App';
 import FormLayout from './FormLayout';
-import { organizerAPI } from '../../utils/api';
-import { toast } from 'sonner';
 
 interface AboutScreenProps {
   formData: FormData;
@@ -28,7 +26,6 @@ export default function AboutScreen({
   prevDisabled = false,
 }: AboutScreenProps) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -133,7 +130,7 @@ export default function AboutScreen({
         <p className="text-[#717182] mb-3" style={{ fontSize: '14px' }}>
           Connect your calendar to make scheduling easier
         </p>
-        
+
         <div className="space-y-3">
           <select
             value={formData.calendarType}
@@ -220,14 +217,8 @@ export default function AboutScreen({
           <Switch
             id="showInSpeakerSearch"
             checked={formData.showInSpeakerSearch}
-            onCheckedChange={async (checked) => {
+            onCheckedChange={(checked) => {
               updateFormData({ showInSpeakerSearch: checked });
-              try {
-                await organizerAPI.toggleSpeakerVisibility(checked);
-              } catch (error: any) {
-                toast.error('Failed to update visibility');
-                updateFormData({ showInSpeakerSearch: !checked });
-              }
             }}
           />
         </div>

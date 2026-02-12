@@ -103,7 +103,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     budgetMin: profile.budget_min ?? 0,
     budgetMax: profile.budget_max ?? 10000,
     leadTime: profile.lead_time ?? '',
-    showInSpeakerSearch: profile.show_in_speaker_search ?? true,
+    showInSpeakerSearch: profile.show_in_speaker_search ?? false,
   });
 
   useEffect(() => {

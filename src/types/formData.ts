@@ -132,7 +132,7 @@ export const initialFormData: FormData = {
   youtube: '',
   twitter: '',
   authorised: false,
-  showInSpeakerSearch: true,
+  showInSpeakerSearch: false,
   eventTypes: [],
   frequency: [],
   eventSizes: [],

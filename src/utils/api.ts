@@ -275,6 +275,7 @@ export const organizerAPI = {
     if (profileData.youtube) organizationData.youtube = profileData.youtube;
     if (profileData.twitter) organizationData.twitter = profileData.twitter;
     if (profileData.authorised !== undefined) organizationData.authorised = profileData.authorised;
+    if (profileData.showInSpeakerSearch !== undefined) organizationData.show_in_speaker_search = profileData.showInSpeakerSearch;
 
     // Screen 4 - Event Types & Frequency
     if (profileData.eventTypes) organizationData.event_types = profileData.eventTypes;
@@ -368,7 +369,11 @@ export const organizerAPI = {
       throw new Error(error.message);
     }
 
-    return data;
+    // Map snake_case DB fields to camelCase formData fields
+    return {
+      ...data,
+      showInSpeakerSearch: data.show_in_speaker_search ?? false,
+    };
   },
 
   toggleSpeakerVisibility: async (showInSpeakerSearch: boolean) => {

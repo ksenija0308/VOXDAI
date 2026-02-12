@@ -33,37 +33,6 @@ const industries = [
   'Other',
 ];
 
-const countries = [
-  'Switzerland',
-  'Germany', 
-  'Austria',
-  'Belgium',
-  'Bulgaria',
-  'Croatia',
-  'Cyprus',
-  'Czechia',
-  'Denmark',
-  'Estonia',
-  'Finland',
-  'France',
-  'Greece',
-  'Hungary',
-  'Ireland',
-  'Italy',
-  'Latvia',
-  'Lithuania',
-  'Luxembourg',
-  'Malta',
-  'Netherlands',
-  'Poland',
-  'Portugal',
-  'Romania',
-  'Slovakia',
-  'Slovenia',
-  'Spain',
-  'Sweden',
-  'Other',
-];
 
 export default function OrganiserBasicsScreen({
   formData,
@@ -208,23 +177,18 @@ export default function OrganiserBasicsScreen({
           <label htmlFor="country" className="block mb-2">
             Country <span className="text-[#d4183d]">*</span>
           </label>
-          <select
+          <input
+            type="text"
             id="country"
             value={formData.country}
             onChange={(e) => {
               updateFormData({ country: e.target.value });
               setErrors({ ...errors, country: '' });
             }}
+            placeholder="Enter country"
             className="w-full h-10 px-3 rounded-md bg-[#f3f3f5] border-none"
             style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            <option value="">Select country</option>
-            {countries.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
+          />
           {errors.country && (
             <p className="text-[#d4183d] mt-1" style={{ fontSize: '14px' }}>{errors.country}</p>
           )}
