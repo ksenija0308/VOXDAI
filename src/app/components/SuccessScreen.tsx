@@ -94,7 +94,6 @@ export default function SuccessScreen({ nextScreen, formData }: SuccessScreenPro
             <button
               className="bg-[#0b3b2e] rounded-[12px] px-8 py-3.5 font-['Inter',sans-serif] font-medium text-[16px] text-white hover:bg-[#0b3b2e]/90 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
               onClick={() => {
-                console.log('[SuccessScreen] Go to Dashboard clicked');
                 nextScreen();
               }}
             >

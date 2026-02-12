@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { Check } from 'lucide-react';
-import { Button } from './ui/button';
 
 interface FormLayoutProps {
   children: ReactNode;
@@ -33,7 +32,6 @@ export default function FormLayout({
   currentStep,
   onNext,
   onPrev,
-  onSaveExit,
   nextLabel = 'Continue',
   nextDisabled = false,
   prevDisabled = false,

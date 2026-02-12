@@ -151,8 +151,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       }
     };
 
-    console.log('profileData', profileData)
-
     loadProfile();
     // Only run on mount - formData.userType determines which API to call
     // We intentionally don't include formData to avoid re-fetching on every prop change

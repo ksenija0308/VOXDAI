@@ -3,7 +3,7 @@ import { Linkedin, Instagram, Youtube, Twitter } from 'lucide-react';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 
 interface AboutScreenProps {
@@ -53,11 +53,6 @@ export default function AboutScreen({
     if (Object.keys(newErrors).length === 0) {
       nextScreen();
     }
-  };
-
-  const handleSkip = () => {
-    // Clear optional fields and continue
-    nextScreen();
   };
 
   return (

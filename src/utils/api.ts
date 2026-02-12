@@ -713,8 +713,6 @@ export const conversationAPI = {
       .eq('user_id', userId)
       .select('conversation_id,user_id,last_read_at');
 
-    console.log('markRead result:', data, error);
-
     if (error) throw error;
 
     if (!data || data.length === 0) {
