@@ -992,20 +992,22 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
             </div>
           </div>
 
-          <button className="p-6 border-2 border-[#e9ebef] rounded-lg hover:border-[#0B3B2E] transition-colors text-left"
-            onClick={() => setShowEventBrief(true)}>
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 bg-[#0B3B2E] rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
+          {formData.userType !== 'speaker' && (
+            <button className="p-6 border-2 border-[#e9ebef] rounded-lg hover:border-[#0B3B2E] transition-colors text-left"
+              onClick={() => setShowEventBrief(true)}>
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-12 h-12 bg-[#0B3B2E] rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
+                  Create Event Brief
+                </h3>
               </div>
-              <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                Create Event Brief
-              </h3>
-            </div>
-            <p className="text-[#717182]" style={{ fontSize: '14px' }}>
-              Post your event details to attract speakers
-            </p>
-          </button>
+              <p className="text-[#717182]" style={{ fontSize: '14px' }}>
+                Post your event details to attract speakers
+              </p>
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

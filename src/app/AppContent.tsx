@@ -23,7 +23,6 @@ export default function AppContent() {
       await authAPI.signOut();
       resetFormData();
       navigate('/', { replace: true });
-      toast.success('Logged out successfully');
     } catch (error) {
       console.error('Error during logout:', error);
       toast.error('Failed to log out');

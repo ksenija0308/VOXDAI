@@ -45,7 +45,6 @@ export default function SignInForm({ onSignInSuccess, onNavigateToSignUp }: Sign
       setIsLoading(true);
       try {
         await authAPI.signIn(email, password);
-        toast.success('Welcome back!');
 
         // Call the success callback if provided
         if (onSignInSuccess) {

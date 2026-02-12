@@ -193,7 +193,6 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
       updateFormData(saveData);
       const saved = await saveProfile(updatedData, false);
       if (saved) {
-        toast.success('Profile updated successfully');
         setEditingSection(null);
         setEditData({});
         setLocationInput('');
