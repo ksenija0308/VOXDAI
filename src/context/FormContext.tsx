@@ -68,11 +68,15 @@ export function FormProvider({ children }: FormProviderProps) {
     }
   };
 
-  // Listen for Supabase auth state changes (handles OAuth callback reliably)
+  // Listen for Supabase auth state changes (handles OAuth callback reliably).
+  // INITIAL_SESSION fires when the listener is first registered (guaranteed),
+  // SIGNED_IN fires on new sign-ins. We need both because the OAuth token
+  // exchange may complete before or after our listener is set up.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event !== 'SIGNED_IN' || !session) return;
+        if (!session) return;
+        if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
 
         // Only handle when on a public page (OAuth redirect lands on `/`)
         const path = window.location.pathname;
