@@ -109,7 +109,7 @@ export const authAPI = {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
-console.log(`${window.location.origin}/dashboard`)
+
     if (error) {
       throw new Error(error.message);
     }
