@@ -267,7 +267,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
               I accept the{' '}
               <a href="#" className="text-[#0B3B2E] underline">Terms and Conditions</a>
               {' '}and{' '}
-              <a href="#" className="text-[#0B3B2E] underline">Privacy Policy</a>
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#0B3B2E] underline">Privacy Policy</a>
             </label>
           </div>
           {errors.terms && (

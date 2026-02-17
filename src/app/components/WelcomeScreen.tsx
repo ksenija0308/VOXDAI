@@ -721,7 +721,7 @@ export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn
             <div>
               <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style={{ fontFamily: 'Inter, sans-serif' }}>Legal</h4>
               <ul className="space-y-2 text-[#717182]" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px' }}>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Privacy Policy</a></li>
+                <li><a href="/privacy-policy" className="hover:text-[#0B3B2E] transition-colors">Privacy Policy</a></li>
                 <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Terms of Service</a></li>
                 <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Cookie Policy</a></li>
               </ul>

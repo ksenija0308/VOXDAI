@@ -11,6 +11,7 @@ import OrganizerWizard from '../app/components/OrganizerWizard';
 import SpeakerWizard from '../app/components/SpeakerWizard';
 import ProtectedRoute from '../app/components/ProtectedRoute';
 import PublicRoute from '../app/components/PublicRoute';
+import PrivacyPolicyScreen from '../app/components/PrivacyPolicyScreen';
 import { organizerAPI, speakerAPI, authAPI } from '../utils/api';
 import { toast } from 'sonner';
 
@@ -144,6 +145,8 @@ export default function AppRoutes({
           </PublicRoute>
         }
       />
+
+      <Route path="/privacy-policy" element={<PrivacyPolicyScreen />} />
 
       {/* Protected routes */}
       <Route
