@@ -175,12 +175,6 @@ export function FormProvider({ children }: FormProviderProps) {
               return;
             }
 
-            // Skip profile loading if user hasn't completed onboarding yet
-            const profileCompleted = session.user?.user_metadata?.profileCompleted;
-            if (!profileCompleted) {
-              return;
-            }
-
             try {
               const profile = userType === 'organizer'
                 ? await organizerAPI.getProfile()
@@ -192,6 +186,12 @@ export function FormProvider({ children }: FormProviderProps) {
                 sessionStorage.setItem('voxd_profile_completed', 'true');
                 // Resolve logo/photo URL for header avatar
                 refreshLogo(userType);
+
+                // Backfill profileCompleted metadata for old users who
+                // completed onboarding before this flag was introduced
+                if (!session.user?.user_metadata?.profileCompleted) {
+                  authAPI.updateUserMetadata({ profileCompleted: true }).catch(() => {});
+                }
 
                 // Redirect to dashboard if on a public page (e.g., page refresh while authenticated)
                 if (location.pathname === '/' || location.pathname === '/login') {
