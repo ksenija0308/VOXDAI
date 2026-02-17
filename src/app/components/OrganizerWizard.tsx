@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { FormData } from "@/types/formData.ts";
+import { authAPI } from '@/utils/api';
 import OrganiserBasicsScreen from './OrganiserBasicsScreen';
 import AboutScreen from './AboutScreen';
 import EventTypesScreen from './EventTypesScreen';
@@ -34,6 +35,13 @@ export default function OrganizerWizard({
     if (step === 'preferences') {
       const saved = await saveProfile(formData, true);
       if (saved) {
+        // Mark profile as completed in user metadata so OAuth sign-in
+        // knows not to call getProfile() before a profile exists
+        try {
+          await authAPI.updateUserMetadata({ profileCompleted: true });
+        } catch (e) {
+          console.error('Failed to set profileCompleted metadata:', e);
+        }
         clearOnboardingData();
         navigate(`/onboarding/organizer/${stepOrder[currentIndex + 1]}`, { replace: true });
       } else {

@@ -40,8 +40,19 @@ export function FormProvider({ children }: FormProviderProps) {
   const handledByAuthChange = useRef(false);
 
   // Helper: load profile and navigate after OAuth sign-in
-  const handleOAuthSignIn = async (userType: string) => {
+  const handleOAuthSignIn = async (userType: string, session: any) => {
     formMethods.setFormData(prev => ({ ...prev, userType }));
+
+    // If the user hasn't completed onboarding yet, skip the profile API call
+    // entirely — there's no profile to fetch and calling it would produce an error
+    const profileCompleted = session.user?.user_metadata?.profileCompleted;
+    if (!profileCompleted) {
+      const path = userType === 'organizer'
+        ? '/onboarding/organizer/basics'
+        : '/onboarding/speaker/basics';
+      navigate(path, { replace: true });
+      return;
+    }
 
     try {
       const profile = userType === 'organizer'
@@ -107,7 +118,7 @@ export function FormProvider({ children }: FormProviderProps) {
         // Existing user OAuth sign-in
         const userType = session.user?.user_metadata?.userType;
         if (userType) {
-          await handleOAuthSignIn(userType);
+          await handleOAuthSignIn(userType, session);
         }
       }
     );
@@ -161,6 +172,12 @@ export function FormProvider({ children }: FormProviderProps) {
             // Skip profile loading on onboarding routes to avoid unnecessary 404 errors
             const isOnboarding = location.pathname.startsWith('/onboarding/');
             if (isOnboarding) {
+              return;
+            }
+
+            // Skip profile loading if user hasn't completed onboarding yet
+            const profileCompleted = session.user?.user_metadata?.profileCompleted;
+            if (!profileCompleted) {
               return;
             }
 
