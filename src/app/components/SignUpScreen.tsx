@@ -265,7 +265,7 @@ export default function SignUpScreen({ formData, updateFormData, nextScreen, onS
             />
             <label htmlFor="terms" className="text-[#717182] cursor-pointer" style={{ fontSize: '14px' }}>
               I accept the{' '}
-              <a href="#" className="text-[#0B3B2E] underline">Terms and Conditions</a>
+              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-[#0B3B2E] underline">Terms and Conditions</a>
               {' '}and{' '}
               <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#0B3B2E] underline">Privacy Policy</a>
             </label>
