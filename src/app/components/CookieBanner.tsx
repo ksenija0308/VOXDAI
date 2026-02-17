@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const COOKIE_CONSENT_KEY = 'voxd_cookie_consent';
+import { COOKIE_CONSENT_KEY, setConsent } from '../../cookies/consent';
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -13,12 +12,12 @@ export default function CookieBanner() {
   }, []);
 
   const handleAcceptAll = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'all');
+    setConsent(true, true);
     setVisible(false);
   };
 
   const handleRejectNonEssential = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'essential');
+    setConsent(false, false);
     setVisible(false);
   };
   if (!visible) return null;
@@ -43,7 +42,7 @@ export default function CookieBanner() {
 
         <p className="text-[12px] text-[#717182] leading-relaxed mb-5">
           For more information, please see our{' '}
-          <a href="/privacy-policy" className="text-[#0B3B2E] underline hover:opacity-80 transition-opacity">
+          <a href="/cookie-settings" className="text-[#0B3B2E] underline hover:opacity-80 transition-opacity">
             Cookie Policy
           </a>
           {' '}and{' '}
