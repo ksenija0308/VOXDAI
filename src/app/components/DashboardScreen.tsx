@@ -197,7 +197,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   } | null>(null);
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [bookingSpeaker, setBookingSpeaker] = useState<{ name: string; topic: string } | null>(null);
+  const [bookingSpeaker, setBookingSpeaker] = useState<{ id: string; name: string; topic: string } | null>(null);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -1147,7 +1147,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       <Button
                         className="bg-[#0B3B2E] text-white hover:bg-black flex-1 min-w-[140px]"
                         style={{ fontSize: '14px' }}
-                        onClick={() => setBookingSpeaker({ name: match.name, topic: match.topic })}
+                        onClick={() => setBookingSpeaker({ id: match.id, name: match.name, topic: match.topic })}
                       >
                         Book Speaker
                       </Button>
@@ -1419,6 +1419,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       {/* Book Speaker Modal */}
       {bookingSpeaker && (
         <BookSpeakerModal
+          speakerProfileId={bookingSpeaker.id}
           speakerName={bookingSpeaker.name}
           speakerTopic={bookingSpeaker.topic}
           onClose={() => setBookingSpeaker(null)}

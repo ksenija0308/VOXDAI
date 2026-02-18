@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { X as XIcon, Calendar as CalendarIcon, Clock, MapPin, FileText, Download, ExternalLink } from 'lucide-react';
+import { X as XIcon, Calendar as CalendarIcon, Clock, MapPin, FileText, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { createBooking } from '@/utils/booking';
 
 interface BookSpeakerModalProps {
+  speakerProfileId: string;
   speakerName: string;
   speakerTopic: string;
   onClose: () => void;
 }
 
-export default function BookSpeakerModal({ speakerName, speakerTopic, onClose }: BookSpeakerModalProps) {
+export default function BookSpeakerModal({ speakerProfileId, speakerName, speakerTopic, onClose }: BookSpeakerModalProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [eventTitle, setEventTitle] = useState('');
   const [eventLocation, setEventLocation] = useState('');
@@ -18,6 +21,7 @@ export default function BookSpeakerModal({ speakerName, speakerTopic, onClose }:
   const [eventTime, setEventTime] = useState('10:00');
   const [eventNotes, setEventNotes] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const handleGoogleCalendar = () => {
     if (!selectedDate) {
@@ -308,17 +312,52 @@ export default function BookSpeakerModal({ speakerName, speakerTopic, onClose }:
             Cancel
           </Button>
           <Button
-            onClick={() => {
+            disabled={isSending}
+            onClick={async () => {
               if (!selectedDate) {
-                alert('Please select a date first');
+                toast.error('Please select a date first');
                 return;
               }
-              alert(`Booking request sent to ${speakerName}! A calendar invite will be sent shortly.`);
-              onClose();
+
+              const startDate = new Date(selectedDate);
+              const [hours, minutes] = eventTime.split(':');
+              startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+
+              const endDate = new Date(startDate);
+              endDate.setMinutes(endDate.getMinutes() + parseInt(eventDuration));
+
+              const title = eventTitle || `Speaking Engagement with ${speakerName}`;
+              const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+              setIsSending(true);
+              try {
+                await createBooking({
+                  speakerProfileId,
+                  title,
+                  startsAt: startDate.toISOString(),
+                  endsAt: endDate.toISOString(),
+                  timezone,
+                  location: eventLocation || undefined,
+                  notes: eventNotes || undefined,
+                });
+                toast.success(`Booking request sent to ${speakerName}!`);
+                onClose();
+              } catch (err: any) {
+                toast.error(err?.message || 'Failed to send booking request. Please try again.');
+              } finally {
+                setIsSending(false);
+              }
             }}
             className="bg-[#0B3B2E] text-white hover:bg-black"
           >
-            Send Booking Request
+            {isSending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              'Send Booking Request'
+            )}
           </Button>
         </div>
       </div>
