@@ -48,6 +48,15 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [confirmingCalendarId, setConfirmingCalendarId] = useState<string | null>(null);
+  const [addedToCalendar, setAddedToCalendar] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('voxd_calendar_added');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -126,6 +135,17 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
       : (row.organization_name_snapshot ? `Organized by ${row.organization_name_snapshot}` : '');
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGCal(start)}/${formatGCal(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(row.location || '')}&sf=true&output=xml`;
     window.open(url, '_blank');
+    setConfirmingCalendarId(row.id);
+  };
+
+  const confirmCalendarAdded = (bookingId: string) => {
+    setAddedToCalendar((prev) => {
+      const next = new Set(prev);
+      next.add(bookingId);
+      localStorage.setItem('voxd_calendar_added', JSON.stringify([...next]));
+      return next;
+    });
+    setConfirmingCalendarId(null);
   };
 
   const formatEventDate = (iso: string) => {
@@ -293,15 +313,41 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
 
                     {/* Accepted → add to calendar (both speaker and organizer) */}
                     {row.status === 'accepted' && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCalendar(row)}
-                        className="bg-[#0B3B2E] text-white hover:bg-black"
-                        style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}
-                      >
-                        <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
-                        Add to Calendar
-                      </Button>
+                      <div className="flex flex-col items-end gap-2">
+                        <Button
+                          size="sm"
+                          disabled={addedToCalendar.has(row.id)}
+                          onClick={() => handleAddToCalendar(row)}
+                          className={addedToCalendar.has(row.id)
+                            ? 'bg-[#e9ebef] text-[#717182] cursor-default'
+                            : 'bg-[#0B3B2E] text-white hover:bg-black'}
+                          style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}
+                        >
+                          <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
+                          {addedToCalendar.has(row.id) ? 'Added' : 'Add to Calendar'}
+                        </Button>
+
+                        {confirmingCalendarId === row.id && (
+                          <div
+                            className="flex items-center gap-2 bg-[#f3f3f5] rounded-lg px-3 py-2"
+                            style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}
+                          >
+                            <span className="text-[#717182]">Did you add the event?</span>
+                            <button
+                              onClick={() => confirmCalendarAdded(row.id)}
+                              className="text-[#0B3B2E] font-medium hover:underline"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmingCalendarId(null)}
+                              className="text-[#717182] hover:underline"
+                            >
+                              No
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Organizer sent a pending request → can cancel */}
