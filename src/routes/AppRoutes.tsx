@@ -15,6 +15,7 @@ import PrivacyPolicyScreen from '../app/components/PrivacyPolicyScreen';
 import TermsOfServiceScreen from '../app/components/TermsOfServiceScreen';
 import CookieSettingsScreen from '../app/components/CookieSettingsScreen';
 import BookingRespondPage from '../app/components/BookingRespondPage';
+import OutreachPage from '../app/components/OutreachPage';
 import { organizerAPI, speakerAPI, authAPI } from '../utils/api';
 import { toast } from 'sonner';
 
@@ -190,6 +191,14 @@ export default function AppRoutes({
         element={
           <ProtectedRoute>
             <DashboardScreen formData={formData} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/outreach"
+        element={
+          <ProtectedRoute>
+            <OutreachPage userType={formData.userType as 'organizer' | 'speaker'} />
           </ProtectedRoute>
         }
       />

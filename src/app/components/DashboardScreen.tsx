@@ -1236,6 +1236,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 variant="outline"
                 className="w-full mt-6"
                 style={{ fontFamily: 'Inter, sans-serif' }}
+                onClick={() => navigate('/dashboard/outreach')}
               >
                 View all outreach
               </Button>
