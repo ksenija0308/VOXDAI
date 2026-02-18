@@ -64,6 +64,22 @@ export async function listMyBookings() {
   return (data ?? []) as BookingRequest[];
 }
 
+export async function respondBookingAuth(bookingId: string, action: "approve" | "decline") {
+  const { data, error } = await supabase.functions.invoke("respond-booking-auth", {
+    body: { bookingId, action },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function cancelBookingAuth(bookingId: string) {
+  const { data, error } = await supabase.functions.invoke("cancel-booking-auth", {
+    body: { bookingId },
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchOutreachRows(params: {
   status?: string;
   role?: "all" | "sent" | "received";

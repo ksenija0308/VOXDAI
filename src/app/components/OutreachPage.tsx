@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Clock, Loader2, Inbox } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, Loader2, Inbox, CalendarPlus } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { fetchOutreachRows, respondBooking, type BookingRequest, type BookingStatus } from '@/utils/booking';
+import { fetchOutreachRows, respondBookingAuth, cancelBookingAuth, type BookingRequest, type BookingStatus } from '@/utils/booking';
 import { supabase } from '@/lib/supabaseClient';
 
 const SPEAKER_STATUS_OPTIONS: { label: string; value: string }[] = [
@@ -84,11 +84,24 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
   const handleRespond = async (bookingId: string, action: 'approve' | 'decline') => {
     setRespondingId(bookingId);
     try {
-      await respondBooking({ bookingId, action, token: '' });
+      await respondBookingAuth(bookingId, action);
       toast.success(action === 'approve' ? 'Booking approved' : 'Booking declined');
       loadRows();
     } catch (err: any) {
       toast.error(err?.message || 'Failed to respond');
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
+  const handleCancel = async (bookingId: string) => {
+    setRespondingId(bookingId);
+    try {
+      await cancelBookingAuth(bookingId);
+      toast.success('Booking cancelled');
+      loadRows();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to cancel');
     } finally {
       setRespondingId(null);
     }
@@ -101,6 +114,18 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
       return `To: ${row.speaker_name_snapshot || 'Speaker'}`;
     }
     return `From: ${row.organization_name_snapshot || 'Organization'}`;
+  };
+
+  const handleAddToCalendar = (row: BookingRequest) => {
+    const start = new Date(row.starts_at);
+    const end = row.ends_at ? new Date(row.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
+    const formatGCal = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const title = row.title;
+    const details = row.organization_name_snapshot
+      ? `Organized by ${row.organization_name_snapshot}`
+      : '';
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGCal(start)}/${formatGCal(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(row.location || '')}&sf=true&output=xml`;
+    window.open(url, '_blank');
   };
 
   const formatEventDate = (iso: string) => {
@@ -266,13 +291,26 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
                       </>
                     )}
 
-                    {/* Organizer sent a pending request → can cancel (uses decline endpoint) */}
+                    {/* Speaker accepted → add to calendar */}
+                    {!isSentByMe(row) && row.status === 'accepted' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddToCalendar(row)}
+                        className="bg-[#0B3B2E] text-white hover:bg-black"
+                        style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
+                        Add to Calendar
+                      </Button>
+                    )}
+
+                    {/* Organizer sent a pending request → can cancel */}
                     {isSentByMe(row) && row.status === 'pending' && (
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={respondingId === row.id}
-                        onClick={() => handleRespond(row.id, 'decline')}
+                        onClick={() => handleCancel(row.id)}
                         className="border-[#e9ebef] text-[#717182] hover:bg-[#f3f3f5]"
                         style={{ fontSize: '13px', fontFamily: 'Inter, sans-serif' }}
                       >
