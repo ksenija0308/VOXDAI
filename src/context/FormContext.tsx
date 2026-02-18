@@ -89,6 +89,18 @@ export function FormProvider({ children }: FormProviderProps) {
         if (!session) return;
         if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
 
+        // Capture OAuth provider token (e.g. LinkedIn) if present
+        const providerToken = session.provider_token;
+        if (providerToken && session.user) {
+          supabase.from('user_oauth_tokens').upsert({
+            user_id: session.user.id,
+            linkedin_access_token: providerToken,
+            linkedin_token_updated_at: new Date().toISOString(),
+          }).then(({ error }) => {
+            if (error) console.error('Failed to store OAuth provider token:', error);
+          });
+        }
+
         // Only handle when on a public page (OAuth redirect lands on `/`)
         const path = window.location.pathname;
         if (path !== '/' && path !== '/login') return;

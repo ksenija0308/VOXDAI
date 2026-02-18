@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import svgPaths from '../../imports/svg-5axqc4zoph';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 
 const languageOptions = [
   'English', 'Spanish', 'French', 'German', 'Mandarin',
@@ -57,21 +59,47 @@ export default function SpeakerBasicsScreen({
 
   const handleLinkedInImport = async () => {
     setIsImporting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const jwt = sessionData.session?.access_token;
+      if (!jwt) throw new Error('Not authenticated');
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/linkedin-import`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify({}),
+        }
+      );
 
-    // Fill form with sample LinkedIn data
-    updateFormData({
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      professionalTitle: 'Technology Innovation Speaker | AI & Digital Transformation Expert',
-      bio: 'Sarah Johnson is a globally recognized speaker and thought leader in technology innovation, artificial intelligence, and digital transformation. With over 15 years of experience leading digital initiatives at Fortune 500 companies, she brings real-world insights and actionable strategies to every presentation.\n\nAs former Chief Innovation Officer at TechCorp Global, Sarah spearheaded the company\'s AI transformation journey, resulting in a 40% increase in operational efficiency. Her engaging speaking style combines data-driven insights with compelling storytelling, making complex technical concepts accessible to diverse audiences.\n\nSarah has delivered keynotes at major industry conferences including Web Summit, CES, and SXSW, reaching audiences of over 50,000 attendees worldwide. Her TED talk on "The Human Side of AI" has been viewed over 2 million times.\n\nShe holds an MBA from Stanford Graduate School of Business and a Master\'s degree in Computer Science from MIT.',
-      speakerLocation: 'United States',
-      speakerCity: 'San Francisco',
-    });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Import failed');
 
-    setIsImporting(false);
+      // Fill only empty fields with imported data
+      const updates: Partial<FormData> = {};
+      if (!formData.full_name && data.full_name) updates.full_name = data.full_name;
+      if (!formData.profilePhoto && data.photo_url) updates.profilePhoto = data.photo_url;
+      if (!formData.professionalTitle && data.headline) updates.professionalTitle = data.headline;
+
+      if (Object.keys(updates).length > 0) {
+        updateFormData(updates);
+        // Show photo preview if we got a photo URL
+        if (updates.profilePhoto && typeof updates.profilePhoto === 'string') {
+          setPhotoPreview(updates.profilePhoto);
+        }
+      }
+
+      toast.success('LinkedIn profile imported successfully!');
+    } catch (error) {
+      console.error('LinkedIn import failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to import from LinkedIn');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
