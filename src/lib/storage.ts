@@ -36,6 +36,11 @@ export async function getSignedUrl(
   path: string,
   expiresSeconds: number = 600
 ): Promise<string> {
+  // If the path is already an external URL (e.g. LinkedIn CDN), return it as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
     .createSignedUrl(path, expiresSeconds);
