@@ -30,6 +30,7 @@ export default function SpeakerBasicsScreen({
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [languageError, setLanguageError] = useState('');
+  const [ageError, setAgeError] = useState('');
 
   const toggleLanguage = (language: string) => {
     const current = formData.speakerLanguages || [];
@@ -41,10 +42,16 @@ export default function SpeakerBasicsScreen({
   };
 
   const handleContinue = () => {
+    let hasError = false;
+    if (!formData.confirmedOver18) {
+      setAgeError('You must confirm that you are over 18 years old');
+      hasError = true;
+    }
     if (!formData.speakerLanguages || formData.speakerLanguages.length === 0) {
       setLanguageError('Please select at least one language');
-      return;
+      hasError = true;
     }
+    if (hasError) return;
     nextScreen();
   };
 
@@ -308,6 +315,27 @@ export default function SpeakerBasicsScreen({
               </div>
               {languageError && (
                 <p className="text-[#e7000b] mt-2" style={{ fontSize: '14px' }}>{languageError}</p>
+              )}
+            </div>
+
+            {/* Age Confirmation */}
+            <div className="mb-8">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.confirmedOver18}
+                  onChange={(e) => {
+                    updateFormData({ confirmedOver18: e.target.checked });
+                    if (e.target.checked) setAgeError('');
+                  }}
+                  className="mt-1 w-5 h-5 rounded border-[#d1d5dc] text-[#0b3b2e] focus:ring-[#0b3b2e] accent-[#0b3b2e] cursor-pointer"
+                />
+                <span className="font-['Inter',sans-serif] text-[14px] text-[#1a1a1a]">
+                  I confirm that I am over 18 years old <span className="text-[#e7000b]">*</span>
+                </span>
+              </label>
+              {ageError && (
+                <p className="text-[#e7000b] mt-2" style={{ fontSize: '14px' }}>{ageError}</p>
               )}
             </div>
 

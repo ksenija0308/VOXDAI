@@ -51,6 +51,7 @@ export interface FormData {
 
   // Speaker Profile Fields
   // Speaker Basics
+  confirmedOver18: boolean;
   firstName: string;
   full_name: string;
   lastName: string;
@@ -147,6 +148,7 @@ export const initialFormData: FormData = {
   budgetMax: 10000,
   leadTime: '',
   visibility: 'public',
+  confirmedOver18: false,
   firstName: '',
   full_name: '',
   lastName: '',
