@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import svgPaths from '../../imports/svg-5axqc4zoph';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+
+const LINKEDIN_IMPORT_PENDING_KEY = 'voxd_linkedin_import_pending';
 
 const languageOptions = [
   'English', 'Spanish', 'French', 'German', 'Mandarin',
@@ -33,6 +35,7 @@ export default function SpeakerBasicsScreen({
   const [isImporting, setIsImporting] = useState(false);
   const [languageError, setLanguageError] = useState('');
   const [ageError, setAgeError] = useState('');
+  const importRan = useRef(false);
 
   const toggleLanguage = (language: string) => {
     const current = formData.speakerLanguages || [];
@@ -57,7 +60,8 @@ export default function SpeakerBasicsScreen({
     nextScreen();
   };
 
-  const handleLinkedInImport = async () => {
+  // Call the linkedin-import edge function and fill empty form fields
+  const callLinkedInImport = useCallback(async () => {
     setIsImporting(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -87,7 +91,6 @@ export default function SpeakerBasicsScreen({
 
       if (Object.keys(updates).length > 0) {
         updateFormData(updates);
-        // Show photo preview if we got a photo URL
         if (updates.profilePhoto && typeof updates.profilePhoto === 'string') {
           setPhotoPreview(updates.profilePhoto);
         }
@@ -98,6 +101,54 @@ export default function SpeakerBasicsScreen({
       console.error('LinkedIn import failed:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to import from LinkedIn');
     } finally {
+      setIsImporting(false);
+    }
+  }, [formData.full_name, formData.profilePhoto, formData.professionalTitle, updateFormData]);
+
+  // After redirect back from LinkedIn linkIdentity, automatically run the import
+  useEffect(() => {
+    if (importRan.current) return;
+    const pending = localStorage.getItem(LINKEDIN_IMPORT_PENDING_KEY);
+    if (!pending) return;
+
+    importRan.current = true;
+    localStorage.removeItem(LINKEDIN_IMPORT_PENDING_KEY);
+    callLinkedInImport();
+  }, [callLinkedInImport]);
+
+  const handleLinkedInImport = async () => {
+    setIsImporting(true);
+    try {
+      // Check if LinkedIn identity is already linked
+      const { data } = await supabase.auth.getUser();
+      const identities = data.user?.identities ?? [];
+      const hasLinkedIn = identities.some((i) => i.provider === 'linkedin_oidc');
+
+      if (hasLinkedIn) {
+        // LinkedIn already linked — import directly
+        await callLinkedInImport();
+      } else {
+        // LinkedIn not linked — initiate linkIdentity flow
+        // Set flag so we auto-import after redirect back
+        localStorage.setItem(LINKEDIN_IMPORT_PENDING_KEY, 'true');
+
+        const { error } = await supabase.auth.linkIdentity({
+          provider: 'linkedin_oidc',
+          options: {
+            scopes: 'openid profile',
+            redirectTo: window.location.href,
+          },
+        });
+
+        if (error) {
+          localStorage.removeItem(LINKEDIN_IMPORT_PENDING_KEY);
+          throw error;
+        }
+        // Browser will redirect to LinkedIn — execution stops here
+      }
+    } catch (error) {
+      console.error('LinkedIn import failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to import from LinkedIn');
       setIsImporting(false);
     }
   };
