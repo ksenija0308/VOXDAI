@@ -121,9 +121,9 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
     const end = row.ends_at ? new Date(row.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
     const formatGCal = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const title = row.title;
-    const details = row.organization_name_snapshot
-      ? `Organized by ${row.organization_name_snapshot}`
-      : '';
+    const details = isSentByMe(row)
+      ? (row.speaker_name_snapshot ? `Speaker: ${row.speaker_name_snapshot}` : '')
+      : (row.organization_name_snapshot ? `Organized by ${row.organization_name_snapshot}` : '');
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGCal(start)}/${formatGCal(end)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(row.location || '')}&sf=true&output=xml`;
     window.open(url, '_blank');
   };
@@ -291,8 +291,8 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
                       </>
                     )}
 
-                    {/* Speaker accepted → add to calendar */}
-                    {!isSentByMe(row) && row.status === 'accepted' && (
+                    {/* Accepted → add to calendar (both speaker and organizer) */}
+                    {row.status === 'accepted' && (
                       <Button
                         size="sm"
                         onClick={() => handleAddToCalendar(row)}
