@@ -7,19 +7,21 @@ import { format } from 'date-fns';
 import { fetchOutreachRows, respondBooking, type BookingRequest, type BookingStatus } from '@/utils/booking';
 import { supabase } from '@/lib/supabaseClient';
 
-const STATUS_OPTIONS: { label: string; value: string }[] = [
+const SPEAKER_STATUS_OPTIONS: { label: string; value: string }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Accepted', value: 'accepted' },
+  { label: 'Declined', value: 'declined' },
+  { label: 'Expired', value: 'expired' },
+];
+
+const ORGANIZER_STATUS_OPTIONS: { label: string; value: string }[] = [
   { label: 'All', value: 'all' },
   { label: 'Pending', value: 'pending' },
   { label: 'Accepted', value: 'accepted' },
   { label: 'Declined', value: 'declined' },
   { label: 'Cancelled', value: 'cancelled' },
   { label: 'Expired', value: 'expired' },
-];
-
-const ROLE_OPTIONS: { label: string; value: string }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Sent', value: 'sent' },
-  { label: 'Received', value: 'received' },
 ];
 
 const STATUS_COLORS: Record<BookingStatus, { bg: string; text: string }> = {
@@ -39,7 +41,8 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
   const navigate = useNavigate();
 
   const statusFilter = searchParams.get('status') || 'all';
-  const roleFilter = (searchParams.get('role') || 'all') as 'all' | 'sent' | 'received';
+  const roleFilter = userType === 'organizer' ? 'sent' : 'received' as 'sent' | 'received';
+  const statusOptions = userType === 'organizer' ? ORGANIZER_STATUS_OPTIONS : SPEAKER_STATUS_OPTIONS;
 
   const [rows, setRows] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +65,7 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, roleFilter]);
+  }, [statusFilter, roleFilter, userType]);
 
   useEffect(() => {
     loadRows();
@@ -135,61 +138,30 @@ export default function OutreachPage({ userType }: OutreachPageProps) {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Filters */}
-        <div className="bg-white border border-[#e9ebef] rounded-lg p-4 flex flex-wrap gap-4">
-          {/* Status filter */}
-          <div>
-            <label
-              className="block mb-1.5 text-[#717182]"
-              style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}
-            >
-              Status
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {STATUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => updateFilter('status', opt.value)}
-                  className="px-3 py-1.5 rounded-full border transition-colors"
-                  style={{
-                    fontSize: '13px',
-                    fontFamily: 'Inter, sans-serif',
-                    borderColor: statusFilter === opt.value ? '#0B3B2E' : '#e9ebef',
-                    backgroundColor: statusFilter === opt.value ? '#0B3B2E' : 'white',
-                    color: statusFilter === opt.value ? 'white' : '#717182',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Role filter */}
-          <div>
-            <label
-              className="block mb-1.5 text-[#717182]"
-              style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}
-            >
-              Role
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {ROLE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => updateFilter('role', opt.value)}
-                  className="px-3 py-1.5 rounded-full border transition-colors"
-                  style={{
-                    fontSize: '13px',
-                    fontFamily: 'Inter, sans-serif',
-                    borderColor: roleFilter === opt.value ? '#0B3B2E' : '#e9ebef',
-                    backgroundColor: roleFilter === opt.value ? '#0B3B2E' : 'white',
-                    color: roleFilter === opt.value ? 'white' : '#717182',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        <div className="bg-white border border-[#e9ebef] rounded-lg p-4">
+          <label
+            className="block mb-1.5 text-[#717182]"
+            style={{ fontSize: '12px', fontFamily: 'Inter, sans-serif' }}
+          >
+            Status
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => updateFilter('status', opt.value)}
+                className="px-3 py-1.5 rounded-full border transition-colors"
+                style={{
+                  fontSize: '13px',
+                  fontFamily: 'Inter, sans-serif',
+                  borderColor: statusFilter === opt.value ? '#0B3B2E' : '#e9ebef',
+                  backgroundColor: statusFilter === opt.value ? '#0B3B2E' : 'white',
+                  color: statusFilter === opt.value ? 'white' : '#717182',
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 
