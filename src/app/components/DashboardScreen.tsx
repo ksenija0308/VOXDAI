@@ -432,7 +432,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   }, []);
 
   const pipelineStages = [
-    { name: 'Contacted', count: outreachCounts.contacted, color: '#717182' },
+    { name: 'Pending', count: outreachCounts.contacted, color: '#717182' },
     { name: 'Confirmed', count: outreachCounts.confirmed, color: '#0B3B2E' },
     { name: 'Declined', count: outreachCounts.declined, color: '#d4183d' },
   ];
