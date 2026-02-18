@@ -106,7 +106,6 @@ export const authAPI = {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,
       options: {
-        scopes: "openid, profile",
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
