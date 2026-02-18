@@ -12,6 +12,7 @@ import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { fetchOutreachCounts } from '@/features/outreach/outreachCounts';
 
 interface DashboardScreenProps {
   formData: FormData;
@@ -422,11 +423,18 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     };
   }, [activeConversation]);
 
+  const [outreachCounts, setOutreachCounts] = useState({ contacted: 0, confirmed: 0, declined: 0 });
+
+  useEffect(() => {
+    fetchOutreachCounts()
+      .then(setOutreachCounts)
+      .catch((err) => console.error('Failed to load outreach counts:', err));
+  }, []);
+
   const pipelineStages = [
-    { name: 'Contacted', count: 8, color: '#717182' },
-    { name: 'Interested', count: 5, color: '#0B3B2E' },
-    { name: 'Confirmed', count: 2, color: '#0B3B2E' },
-    { name: 'Declined', count: 1, color: '#d4183d' },
+    { name: 'Contacted', count: outreachCounts.contacted, color: '#717182' },
+    { name: 'Confirmed', count: outreachCounts.confirmed, color: '#0B3B2E' },
+    { name: 'Declined', count: outreachCounts.declined, color: '#d4183d' },
   ];
 
   // Real API search function
@@ -1203,7 +1211,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 Outreach Pipeline
               </h3>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {pipelineStages.map((stage, index) => (
                   <div key={index} className="text-center">
                     <div
