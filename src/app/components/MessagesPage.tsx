@@ -111,6 +111,16 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
           (fallbackProfiles ?? []).forEach((p: any) => fallbackMap.set(p.user_id, p.display_name));
         }
 
+        // Count unread messages per conversation
+        const unreadCountMap = new Map<string, number>();
+        rows.forEach((r: any) => {
+          const lastReadAt = r.last_read_at ? new Date(r.last_read_at).getTime() : 0;
+          const count = (allMessages ?? []).filter(
+            (m: any) => m.conversation_id === r.conversation_id && m.sender_id !== currentUserId && new Date(m.created_at).getTime() > lastReadAt
+          ).length;
+          unreadCountMap.set(r.conversation_id, count);
+        });
+
         const mapped: Conversation[] = rows.map((r: any) => {
           const convData = convDataMap.get(r.conversation_id);
 
@@ -121,7 +131,7 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
             speakerTopic: '',
             lastMessage: convData?.lastMsg?.body || '',
             timestamp: convData?.lastMsg ? new Date(convData.lastMsg.created_at).toLocaleTimeString() : '',
-            unread: 0,
+            unread: unreadCountMap.get(r.conversation_id) ?? 0,
             messages: [],
           };
         });
@@ -186,6 +196,10 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
 
       try {
         await conversationAPI.markRead(activeConversation);
+        // Reset unread count for this conversation in the sidebar
+        setConversations(prev => prev.map(c =>
+          c.conversationId === activeConversation ? { ...c, unread: 0 } : c
+        ));
       } catch (error) {
         console.error('markRead failed:', error);
       }
@@ -369,24 +383,31 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
                 No conversations yet
               </div>
             ) : (
-              conversations.map((conversation) => (
+              conversations.map((conversation) => {
+                const hasUnread = conversation.unread > 0;
+                return (
                 <button
                   key={conversation.conversationId}
                   className={`w-full p-4 border-b border-[#e9ebef] hover:bg-[#f3f3f5] transition-colors text-left ${
                     activeConversation === conversation.conversationId ? 'bg-[#f3f3f5]' : ''
-                  }`}
+                  } ${hasUnread && activeConversation !== conversation.conversationId ? 'bg-[#f0faf6]' : ''}`}
                   onClick={() => selectConversation(conversation.conversationId)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
-                      {conversation.speakerName.charAt(0)}
+                    <div className="relative shrink-0">
+                      <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white">
+                        {conversation.speakerName.charAt(0)}
+                      </div>
+                      {hasUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#0B3B2E] rounded-full border-2 border-white" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
+                        <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: hasUnread ? '700' : '500' }}>
                           {conversation.speakerName}
                         </h4>
-                        <span className="text-[#717182]" style={{ fontSize: '12px' }}>
+                        <span className={hasUnread ? 'text-[#0B3B2E]' : 'text-[#717182]'} style={{ fontSize: '12px', fontWeight: hasUnread ? '600' : '400' }}>
                           {conversation.timestamp}
                         </span>
                       </div>
@@ -394,11 +415,11 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
                         {conversation.speakerTopic}
                       </p>
                       <div className="flex items-center justify-between">
-                        <p className="text-[#717182] truncate" style={{ fontSize: '14px' }}>
+                        <p className={`truncate ${hasUnread ? 'text-[#1a1a2e]' : 'text-[#717182]'}`} style={{ fontSize: '14px', fontWeight: hasUnread ? '600' : '400' }}>
                           {conversation.lastMessage}
                         </p>
-                        {conversation.unread > 0 && (
-                          <span className="ml-2 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center shrink-0">
+                        {hasUnread && (
+                          <span className="ml-2 min-w-[20px] h-5 px-1.5 bg-[#0B3B2E] rounded-full text-white text-xs flex items-center justify-center shrink-0" style={{ fontWeight: '600' }}>
                             {conversation.unread}
                           </span>
                         )}
@@ -406,7 +427,8 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
                     </div>
                   </div>
                 </button>
-              ))
+                );
+              })
             )}
           </div>
         </div>
