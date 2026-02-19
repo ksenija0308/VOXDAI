@@ -1,4 +1,4 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, User, Bell } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, Sparkles, Filter, Video, Clock, DollarSign, LogOut, User, Bell } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -18,24 +18,6 @@ import { fetchOutreachCounts } from '@/features/outreach/outreachCounts';
 interface DashboardScreenProps {
   formData: FormData;
   onLogout?: () => void;
-}
-
-interface Message {
-  id: number;
-  sender: 'user' | 'speaker';
-  content: string;
-  timestamp: string;
-}
-
-interface Conversation {
-  conversationId: string;
-  speakerId: string;
-  speakerName: string;
-  speakerTopic: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  messages: Message[];
 }
 
 export default function DashboardScreen({ formData, onLogout }: DashboardScreenProps) {
@@ -176,9 +158,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     profilePhotoPath: string | null;
   }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [activeConversation, setActiveConversation] = useState<string | null>(null);
-  const [messageInput, setMessageInput] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
   const [viewingSpeaker, setViewingSpeaker] = useState<{
     id: string;
@@ -211,7 +190,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     feeRange: 'all'
   });
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
 
   const [recentMatches, setRecentMatches] = useState<Array<{
     id: string;
@@ -239,87 +217,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       .catch(err => console.error('Failed to load unread count:', err));
   }, []);
 
-  // Load conversations on mount
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const { data: auth } = await supabase.auth.getUser();
-        const currentUserId = auth.user?.id;
-        if (!currentUserId) return;
-
-        const rows = await conversationAPI.loadMyConversations();
-        if (rows.length === 0) return;
-
-        // Load all messages (with sender profile) for each conversation
-        const convIds = rows.map((r: any) => r.conversation_id);
-        const { data: allMessages } = await supabase
-          .from('messages')
-          .select(`
-            conversation_id, body, created_at, sender_id,
-            sender:profiles!messages_sender_id_fkey (display_name)
-          `)
-          .in('conversation_id', convIds)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false });
-
-        // Group messages by conversation: last message + other participant's name
-        const convDataMap = new Map<string, { lastMsg: any; otherName: string }>();
-        (allMessages ?? []).forEach((m: any) => {
-          const cid = m.conversation_id;
-          const existing = convDataMap.get(cid);
-
-          if (!existing) {
-            convDataMap.set(cid, { lastMsg: m, otherName: '' });
-          }
-
-          // Pick up display_name from any message sent by the other participant
-          if (m.sender_id !== currentUserId && m.sender?.display_name) {
-            const entry = convDataMap.get(cid)!;
-            if (!entry.otherName) {
-              entry.otherName = m.sender.display_name;
-            }
-          }
-        });
-
-        // For conversations where the other person hasn't sent a message yet,
-        // fall back to loading their profile from the profiles table
-        const missingNameIds = rows
-          .filter((r: any) => !convDataMap.get(r.conversation_id)?.otherName && r.other_user_id)
-          .map((r: any) => r.other_user_id);
-
-        const fallbackMap = new Map<string, string>();
-        if (missingNameIds.length > 0) {
-          const { data: fallbackProfiles } = await supabase
-            .from('profiles')
-            .select('user_id, display_name')
-            .in('user_id', missingNameIds);
-          (fallbackProfiles ?? []).forEach((p: any) => fallbackMap.set(p.user_id, p.display_name));
-        }
-
-        const mapped: Conversation[] = rows.map((r: any) => {
-          const convData = convDataMap.get(r.conversation_id);
-
-          return {
-            conversationId: r.conversation_id,
-            speakerId: r.other_user_id ?? '',
-            speakerName: convData?.otherName || fallbackMap.get(r.other_user_id) || 'Unknown',
-            speakerTopic: '',
-            lastMessage: convData?.lastMsg?.body || '',
-            timestamp: convData?.lastMsg ? new Date(convData.lastMsg.created_at).toLocaleTimeString() : '',
-            unread: 0,
-            messages: [],
-          };
-        });
-
-        setConversations(mapped);
-      } catch (error) {
-        console.error('Failed to load conversations:', error);
-      }
-    };
-
-    fetchConversations();
-  }, [formData.userType]);
-
   // Load recent matches from database on mount
   useEffect(() => {
     const fetchRecentMatches = async () => {
@@ -336,93 +233,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
     fetchRecentMatches();
   }, [formData.userType]);
-
-  // Load messages and subscribe to realtime when a conversation is opened
-  useEffect(() => {
-    if (!activeConversation) return;
-
-    let currentUserId: string | undefined;
-
-    const fetchMessages = async () => {
-      try {
-        const { data: auth } = await supabase.auth.getUser();
-        currentUserId = auth.user?.id;
-
-        const msgs = await conversationAPI.loadMessages(activeConversation);
-
-        // Find the other participant's display_name from sender profiles
-        const otherMsg = msgs.find((m: any) => m.sender_id !== currentUserId);
-        const otherName = otherMsg?.sender?.display_name || null;
-
-        const mapped: Message[] = msgs.map((m: any) => ({
-          id: m.id,
-          sender: m.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
-          content: m.body,
-          timestamp: new Date(m.created_at).toLocaleTimeString(),
-        }));
-
-        setConversations(prev => prev.map(c => {
-          if (c.conversationId === activeConversation) {
-            return {
-              ...c,
-              speakerName: otherName || c.speakerName,
-              messages: mapped,
-              lastMessage: mapped.length > 0 ? mapped[mapped.length - 1].content : c.lastMessage,
-            };
-          }
-          return c;
-        }));
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      }
-
-      // Mark conversation as read and refresh badge
-      try {
-        await conversationAPI.markRead(activeConversation);
-      } catch (error) {
-        console.error('markRead failed:', error);
-      }
-      try {
-        const count = await conversationAPI.loadUnreadCount();
-        setTotalUnread(count);
-      } catch (error) {
-        console.error('Failed to refresh unread count:', error);
-      }
-    };
-
-    fetchMessages();
-
-    const unsubscribe = conversationAPI.subscribeToMessages(activeConversation, (newMsg) => {
-      if (newMsg.sender_id === currentUserId) return;
-
-      const mapped: Message = {
-        id: newMsg.id,
-        sender: 'speaker',
-        content: newMsg.body,
-        timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
-      };
-
-      setConversations(prev => prev.map(c => {
-        if (c.conversationId === activeConversation) {
-          return {
-            ...c,
-            messages: [...c.messages, mapped],
-            lastMessage: mapped.content,
-            timestamp: mapped.timestamp,
-          };
-        }
-        return c;
-      }));
-
-      conversationAPI.loadUnreadCount()
-        .then(count => setTotalUnread(count))
-        .catch(() => {});
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [activeConversation]);
 
   const [outreachCounts, setOutreachCounts] = useState({ contacted: 0, confirmed: 0, declined: 0 });
 
@@ -496,39 +306,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeConversation) return;
-
-    const text = messageInput;
-    setMessageInput('');
-
-    const newMessage: Message = {
-      id: Date.now(),
-      sender: 'user',
-      content: text,
-      timestamp: new Date().toLocaleTimeString()
-    };
-
-    setConversations(prev => prev.map(conversation => {
-      if (conversation.conversationId === activeConversation) {
-        return {
-          ...conversation,
-          messages: [...conversation.messages, newMessage],
-          lastMessage: newMessage.content,
-          timestamp: newMessage.timestamp,
-        };
-      }
-      return conversation;
-    }));
-
-    try {
-      await conversationAPI.sendMessage(activeConversation, text);
-    } catch (error: any) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -538,7 +315,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           <div className="flex items-center gap-4">
             <button
               className="text-[#717182] hover:text-black relative"
-              onClick={() => setIsChatOpen(!isChatOpen)}
+              onClick={() => navigate('/dashboard/messages')}
             >
               <Mail className="w-5 h-5" />
               {totalUnread > 0 && (
@@ -970,24 +747,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                                 ? await conversationAPI.getOrCreateConversationOrganizer(result.id)
                                 : await conversationAPI.getOrCreateConversation(result.id);
                               const conversationId = conv.id ?? conv.conversation_id;
-
-                              const existingConv = conversations.find(c => c.conversationId === conversationId);
-
-                              if (!existingConv) {
-                                setConversations(prev => [...prev, {
-                                  conversationId,
-                                  speakerId: result.id,
-                                  speakerName: result.name,
-                                  speakerTopic: result.topic,
-                                  lastMessage: '',
-                                  timestamp: 'Now',
-                                  unread: 0,
-                                  messages: []
-                                }]);
-                              }
-
-                              setActiveConversation(conversationId);
-                              setIsChatOpen(true);
+                              navigate(`/dashboard/messages?conversationId=${conversationId}`);
                             } catch (error: any) {
                               console.error('Failed to create conversation:', error);
                               toast.error('Failed to start conversation. Please try again.');
@@ -1132,24 +892,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                               ? await conversationAPI.getOrCreateConversationOrganizer(match.id)
                               : await conversationAPI.getOrCreateConversation(match.id);
                             const conversationId = conv.id ?? conv.conversation_id;
-
-                            const existingConv = conversations.find(c => c.conversationId === conversationId);
-
-                            if (!existingConv) {
-                              setConversations(prev => [...prev, {
-                                conversationId,
-                                speakerId: match.id,
-                                speakerName: match.name,
-                                speakerTopic: match.topic,
-                                lastMessage: '',
-                                timestamp: 'Now',
-                                unread: 0,
-                                messages: []
-                              }]);
-                            }
-
-                            setActiveConversation(conversationId);
-                            setIsChatOpen(true);
+                            navigate(`/dashboard/messages?conversationId=${conversationId}`);
                           } catch (error: any) {
                             console.error('Failed to create conversation:', error);
                             toast.error('Failed to start conversation. Please try again.');
@@ -1253,141 +996,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         )}
       </div>
 
-      {/* Chat Panel */}
-      {isChatOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-end">
-          <div className="bg-white w-full md:w-[500px] h-[600px] md:rounded-tl-lg shadow-2xl flex flex-col">
-            {/* Chat Header */}
-            <div className="border-b border-[#e9ebef] p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500', fontSize: '18px' }}>
-                  Messages
-                </h3>
-                <button
-                  className="text-[#717182] hover:text-black"
-                  onClick={() => {
-                    setIsChatOpen(false);
-                    setActiveConversation(null);
-                  }}
-                >
-                  <XIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Conversations List or Active Chat */}
-            {!activeConversation ? (
-              <div className="flex-1 overflow-y-auto">
-                {conversations.map((conversation) => (
-                  <button
-                    key={conversation.conversationId}
-                    className="w-full p-4 border-b border-[#e9ebef] hover:bg-[#f3f3f5] transition-colors text-left"
-                    onClick={() => setActiveConversation(conversation.conversationId)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-12 h-12 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white shrink-0">
-                        {conversation.speakerName.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                            {conversation.speakerName}
-                          </h4>
-                          <span className="text-[#717182]" style={{ fontSize: '12px' }}>
-                            {conversation.timestamp}
-                          </span>
-                        </div>
-                        <p className="text-[#717182] mb-1" style={{ fontSize: '13px' }}>
-                          {conversation.speakerTopic}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-[#717182] truncate" style={{ fontSize: '14px' }}>
-                            {conversation.lastMessage}
-                          </p>
-                          {conversation.unread > 0 && (
-                            <span className="ml-2 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center shrink-0">
-                              {conversation.unread}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <>
-                {/* Active Conversation Header */}
-                <div className="border-b border-[#e9ebef] p-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      className="text-[#717182] hover:text-black"
-                      onClick={() => setActiveConversation(null)}
-                    >
-                      <XIcon className="w-5 h-5" />
-                    </button>
-                    <div className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white">
-                      {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName.charAt(0)}
-                    </div>
-                    <div>
-                      <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                        {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName}
-                      </h4>
-                      <p className="text-[#717182]" style={{ fontSize: '13px' }}>
-                        {conversations.find(conv => conv.conversationId === activeConversation)?.speakerTopic}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {conversations.find(conv => conv.conversationId === activeConversation)?.messages.map(message => (
-                    <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'bg-[#0B3B2E] text-white' : 'bg-[#f3f3f5]'}`}>
-                        <p style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-                          {message.content}
-                        </p>
-                        <p className={`mt-1 ${message.sender === 'user' ? 'text-white/70' : 'text-[#717182]'}`} style={{ fontSize: '11px' }}>
-                          {message.timestamp}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Message Input */}
-                <div className="border-t border-[#e9ebef] p-4">
-                  <div className="flex items-end gap-2">
-                    <textarea
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      placeholder="Type a message..."
-                      className="flex-1 p-3 border-2 border-[#e9ebef] rounded-lg resize-none focus:outline-none focus:border-[#0B3B2E] transition-colors"
-                      rows={2}
-                      style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!messageInput.trim()}
-                      className="p-3 bg-[#0B3B2E] text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Send className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Speaker Profile View */}
       {viewingSpeaker && (
         <SpeakerProfileView
@@ -1399,25 +1007,8 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 ? await conversationAPI.getOrCreateConversationOrganizer(viewingSpeaker.id)
                 : await conversationAPI.getOrCreateConversation(viewingSpeaker.id);
               const conversationId = conv.id ?? conv.conversation_id;
-
-              const existingConv = conversations.find(c => c.conversationId === conversationId);
-
-              if (!existingConv) {
-                setConversations(prev => [...prev, {
-                  conversationId,
-                  speakerId: viewingSpeaker.id,
-                  speakerName: viewingSpeaker.name,
-                  speakerTopic: viewingSpeaker.topic,
-                  lastMessage: '',
-                  timestamp: 'Now',
-                  unread: 0,
-                  messages: []
-                }]);
-              }
-
-              setActiveConversation(conversationId);
               setViewingSpeaker(null);
-              setIsChatOpen(true);
+              navigate(`/dashboard/messages?conversationId=${conversationId}`);
             } catch (error: any) {
               console.error('Failed to create conversation:', error);
               toast.error('Failed to start conversation. Please try again.');
