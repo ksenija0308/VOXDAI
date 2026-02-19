@@ -964,7 +964,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                           style={{ fontSize: '14px' }}
                           onClick={async () => {
                             try {
-                              const conv = await conversationAPI.getOrCreateConversation(result.id);
+                              const conv = formData.userType === 'speaker'
+                                ? await conversationAPI.getOrCreateConversationOrganizer(result.id)
+                                : await conversationAPI.getOrCreateConversation(result.id);
                               const conversationId = conv.id ?? conv.conversation_id;
 
                               const existingConv = conversations.find(c => c.conversationId === conversationId);
@@ -1124,7 +1126,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                         style={{ fontSize: '14px' }}
                         onClick={async () => {
                           try {
-                            const conv = await conversationAPI.getOrCreateConversation(match.id);
+                            const conv = formData.userType === 'speaker'
+                              ? await conversationAPI.getOrCreateConversationOrganizer(match.id)
+                              : await conversationAPI.getOrCreateConversation(match.id);
                             const conversationId = conv.id ?? conv.conversation_id;
 
                             const existingConv = conversations.find(c => c.conversationId === conversationId);
@@ -1389,7 +1393,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           onClose={() => setViewingSpeaker(null)}
           onContact={async () => {
             try {
-              const conv = await conversationAPI.getOrCreateConversation(viewingSpeaker.id);
+              const conv = formData.userType === 'speaker'
+                ? await conversationAPI.getOrCreateConversationOrganizer(viewingSpeaker.id)
+                : await conversationAPI.getOrCreateConversation(viewingSpeaker.id);
               const conversationId = conv.id ?? conv.conversation_id;
 
               const existingConv = conversations.find(c => c.conversationId === conversationId);

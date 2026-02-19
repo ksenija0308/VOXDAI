@@ -585,6 +585,31 @@ export const conversationAPI = {
     return response.json();
   },
 
+  getOrCreateConversationOrganizer: async (organizerProfileId: string) => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
+    const accessToken = await authAPI.getAccessToken();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/get-or-create-conversation-organizer`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ organizer_profile_id: organizerProfileId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get or create conversation: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
   sendMessage: async (conversationId: string, text: string) => {
     const body = text.trim();
     if (!body) return;
