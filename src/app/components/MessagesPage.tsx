@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { conversationAPI, authAPI } from '@/utils/api';
 import { useLogoContext } from '@/context/LogoContext';
+import { useConversationPresence } from '@/hooks/usePresencePing';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { FormData } from '@/types/formData';
@@ -43,6 +44,9 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Tell backend which conversation the user is viewing (skips email notifications)
+  useConversationPresence(activeConversation);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

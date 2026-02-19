@@ -5,6 +5,7 @@ import { useFormData } from '../hooks/useFormData';
 import { useLogoContext } from './LogoContext';
 import { authAPI, organizerAPI, speakerAPI } from '../utils/api';
 import { supabase } from '../lib/supabaseClient';
+import { usePresencePing } from '../hooks/usePresencePing';
 import { toast } from 'sonner';
 
 interface FormContextType {
@@ -38,6 +39,9 @@ export function FormProvider({ children }: FormProviderProps) {
   const formMethods = useFormData();
   const { refreshLogo } = useLogoContext();
   const handledByAuthChange = useRef(false);
+
+  // Ping presence every 30s so the backend knows the user is online
+  usePresencePing();
 
   // Helper: load profile and navigate after OAuth sign-in
   const handleOAuthSignIn = async (userType: string, session: any) => {
