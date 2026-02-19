@@ -611,19 +611,12 @@ export const conversationAPI = {
   },
 
   sendMessage: async (conversationId: string, text: string) => {
-    const body = text.trim();
-    if (!body) return;
+    const content = text.trim();
+    if (!content) return;
 
-    const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
-    if (!userId) throw new Error('Not authenticated');
-
-    const { error } = await supabase.from('messages').insert({
-      conversation_id: conversationId,
-      sender_id: userId,
-      body,
+    const { data, error } = await supabase.functions.invoke('send-message', {
+      body: { conversationId, content },
     });
-
     if (error) throw error;
   },
 
@@ -743,6 +736,66 @@ export const conversationAPI = {
     if (!data || data.length === 0) {
       throw new Error('markRead updated 0 rows. Participant row not found or blocked by RLS.');
     }
+  },
+};
+
+// Notification API
+export const notificationAPI = {
+  loadNotifications: async (limit = 30) => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id,type,title,body,href,is_read,created_at,entity_type,entity_id')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  getUnreadCount: async () => {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_read', false);
+    if (error) throw error;
+    return count ?? 0;
+  },
+
+  markAsRead: async (notificationId: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    if (error) throw error;
+  },
+
+  markAllAsRead: async () => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('is_read', false);
+    if (error) throw error;
+  },
+
+  subscribeToNotifications: (userId: string, onNew: (n: any) => void) => {
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          onNew(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   },
 };
 

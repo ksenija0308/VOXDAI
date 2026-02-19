@@ -1,4 +1,5 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, User } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, User, Bell } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { FormData } from "@/types/formData.ts";
@@ -546,6 +547,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 </span>
               )}
             </button>
+            <NotificationBell />
             <div className="relative user-menu-container">
               <button
                 className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white hover:bg-black transition-colors overflow-hidden"
