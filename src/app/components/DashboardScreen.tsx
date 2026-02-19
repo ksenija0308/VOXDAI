@@ -1,4 +1,4 @@
-import { Search, FileText, TrendingUp, Mail, CircleCheck, Sparkles, Filter, Video, Clock, DollarSign, LogOut, User, Bell } from 'lucide-react';
+import { Search, FileText, TrendingUp, Mail, CircleCheck, X as XIcon, Sparkles, Send, Filter, Video, Clock, DollarSign, LogOut, User, Bell } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -14,6 +14,24 @@ import { getSignedUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { fetchOutreachCounts } from '@/features/outreach/outreachCounts';
+
+interface Message {
+  id: number;
+  sender: 'user' | 'speaker';
+  content: string;
+  timestamp: string;
+}
+
+interface Conversation {
+  conversationId: string;
+  speakerId: string;
+  speakerName: string;
+  speakerTopic: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+  messages: Message[];
+}
 
 interface DashboardScreenProps {
   formData: FormData;
@@ -158,7 +176,11 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     profilePhotoPath: string | null;
   }> | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const [messageInput, setMessageInput] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [viewingSpeaker, setViewingSpeaker] = useState<{
     id: string;
     name: string;
@@ -233,6 +255,124 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
 
     fetchRecentMatches();
   }, [formData.userType]);
+
+  // Load messages and subscribe to realtime when a conversation is opened in popup
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    let currentUserId: string | undefined;
+
+    const fetchMessages = async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        currentUserId = auth.user?.id;
+
+        const msgs = await conversationAPI.loadMessages(activeConversation);
+
+        const otherMsg = msgs.find((m: any) => m.sender_id !== currentUserId);
+        const otherName = otherMsg?.sender?.display_name || null;
+
+        const mapped: Message[] = msgs.map((m: any) => ({
+          id: m.id,
+          sender: m.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
+          content: m.body,
+          timestamp: new Date(m.created_at).toLocaleTimeString(),
+        }));
+
+        setConversations(prev => prev.map(c => {
+          if (c.conversationId === activeConversation) {
+            return {
+              ...c,
+              speakerName: otherName || c.speakerName,
+              messages: mapped,
+              lastMessage: mapped.length > 0 ? mapped[mapped.length - 1].content : c.lastMessage,
+            };
+          }
+          return c;
+        }));
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+
+      try {
+        await conversationAPI.markRead(activeConversation);
+      } catch (error) {
+        console.error('markRead failed:', error);
+      }
+      try {
+        const count = await conversationAPI.loadUnreadCount();
+        setTotalUnread(count);
+      } catch (error) {
+        console.error('Failed to refresh unread count:', error);
+      }
+    };
+
+    fetchMessages();
+
+    const unsubscribe = conversationAPI.subscribeToMessages(activeConversation, (newMsg) => {
+      if (newMsg.sender_id === currentUserId) return;
+
+      const mapped: Message = {
+        id: newMsg.id,
+        sender: 'speaker',
+        content: newMsg.body,
+        timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
+      };
+
+      setConversations(prev => prev.map(c => {
+        if (c.conversationId === activeConversation) {
+          return {
+            ...c,
+            messages: [...c.messages, mapped],
+            lastMessage: mapped.content,
+            timestamp: mapped.timestamp,
+          };
+        }
+        return c;
+      }));
+
+      conversationAPI.loadUnreadCount()
+        .then(count => setTotalUnread(count))
+        .catch(() => {});
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [activeConversation]);
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeConversation) return;
+
+    const text = messageInput;
+    setMessageInput('');
+
+    const newMessage: Message = {
+      id: Date.now(),
+      sender: 'user',
+      content: text,
+      timestamp: new Date().toLocaleTimeString()
+    };
+
+    setConversations(prev => prev.map(conversation => {
+      if (conversation.conversationId === activeConversation) {
+        return {
+          ...conversation,
+          messages: [...conversation.messages, newMessage],
+          lastMessage: newMessage.content,
+          timestamp: newMessage.timestamp,
+        };
+      }
+      return conversation;
+    }));
+
+    try {
+      await conversationAPI.sendMessage(activeConversation, text);
+    } catch (error: any) {
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
+  };
 
   const [outreachCounts, setOutreachCounts] = useState({ contacted: 0, confirmed: 0, declined: 0 });
 
@@ -747,7 +887,24 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                                 ? await conversationAPI.getOrCreateConversationOrganizer(result.id)
                                 : await conversationAPI.getOrCreateConversation(result.id);
                               const conversationId = conv.id ?? conv.conversation_id;
-                              navigate(`/dashboard/messages?conversationId=${conversationId}`);
+
+                              const existingConv = conversations.find(c => c.conversationId === conversationId);
+
+                              if (!existingConv) {
+                                setConversations(prev => [...prev, {
+                                  conversationId,
+                                  speakerId: result.id,
+                                  speakerName: result.name,
+                                  speakerTopic: result.topic,
+                                  lastMessage: '',
+                                  timestamp: 'Now',
+                                  unread: 0,
+                                  messages: []
+                                }]);
+                              }
+
+                              setActiveConversation(conversationId);
+                              setIsChatOpen(true);
                             } catch (error: any) {
                               console.error('Failed to create conversation:', error);
                               toast.error('Failed to start conversation. Please try again.');
@@ -892,7 +1049,24 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                               ? await conversationAPI.getOrCreateConversationOrganizer(match.id)
                               : await conversationAPI.getOrCreateConversation(match.id);
                             const conversationId = conv.id ?? conv.conversation_id;
-                            navigate(`/dashboard/messages?conversationId=${conversationId}`);
+
+                            const existingConv = conversations.find(c => c.conversationId === conversationId);
+
+                            if (!existingConv) {
+                              setConversations(prev => [...prev, {
+                                conversationId,
+                                speakerId: match.id,
+                                speakerName: match.name,
+                                speakerTopic: match.topic,
+                                lastMessage: '',
+                                timestamp: 'Now',
+                                unread: 0,
+                                messages: []
+                              }]);
+                            }
+
+                            setActiveConversation(conversationId);
+                            setIsChatOpen(true);
                           } catch (error: any) {
                             console.error('Failed to create conversation:', error);
                             toast.error('Failed to start conversation. Please try again.');
@@ -995,6 +1169,82 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           </>
         )}
       </div>
+
+      {/* Chat Popup */}
+      {isChatOpen && activeConversation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-end">
+          <div className="bg-white w-full md:w-[500px] h-[600px] md:rounded-tl-lg shadow-2xl flex flex-col">
+            {/* Chat Header */}
+            <div className="border-b border-[#e9ebef] p-4">
+              <div className="flex items-center gap-3">
+                <button
+                  className="text-[#717182] hover:text-black"
+                  onClick={() => {
+                    setIsChatOpen(false);
+                    setActiveConversation(null);
+                  }}
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+                <div className="w-10 h-10 bg-[#0B3B2E] rounded-full flex items-center justify-center text-white">
+                  {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName.charAt(0)}
+                </div>
+                <div>
+                  <h4 style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
+                    {conversations.find(conv => conv.conversationId === activeConversation)?.speakerName}
+                  </h4>
+                  <p className="text-[#717182]" style={{ fontSize: '13px' }}>
+                    {conversations.find(conv => conv.conversationId === activeConversation)?.speakerTopic}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {conversations.find(conv => conv.conversationId === activeConversation)?.messages.map(message => (
+                <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'bg-[#0B3B2E] text-white' : 'bg-[#f3f3f5]'}`}>
+                    <p style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+                      {message.content}
+                    </p>
+                    <p className={`mt-1 ${message.sender === 'user' ? 'text-white/70' : 'text-[#717182]'}`} style={{ fontSize: '11px' }}>
+                      {message.timestamp}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Message Input */}
+            <div className="border-t border-[#e9ebef] p-4">
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  className="flex-1 p-3 border-2 border-[#e9ebef] rounded-lg resize-none focus:outline-none focus:border-[#0B3B2E] transition-colors"
+                  rows={2}
+                  style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim()}
+                  className="p-3 bg-[#0B3B2E] text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Speaker Profile View */}
       {viewingSpeaker && (
