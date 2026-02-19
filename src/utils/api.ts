@@ -600,7 +600,7 @@ export const conversationAPI = {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ organizer_profile_id: organizerProfileId }),
+      body: JSON.stringify({ organization_profile_id: organizerProfileId }),
     });
 
     if (!response.ok) {
