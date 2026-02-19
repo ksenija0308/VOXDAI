@@ -3,7 +3,7 @@ import NotificationBell from './NotificationBell';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { FormData } from "@/types/formData.ts";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import SpeakerProfileView from './SpeakerProfileView';
 import EventBriefForm from './EventBriefForm';
 import BookSpeakerModal from './BookSpeakerModal';
@@ -12,6 +12,7 @@ import { trackRecentMatchView, loadRecentMatches } from '@/utils/recentMatches';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { supabase } from '@/lib/supabaseClient';
+import { useConversationRealtime } from '@/hooks/useConversationRealtime';
 import { toast } from 'sonner';
 import { fetchOutreachCounts } from '@/features/outreach/outreachCounts';
 
@@ -181,6 +182,8 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [messageInput, setMessageInput] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const chatMessagesEndRef = useRef<HTMLDivElement>(null);
+  const currentUserIdRef = useRef<string | undefined>();
   const [viewingSpeaker, setViewingSpeaker] = useState<{
     id: string;
     name: string;
@@ -256,16 +259,48 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     fetchRecentMatches();
   }, [formData.userType]);
 
-  // Load messages and subscribe to realtime when a conversation is opened in popup
+  // Realtime listener for new messages in chat popup
+  useConversationRealtime(activeConversation, (newMsg) => {
+    const currentUserId = currentUserIdRef.current;
+
+    const mapped: Message = {
+      id: newMsg.id,
+      sender: newMsg.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
+      content: newMsg.body,
+      timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
+    };
+
+    setConversations(prev => prev.map(c => {
+      if (c.conversationId !== newMsg.conversation_id) return c;
+      if (c.messages.some(m => m.id === newMsg.id)) return c;
+      return {
+        ...c,
+        messages: [...c.messages, mapped],
+        lastMessage: mapped.content,
+        timestamp: mapped.timestamp,
+      };
+    }));
+
+    conversationAPI.loadUnreadCount()
+      .then(count => setTotalUnread(count))
+      .catch(() => {});
+  });
+
+  // Auto-scroll chat popup to bottom when messages change
+  const activeConvData = conversations.find(c => c.conversationId === activeConversation);
+  useEffect(() => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeConvData?.messages]);
+
+  // Load messages when a conversation is opened in popup
   useEffect(() => {
     if (!activeConversation) return;
-
-    let currentUserId: string | undefined;
 
     const fetchMessages = async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        currentUserId = auth.user?.id;
+        const currentUserId = auth.user?.id;
+        currentUserIdRef.current = currentUserId;
 
         const msgs = await conversationAPI.loadMessages(activeConversation);
 
@@ -308,37 +343,6 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     };
 
     fetchMessages();
-
-    const unsubscribe = conversationAPI.subscribeToMessages(activeConversation, (newMsg) => {
-      if (newMsg.sender_id === currentUserId) return;
-
-      const mapped: Message = {
-        id: newMsg.id,
-        sender: 'speaker',
-        content: newMsg.body,
-        timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
-      };
-
-      setConversations(prev => prev.map(c => {
-        if (c.conversationId === activeConversation) {
-          return {
-            ...c,
-            messages: [...c.messages, mapped],
-            lastMessage: mapped.content,
-            timestamp: mapped.timestamp,
-          };
-        }
-        return c;
-      }));
-
-      conversationAPI.loadUnreadCount()
-        .then(count => setTotalUnread(count))
-        .catch(() => {});
-    });
-
-    return () => {
-      unsubscribe();
-    };
   }, [activeConversation]);
 
   const handleSendMessage = async () => {
@@ -1216,6 +1220,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                   </div>
                 </div>
               ))}
+              <div ref={chatMessagesEndRef} />
             </div>
 
             {/* Message Input */}

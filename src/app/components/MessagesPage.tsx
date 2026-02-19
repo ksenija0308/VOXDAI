@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { conversationAPI, authAPI } from '@/utils/api';
 import { useLogoContext } from '@/context/LogoContext';
 import { useConversationPresence } from '@/hooks/usePresencePing';
+import { useConversationRealtime } from '@/hooks/useConversationRealtime';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { FormData } from '@/types/formData';
@@ -44,14 +45,44 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentUserIdRef = useRef<string | undefined>();
 
   // Tell backend which conversation the user is viewing (skips email notifications)
   useConversationPresence(activeConversation);
 
+  // Realtime listener for new messages
+  useConversationRealtime(activeConversation, (newMsg) => {
+    const currentUserId = currentUserIdRef.current;
+
+    const mapped: Message = {
+      id: newMsg.id,
+      sender: newMsg.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
+      content: newMsg.body,
+      timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
+    };
+
+    setConversations(prev => prev.map(c => {
+      if (c.conversationId !== newMsg.conversation_id) return c;
+      // Avoid duplicate if sender also receives own event
+      if (c.messages.some(m => m.id === newMsg.id)) return c;
+      return {
+        ...c,
+        messages: [...c.messages, mapped],
+        lastMessage: mapped.content,
+        timestamp: mapped.timestamp,
+      };
+    }));
+
+    conversationAPI.loadUnreadCount()
+      .then(count => setTotalUnread(count))
+      .catch(() => {});
+  });
+
   // Auto-scroll to bottom when messages change
+  const activeConv = conversations.find(c => c.conversationId === activeConversation);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversations, activeConversation]);
+  }, [activeConv?.messages]);
 
   // Load unread count on mount
   useEffect(() => {
@@ -160,16 +191,15 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
     fetchConversations();
   }, [formData.userType]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load messages and subscribe to realtime when a conversation is opened
+  // Load messages when a conversation is opened
   useEffect(() => {
     if (!activeConversation) return;
-
-    let currentUserId: string | undefined;
 
     const fetchMessages = async () => {
       try {
         const { data: auth } = await supabase.auth.getUser();
-        currentUserId = auth.user?.id;
+        const currentUserId = auth.user?.id;
+        currentUserIdRef.current = currentUserId;
 
         const msgs = await conversationAPI.loadMessages(activeConversation);
 
@@ -216,37 +246,6 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
     };
 
     fetchMessages();
-
-    const unsubscribe = conversationAPI.subscribeToMessages(activeConversation, (newMsg) => {
-      if (newMsg.sender_id === currentUserId) return;
-
-      const mapped: Message = {
-        id: newMsg.id,
-        sender: 'speaker',
-        content: newMsg.body,
-        timestamp: new Date(newMsg.created_at).toLocaleTimeString(),
-      };
-
-      setConversations(prev => prev.map(c => {
-        if (c.conversationId === activeConversation) {
-          return {
-            ...c,
-            messages: [...c.messages, mapped],
-            lastMessage: mapped.content,
-            timestamp: mapped.timestamp,
-          };
-        }
-        return c;
-      }));
-
-      conversationAPI.loadUnreadCount()
-        .then(count => setTotalUnread(count))
-        .catch(() => {});
-    });
-
-    return () => {
-      unsubscribe();
-    };
   }, [activeConversation]);
 
   const handleSendMessage = async () => {
@@ -286,8 +285,6 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
     setActiveConversation(conversationId);
     setSearchParams({ conversationId });
   };
-
-  const activeConv = conversations.find(c => c.conversationId === activeConversation);
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
