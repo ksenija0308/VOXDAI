@@ -54,6 +54,9 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
   useConversationRealtime(activeConversation, (newMsg) => {
     const currentUserId = currentUserIdRef.current;
 
+    // Skip own messages — already added optimistically in handleSendMessage
+    if (newMsg.sender_id === currentUserId) return;
+
     const mapped: Message = {
       id: newMsg.id,
       sender: newMsg.sender_id === currentUserId ? 'user' as const : 'speaker' as const,
