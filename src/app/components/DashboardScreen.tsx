@@ -1075,6 +1075,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       >
                         Contact
                       </Button>
+                      {formData.userType !== 'speaker' && (
                       <Button
                         className="bg-[#0B3B2E] text-white hover:bg-black flex-1 min-w-[140px]"
                         style={{ fontSize: '14px' }}
@@ -1082,6 +1083,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       >
                         Book Speaker
                       </Button>
+                      )}
                       <Button
                         variant="outline"
                         className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] flex-1 min-w-[140px]"
