@@ -1,45 +1,41 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
+// Shared state so the 30s interval ping includes the current conversation
+let currentConversationId: string | null = null;
+
+function ping() {
+  supabase.functions.invoke('presence-ping', {
+    body: { activeConversationId: currentConversationId },
+  });
+}
+
 /**
  * Pings the presence-ping edge function every 30s while the app is open.
  * The backend uses this to skip email notifications for active users.
  */
 export function usePresencePing() {
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>;
-
-    async function ping(activeConversationId: string | null) {
-      await supabase.functions.invoke('presence-ping', {
-        body: { activeConversationId },
-      });
-    }
-
-    // call immediately then every 30s
-    ping(null);
-    timer = setInterval(() => ping(null), 30_000);
-
+    ping();
+    const timer = setInterval(ping, 30_000);
     return () => clearInterval(timer);
   }, []);
 }
 
 /**
- * Pings presence with the active conversation ID so the backend knows
- * the user is currently viewing this conversation (no need to email).
+ * Sets the active conversation so every ping (including the 30s interval)
+ * tells the backend which conversation the user is currently viewing.
  */
 export function useConversationPresence(conversationId: string | null) {
   useEffect(() => {
     if (!conversationId) return;
 
-    supabase.functions.invoke('presence-ping', {
-      body: { activeConversationId: conversationId },
-    });
+    currentConversationId = conversationId;
+    ping(); // notify immediately
 
     return () => {
-      // user left this conversation
-      supabase.functions.invoke('presence-ping', {
-        body: { activeConversationId: null },
-      });
+      currentConversationId = null;
+      ping(); // clear on leave
     };
   }, [conversationId]);
 }
