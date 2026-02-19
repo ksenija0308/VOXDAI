@@ -281,7 +281,9 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       };
     }));
 
-    conversationAPI.loadUnreadCount()
+    // Mark as read immediately since the chat popup is open, then refresh count
+    conversationAPI.markRead(newMsg.conversation_id)
+      .then(() => conversationAPI.loadUnreadCount())
       .then(count => setTotalUnread(count))
       .catch(() => {});
   });
