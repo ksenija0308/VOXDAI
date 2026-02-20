@@ -23,12 +23,12 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-[10px] right-[10px] bg-white w-[600px] rounded-[8px] text-[12px] shadow-[0px_7px_29px_rgba(100,100,111,0.2)] z-[9999]">
-      <div
-        className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-6"
-        style={{ fontFamily: 'Inter, sans-serif' }}
-      >
-        <h3 className="text-base sm:text-lg font-semibold text-[#0B3B2E] mb-2">
+      <div className="fixed bottom-0 right-0 min-[600px]:bottom-[10px] min-[600px]:right-[10px] bg-white max-w-[600px] w-auto rounded-[8px] text-[12px] shadow-[0px_7px_29px_rgba(100,100,111,0.2)] z-[9999]">
+        <div
+            className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-6"
+            style={{fontFamily: 'Inter, sans-serif'}}
+        >
+          <h3 className="text-base sm:text-lg font-semibold text-[#0B3B2E] mb-2">
           Cookies & Privacy Settings
         </h3>
 
