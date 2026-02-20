@@ -952,7 +952,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                     >
                       {showAllResults
                         ? 'Show less'
-                        : `Load more (${searchResults.allResults.length - searchResults.topResults.length} more)`}
+                        : `Load more (${searchResults.allResults.length - searchResults.topResults.length} lower-ranked matches)`}
                     </Button>
                   )}
                       </>
