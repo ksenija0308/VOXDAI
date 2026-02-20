@@ -161,13 +161,17 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
           unreadCountMap.set(r.conversation_id, count);
         });
 
+        const participantNameFromUrl = searchParams.get('participantName');
+        const convIdFromUrlForName = searchParams.get('conversationId');
+
         const mapped: Conversation[] = rows.map((r: any) => {
           const convData = convDataMap.get(r.conversation_id);
+          const urlNameFallback = r.conversation_id === convIdFromUrlForName ? participantNameFromUrl : null;
 
           return {
             conversationId: r.conversation_id,
             speakerId: r.other_user_id ?? '',
-            speakerName: convData?.otherName || fallbackMap.get(r.other_user_id) || 'Unknown',
+            speakerName: convData?.otherName || fallbackMap.get(r.other_user_id) || urlNameFallback || 'Unknown',
             speakerTopic: '',
             lastMessage: convData?.lastMsg?.body || '',
             timestamp: convData?.lastMsg ? new Date(convData.lastMsg.created_at).toLocaleTimeString() : '',

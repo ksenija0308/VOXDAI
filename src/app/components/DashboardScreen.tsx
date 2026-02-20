@@ -1313,7 +1313,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 : await conversationAPI.getOrCreateConversation(viewingSpeaker.id);
               const conversationId = conv.id ?? conv.conversation_id;
               setViewingSpeaker(null);
-              navigate(`/dashboard/messages?conversationId=${conversationId}`);
+              navigate(`/dashboard/messages?conversationId=${conversationId}&participantName=${encodeURIComponent(viewingSpeaker.name)}`);
             } catch (error: any) {
               console.error('Failed to create conversation:', error);
               toast.error('Failed to start conversation. Please try again.');
