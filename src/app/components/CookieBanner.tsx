@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { COOKIE_CONSENT_KEY, setConsent } from '../../cookies/consent';
+import { COOKIE_CONSENT_KEY, setConsent } from '@/cookies/consent.ts';
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
