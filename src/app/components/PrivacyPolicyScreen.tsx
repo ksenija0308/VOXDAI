@@ -25,7 +25,7 @@ export default function PrivacyPolicyScreen() {
           <section>
             <h2 className="text-lg font-semibold text-[#0B3B2E] mb-2">1. Controller</h2>
             <p>
-              Ksenija Korolova, Dufourstrasse 46, 8702 Zollikon, Switzerland
+              Ksenija Korolova, Switzerland
             </p>
           </section>
 

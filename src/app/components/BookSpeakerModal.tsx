@@ -32,7 +32,7 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
     const startDate = new Date(selectedDate);
     const [hours, minutes] = eventTime.split(':');
     startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-    
+
     const endDate = new Date(startDate);
     endDate.setMinutes(endDate.getMinutes() + parseInt(eventDuration));
 
@@ -65,7 +65,7 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
     const startDate = new Date(selectedDate);
     const [hours, minutes] = eventTime.split(':');
     startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-    
+
     const endDate = new Date(startDate);
     endDate.setMinutes(endDate.getMinutes() + parseInt(eventDuration));
 
@@ -166,7 +166,7 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
                   </span>
                   <CalendarIcon className="w-5 h-5 text-[#717182]" />
                 </button>
-                
+
                 {showCalendar && (
                   <div className="mt-2 p-4 border-2 border-[#e9ebef] rounded-lg bg-white">
                     <Calendar
@@ -250,55 +250,6 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
                 />
               </div>
             </div>
-          </div>
-
-          {/* Calendar Integration Options */}
-          <div className="border-t border-[#e9ebef] pt-6">
-            <h3 className="mb-4" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-              Add to Calendar
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Google Calendar */}
-              <Button
-                onClick={handleGoogleCalendar}
-                variant="outline"
-                className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] hover:bg-[#f3f3f5] h-auto py-4 flex-col gap-2"
-              >
-                <ExternalLink className="w-5 h-5 text-[#0B3B2E]" />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
-                  Google Calendar
-                </span>
-              </Button>
-
-              {/* Calendly */}
-              <Button
-                onClick={handleCalendly}
-                variant="outline"
-                className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] hover:bg-[#f3f3f5] h-auto py-4 flex-col gap-2"
-              >
-                <ExternalLink className="w-5 h-5 text-[#0B3B2E]" />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
-                  Calendly
-                </span>
-              </Button>
-
-              {/* iCal Download */}
-              <Button
-                onClick={handleICalDownload}
-                variant="outline"
-                className="border-2 border-[#e9ebef] hover:border-[#0B3B2E] hover:bg-[#f3f3f5] h-auto py-4 flex-col gap-2"
-              >
-                <Download className="w-5 h-5 text-[#0B3B2E]" />
-                <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px' }}>
-                  Download .ics
-                </span>
-              </Button>
-            </div>
-
-            <p className="mt-4 text-[#717182] text-center" style={{ fontSize: '13px' }}>
-              Select a calendar option to send an invite to {speakerName}
-            </p>
           </div>
         </div>
 
