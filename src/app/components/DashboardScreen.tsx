@@ -208,6 +208,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showAllResults, setShowAllResults] = useState(false);
+  const [recentMatchesVisible, setRecentMatchesVisible] = useState(5);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ id: string; name: string; topic: string } | null>(null);
 
   // Filter states
@@ -1047,7 +1048,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 </p>
               ) : (
               <div className="space-y-4">
-                {recentMatches.map((match, index) => (
+                {recentMatches.slice(0, recentMatchesVisible).map((match, index) => (
                   <div key={index} className="p-4 bg-[#f3f3f5] rounded-lg">
                     <div className="flex items-start gap-3 mb-3">
                       {match.profilePhoto ? (
@@ -1167,6 +1168,16 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                     </div>
                   </div>
                 ))}
+                {recentMatches.length > recentMatchesVisible && (
+                  <Button
+                    onClick={() => setRecentMatchesVisible(prev => prev + 5)}
+                    variant="outline"
+                    className="w-full border-2 border-[#e9ebef] hover:border-[#0B3B2E]"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    Load more ({Math.min(5, recentMatches.length - recentMatchesVisible)} more)
+                  </Button>
+                )}
               </div>
               )}
             </div>
