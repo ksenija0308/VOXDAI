@@ -942,14 +942,16 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       </div>
                     </div>
                   ))}
-                  {!showAllResults && searchResults.allResults.length > searchResults.topResults.length && (
+                  {searchResults.allResults.length > searchResults.topResults.length && (
                     <Button
-                      onClick={() => setShowAllResults(true)}
+                      onClick={() => setShowAllResults(!showAllResults)}
                       variant="outline"
                       className="w-full border-2 border-[#e9ebef] hover:border-[#0B3B2E]"
                       style={{ fontFamily: 'Inter, sans-serif' }}
                     >
-                      Load more ({searchResults.allResults.length - searchResults.topResults.length} more)
+                      {showAllResults
+                        ? 'Show less'
+                        : `Load more (${searchResults.allResults.length - searchResults.topResults.length} more)`}
                     </Button>
                   )}
                       </>
