@@ -688,26 +688,28 @@ export const conversationAPI = {
 
     const convIds = myRows.map(r => r.conversation_id);
 
-    // Get ALL participants for those conversations (includes me + other person)
-    const { data: allParticipants, error: partErr } = await supabase
-      .from('conversation_participants')
-      .select('conversation_id, user_id')
-      .in('conversation_id', convIds);
+    // Get other participants with display names (bypasses RLS via SECURITY DEFINER)
+    const { data: otherParticipants, error: partErr } = await supabase
+      .rpc('get_other_participants', {
+        p_conversation_ids: convIds,
+        p_current_user_id: currentUserId,
+      });
 
     if (partErr) throw partErr;
 
-    // Build a map: conversationId -> other user's ID
-    const otherUserMap = new Map<string, string>();
-    (allParticipants ?? []).forEach((p: any) => {
-      if (p.user_id !== currentUserId) {
-        otherUserMap.set(p.conversation_id, p.user_id);
-      }
+    const otherUserMap = new Map<string, { id: string; name: string | null }>();
+    (otherParticipants ?? []).forEach((p: any) => {
+      otherUserMap.set(p.conversation_id, {
+        id: p.other_user_id,
+        name: p.display_name ?? null,
+      });
     });
 
     return myRows.map(r => ({
       conversation_id: r.conversation_id,
       last_read_at: r.last_read_at,
-      other_user_id: otherUserMap.get(r.conversation_id) ?? null,
+      other_user_id: otherUserMap.get(r.conversation_id)?.id ?? null,
+      other_user_name: otherUserMap.get(r.conversation_id)?.name ?? null,
     }));
   },
 

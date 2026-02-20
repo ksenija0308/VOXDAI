@@ -138,19 +138,6 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
           }
         });
 
-        const missingNameIds = rows
-          .filter((r: any) => !convDataMap.get(r.conversation_id)?.otherName && r.other_user_id)
-          .map((r: any) => r.other_user_id);
-
-        const fallbackMap = new Map<string, string>();
-        if (missingNameIds.length > 0) {
-          const { data: fallbackProfiles } = await supabase
-            .from('profiles')
-            .select('user_id, display_name')
-            .in('user_id', missingNameIds);
-          (fallbackProfiles ?? []).forEach((p: any) => fallbackMap.set(p.user_id, p.display_name));
-        }
-
         // Count unread messages per conversation
         const unreadCountMap = new Map<string, number>();
         rows.forEach((r: any) => {
@@ -161,17 +148,13 @@ export default function MessagesPage({ formData, onLogout }: MessagesPageProps) 
           unreadCountMap.set(r.conversation_id, count);
         });
 
-        const participantNameFromUrl = searchParams.get('participantName');
-        const convIdFromUrlForName = searchParams.get('conversationId');
-
         const mapped: Conversation[] = rows.map((r: any) => {
           const convData = convDataMap.get(r.conversation_id);
-          const urlNameFallback = r.conversation_id === convIdFromUrlForName ? participantNameFromUrl : null;
 
           return {
             conversationId: r.conversation_id,
             speakerId: r.other_user_id ?? '',
-            speakerName: convData?.otherName || fallbackMap.get(r.other_user_id) || urlNameFallback || 'Unknown',
+            speakerName: convData?.otherName || r.other_user_name || 'Unknown',
             speakerTopic: '',
             lastMessage: convData?.lastMsg?.body || '',
             timestamp: convData?.lastMsg ? new Date(convData.lastMsg.created_at).toLocaleTimeString() : '',
