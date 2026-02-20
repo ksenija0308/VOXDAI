@@ -236,7 +236,7 @@ We welcome speakers from all backgrounds—from seasoned corporate executives to
                 {datePickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[60]" onClick={() => setDatePickerOpen(false)} />
-                    <div ref={datePickerRef} className="absolute top-0 left-0 mt-1 z-[70] bg-white rounded-md border border-[#e9ebef] shadow-lg">
+                    <div ref={datePickerRef} className="absolute top-[75px] left-0 mt-1 z-[70] bg-white rounded-md border border-[#e9ebef] shadow-lg">
                       <CalendarComponent
                         mode="single"
                         selected={formData.eventDate ? new Date(formData.eventDate + 'T00:00:00') : undefined}
@@ -286,7 +286,7 @@ We welcome speakers from all backgrounds—from seasoned corporate executives to
                 {timePickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[60]" onClick={() => setTimePickerOpen(false)} />
-                    <div ref={timePickerRef} className="absolute top-full left-0 mt-1 z-[70] bg-white rounded-md border border-[#e9ebef] shadow-lg w-full max-h-60 overflow-y-auto">
+                    <div ref={timePickerRef} className="absolute top-[75px] left-0 mt-1 z-[70] bg-white rounded-md border border-[#e9ebef] shadow-lg w-full max-h-60 overflow-y-auto">
                       {Array.from({ length: 48 }, (_, i) => {
                         const hours = Math.floor(i / 2);
                         const minutes = i % 2 === 0 ? '00' : '30';

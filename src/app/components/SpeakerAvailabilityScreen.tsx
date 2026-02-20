@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { format } from 'date-fns';
 import { FormData } from '../App';
 import FormLayout from './FormLayout';
-import { Calendar, X } from 'lucide-react';
+import { Calendar as CalendarComponent } from './ui/calendar';
+import { Calendar, X, ChevronDown } from 'lucide-react';
 import svgPaths from '../../imports/svg-zbs72l16lo';
 
 interface SpeakerAvailabilityScreenProps {
@@ -50,6 +52,10 @@ export default function SpeakerAvailabilityScreen({
   const [endDate, setEndDate] = useState('');
   const [isOngoing, setIsOngoing] = useState(false);
   const [periodErrors, setPeriodErrors] = useState<{ startDate?: string; endDate?: string }>({});
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  const startDatePickerRef = useRef<HTMLDivElement>(null);
+  const endDatePickerRef = useRef<HTMLDivElement>(null);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -241,7 +247,7 @@ export default function SpeakerAvailabilityScreen({
                 {formData.availabilityPeriods.length} period{formData.availabilityPeriods.length !== 1 ? 's' : ''} defined
               </p>
               <p className="font-['Inter',sans-serif] text-[14px] text-[#717182]">
-                {formData.availabilityPeriods.length === 0 
+                {formData.availabilityPeriods.length === 0
                   ? "Add time ranges when you're available to speak"
                   : "Manage your availability periods below"}
               </p>
@@ -296,35 +302,90 @@ export default function SpeakerAvailabilityScreen({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Start Date */}
-                <div>
+                <div className="relative">
                   <label className="block mb-2 font-['Inter',sans-serif] font-medium text-[14px]">
                     Start Date <span className="text-[#d4183d]">*</span>
                   </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white border border-[#d1d5dc] rounded-[6px] h-[48px] px-4 font-['Inter',sans-serif] text-[16px] focus:outline-none focus:border-[#0b3b2e] focus:ring-1 focus:ring-[#0b3b2e]"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => { setStartDatePickerOpen(!startDatePickerOpen); setEndDatePickerOpen(false); }}
+                    className="flex items-center w-full bg-white border border-[#d1d5dc] rounded-[6px] h-[48px] px-4 font-['Inter',sans-serif] text-[16px] focus:outline-none focus:border-[#0b3b2e] focus:ring-1 focus:ring-[#0b3b2e] hover:border-[#0b3b2e] transition-colors"
+                  >
+                    <Calendar className="mr-2 h-4 w-4 text-[#717182] shrink-0" />
+                    <span className={`flex-1 text-left ${!startDate ? 'text-[#717182]' : 'text-black'}`}>
+                      {startDate ? format(new Date(startDate + 'T00:00:00'), 'MMMM d, yyyy') : 'Select start date'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-[#717182] shrink-0" />
+                  </button>
+                  {startDatePickerOpen && (
+                    <>
+                      <div className="fixed inset-0 z-[10]" onClick={() => setStartDatePickerOpen(false)} />
+                      <div ref={startDatePickerRef} className="absolute top-[75px] left-0 mt-1 z-[20] bg-white rounded-md border border-[#e9ebef] shadow-lg">
+                        <CalendarComponent
+                          mode="single"
+                          selected={startDate ? new Date(startDate + 'T00:00:00') : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              setStartDate(format(date, 'yyyy-MM-dd'));
+                            }
+                            setStartDatePickerOpen(false);
+                          }}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                        />
+                      </div>
+                    </>
+                  )}
                   {periodErrors.startDate && (
                     <p className="text-[#d4183d] text-[14px] mt-1">{periodErrors.startDate}</p>
                   )}
                 </div>
 
                 {/* End Date */}
-                <div>
+                <div className="relative">
                   <label className="block mb-2 font-['Inter',sans-serif] font-medium text-[14px]">
                     End Date {!isOngoing && <span className="text-[#d4183d]">*</span>}
                   </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    disabled={isOngoing}
-                    className={`w-full border border-[#d1d5dc] rounded-[6px] h-[48px] px-4 font-['Inter',sans-serif] text-[16px] mb-3 focus:outline-none focus:border-[#0b3b2e] focus:ring-1 focus:ring-[#0b3b2e] ${
-                      isOngoing ? 'bg-[#f9fafb] cursor-not-allowed' : 'bg-white'
+                  <button
+                    type="button"
+                    onClick={() => { if (!isOngoing) { setEndDatePickerOpen(!endDatePickerOpen); setStartDatePickerOpen(false); } }}
+                    className={`flex items-center w-full border border-[#d1d5dc] rounded-[6px] h-[48px] px-4 font-['Inter',sans-serif] text-[16px] mb-3 focus:outline-none focus:border-[#0b3b2e] focus:ring-1 focus:ring-[#0b3b2e] transition-colors ${
+                      isOngoing ? 'bg-[#f9fafb] cursor-not-allowed' : 'bg-white hover:border-[#0b3b2e]'
                     }`}
-                  />
+                    disabled={isOngoing}
+                  >
+                    <Calendar className="mr-2 h-4 w-4 text-[#717182] shrink-0" />
+                    <span className={`flex-1 text-left ${!endDate ? 'text-[#717182]' : 'text-black'}`}>
+                      {endDate ? format(new Date(endDate + 'T00:00:00'), 'MMMM d, yyyy') : 'Select end date'}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-[#717182] shrink-0" />
+                  </button>
+                  {endDatePickerOpen && !isOngoing && (
+                    <>
+                      <div className="fixed inset-0 z-[10]" onClick={() => setEndDatePickerOpen(false)} />
+                      <div ref={endDatePickerRef} className="absolute top-[75px] left-0 mt-1 z-[20] bg-white rounded-md border border-[#e9ebef] shadow-lg">
+                        <CalendarComponent
+                          mode="single"
+                          selected={endDate ? new Date(endDate + 'T00:00:00') : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              setEndDate(format(date, 'yyyy-MM-dd'));
+                            }
+                            setEndDatePickerOpen(false);
+                          }}
+                          disabled={(date) => {
+                            const today = new Date(new Date().setHours(0, 0, 0, 0));
+                            if (startDate) {
+                              const start = new Date(startDate + 'T00:00:00');
+                              return date < start;
+                            }
+                            return date < today;
+                          }}
+                          initialFocus
+                        />
+                      </div>
+                    </>
+                  )}
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -333,6 +394,7 @@ export default function SpeakerAvailabilityScreen({
                         setIsOngoing(e.target.checked);
                         if (e.target.checked) {
                           setEndDate('');
+                          setEndDatePickerOpen(false);
                           setPeriodErrors({ ...periodErrors, endDate: undefined });
                         }
                       }}

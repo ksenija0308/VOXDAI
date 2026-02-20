@@ -152,7 +152,7 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
               </div>
 
               {/* Date Selection */}
-              <div>
+              <div className="relative">
                 <label className="block mb-2 text-[#717182]" style={{ fontSize: '14px' }}>
                   Event Date *
                 </label>
@@ -168,7 +168,7 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
                 </button>
 
                 {showCalendar && (
-                  <div className="mt-2 p-4 border-2 border-[#e9ebef] rounded-lg bg-white">
+                  <div className="absolute top-[75px] mt-2 p-4 border-2 border-[#e9ebef] rounded-lg bg-white">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
