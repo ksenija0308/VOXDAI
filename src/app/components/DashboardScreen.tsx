@@ -158,7 +158,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     // Only run on mount - formData.userType determines which API to call
     // We intentionally don't include formData to avoid re-fetching on every prop change
   }, [formData.userType]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [searchResults, setSearchResults] = useState<Array<{
+  type SearchResult = {
     id: string;
     name: string;
     topic: string;
@@ -175,7 +175,11 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     bio: string;
     profilePhoto: string | null;
     profilePhotoPath: string | null;
-  }> | null>(null);
+  };
+  const [searchResults, setSearchResults] = useState<{
+    topResults: SearchResult[];
+    allResults: SearchResult[];
+  } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
@@ -203,6 +207,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
   } | null>(null);
   const [showEventBrief, setShowEventBrief] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAllResults, setShowAllResults] = useState(false);
   const [bookingSpeaker, setBookingSpeaker] = useState<{ id: string; name: string; topic: string } | null>(null);
 
   // Filter states
@@ -402,17 +407,19 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setShowAllResults(false);
 
     try {
       const response = formData.userType === 'speaker'
         ? await searchAPI.searchOrganizers(searchQuery)
         : await searchAPI.searchSpeakers(searchQuery);
 
-      // API returns { ok, results: [{ id, score, profile, llmScore, llmScoreExplanation }] }
-      const results = response?.results || [];
+      // API returns { ok, top_results, all_results }
+      const topResultsRaw = response?.top_results || response?.results || [];
+      const allResultsRaw = response?.all_results || topResultsRaw;
 
       // Transform API results to match the expected format
-      const transformedResults = await Promise.all(results.map(async (result: any) => {
+      const transformResult = async (result: any) => {
         const speaker = result.profile || {};
         const matchScore = Math.round((result.llmScore ?? result.score ?? 0.5) * 100);
 
@@ -435,21 +442,26 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
           hasVideo: !!speaker.video_intro || !!speaker.video_intro_url || !!speaker.demo_video_url,
           speakingFormat: speaker.speaking_formats || [],
           experienceLevel: speaker.years_of_experience || 'Not specified',
-          language: speaker.languages || ['English'],
+          language: speaker.speaker_languages || speaker.languages || ['English'],
           feeRange: speaker.speaking_fee_range || (speaker.fee_min != null && speaker.fee_max != null ? `$${speaker.fee_min} - $${speaker.fee_max}` : 'Contact for pricing'),
-          location: speaker.speaker_city && speaker.speaker_location ? `${speaker.speaker_city}, ${speaker.speaker_location}` : speaker.speaker_location || '',
+          location: speaker.speaker_city && speaker.speaker_country ? `${speaker.speaker_city}, ${speaker.speaker_country}` : speaker.speaker_country || speaker.speaker_location || '',
           llmExplanation: result.llmScoreExplanation || '',
           bio: speaker.bio || '',
           profilePhoto: profilePhotoUrl,
           profilePhotoPath: speaker.profile_photo || null,
         };
-      }));
+      };
 
-      setSearchResults(transformedResults);
+      const [topResults, allResults] = await Promise.all([
+        Promise.all(topResultsRaw.map(transformResult)),
+        Promise.all(allResultsRaw.map(transformResult)),
+      ]);
+
+      setSearchResults({ topResults, allResults });
     } catch (error: any) {
       console.error('Search error:', error);
       toast.error(`Failed to search: ${error.message}`);
-      setSearchResults([]);
+      setSearchResults({ topResults: [], allResults: [] });
     } finally {
       setIsSearching(false);
     }
@@ -597,6 +609,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                     onClick={() => {
                       setSearchResults(null);
                       setSearchQuery('');
+                      setShowAllResults(false);
                     }}
                     variant="ghost"
                     className="gap-2"
@@ -621,8 +634,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}>
-                      Top {searchResults.filter(result => {
-                        // Apply filters
+                      {showAllResults ? 'All' : 'Top'} {(showAllResults ? searchResults.allResults : searchResults.topResults).filter(result => {
                         if (filters.hasVideo && !result.hasVideo) return false;
                         if (filters.speakingFormats.length > 0 && !filters.speakingFormats.some(format => result.speakingFormat.includes(format))) return false;
                         if (filters.experienceLevel !== 'all' && result.experienceLevel !== filters.experienceLevel) return false;
@@ -782,14 +794,19 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                     </div>
                   )}
 
-                  {searchResults.filter(result => {
-                    // Apply filters
-                    if (filters.hasVideo && !result.hasVideo) return false;
-                    if (filters.speakingFormats.length > 0 && !filters.speakingFormats.some(format => result.speakingFormat.includes(format))) return false;
-                    if (filters.experienceLevel !== 'all' && result.experienceLevel !== filters.experienceLevel) return false;
-                    if (filters.feeRange !== 'all' && result.feeRange !== filters.feeRange) return false;
-                    return true;
-                  }).map((result, index) => (
+                  {(() => {
+                    const currentResults = showAllResults ? searchResults.allResults : searchResults.topResults;
+                    const filteredResults = currentResults.filter(result => {
+                      if (filters.hasVideo && !result.hasVideo) return false;
+                      if (filters.speakingFormats.length > 0 && !filters.speakingFormats.some(format => result.speakingFormat.includes(format))) return false;
+                      if (filters.experienceLevel !== 'all' && result.experienceLevel !== filters.experienceLevel) return false;
+                      if (filters.feeRange !== 'all' && result.feeRange !== filters.feeRange) return false;
+                      return true;
+                    });
+                    const displayedResults = filteredResults;
+                    return (
+                      <>
+                  {displayedResults.map((result, index) => (
                     <div key={index} className="p-4 bg-[#f3f3f5] rounded-lg border-2 border-transparent hover:border-[#0B3B2E] transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-start gap-3 flex-1">
@@ -925,6 +942,19 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
                       </div>
                     </div>
                   ))}
+                  {!showAllResults && searchResults.allResults.length > searchResults.topResults.length && (
+                    <Button
+                      onClick={() => setShowAllResults(true)}
+                      variant="outline"
+                      className="w-full border-2 border-[#e9ebef] hover:border-[#0B3B2E]"
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                      Load more ({searchResults.allResults.length - searchResults.topResults.length} more)
+                    </Button>
+                  )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>

@@ -107,7 +107,7 @@ export default function NotificationBell() {
   }, []);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative h-5" ref={containerRef}>
       <button
         className="text-[#717182] hover:text-black relative"
         onClick={() => setOpen(!open)}
