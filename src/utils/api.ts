@@ -623,7 +623,7 @@ export const conversationAPI = {
     const content = text.trim();
     if (!content) return;
 
-    const { data, error } = await supabase.functions.invoke('send-message', {
+    const { error } = await supabase.functions.invoke('send-message', {
       body: { conversationId, content },
     });
     if (error) throw error;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X as XIcon, Calendar as CalendarIcon, Clock, MapPin, FileText, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { X as XIcon, Calendar as CalendarIcon, Clock, MapPin, FileText, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
@@ -22,89 +22,6 @@ export default function BookSpeakerModal({ speakerProfileId, speakerName, speake
   const [eventNotes, setEventNotes] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
   const [isSending, setIsSending] = useState(false);
-
-  const handleGoogleCalendar = () => {
-    if (!selectedDate) {
-      alert('Please select a date first');
-      return;
-    }
-
-    const startDate = new Date(selectedDate);
-    const [hours, minutes] = eventTime.split(':');
-    startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    const endDate = new Date(startDate);
-    endDate.setMinutes(endDate.getMinutes() + parseInt(eventDuration));
-
-    const formatGoogleDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    };
-
-    const title = eventTitle || `Speaking Engagement with ${speakerName}`;
-    const description = `Topic: ${speakerTopic}\n\n${eventNotes}`;
-    const location = eventLocation;
-
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}&sf=true&output=xml`;
-
-    window.open(googleCalendarUrl, '_blank');
-  };
-
-  const handleCalendly = () => {
-    // In a real implementation, this would use the Calendly API
-    // For now, we'll open a mock Calendly link
-    const calendlyUrl = `https://calendly.com/schedule?name=${encodeURIComponent(speakerName)}`;
-    window.open(calendlyUrl, '_blank');
-  };
-
-  const handleICalDownload = () => {
-    if (!selectedDate) {
-      alert('Please select a date first');
-      return;
-    }
-
-    const startDate = new Date(selectedDate);
-    const [hours, minutes] = eventTime.split(':');
-    startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    const endDate = new Date(startDate);
-    endDate.setMinutes(endDate.getMinutes() + parseInt(eventDuration));
-
-    const formatICalDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    };
-
-    const title = eventTitle || `Speaking Engagement with ${speakerName}`;
-    const description = `Topic: ${speakerTopic}\\n\\n${eventNotes}`;
-    const location = eventLocation;
-
-    const icalContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//VOXD//Event Booking//EN',
-      'BEGIN:VEVENT',
-      `UID:${Date.now()}@voxd.com`,
-      `DTSTAMP:${formatICalDate(new Date())}`,
-      `DTSTART:${formatICalDate(startDate)}`,
-      `DTEND:${formatICalDate(endDate)}`,
-      `SUMMARY:${title}`,
-      `DESCRIPTION:${description}`,
-      `LOCATION:${location}`,
-      'STATUS:CONFIRMED',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-
-    const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = `${speakerName.replace(/\s+/g, '-')}-booking.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    // Revoke object URL to prevent memory leak
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">

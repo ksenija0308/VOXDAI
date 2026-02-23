@@ -38,7 +38,7 @@ export function useFormData() {
   }, [formData]);
 
   const updateFormData = (data: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
+    setFormData(prev => ({ ...prev, ...data } as FormData));
     // Data will be automatically saved to localStorage via useEffect above
   };
 
@@ -52,9 +52,7 @@ export function useFormData() {
       let photoUrl: string | null = null;
 
       if (dataToSave.logo instanceof File) {
-        if (showLoading) toast.loading('Uploading logo...', { id: 'upload-logo' });
         logoUrl = await fileAPI.upload(dataToSave.logo, 'logo');
-        if (showLoading) toast.success('Logo uploaded!', { id: 'upload-logo' });
 
         // Update formData to replace File with URL to avoid re-uploading
         setFormData(prev => ({ ...prev, logo: logoUrl }));
@@ -82,11 +80,10 @@ export function useFormData() {
         toast.loading('Saving profile...', { id: 'save-profile' });
       }
 
-      let savedProfile;
       if (dataToSave.userType === 'organizer') {
-        savedProfile = await organizerAPI.saveProfile(profileData);
+        await organizerAPI.saveProfile(profileData);
       } else if (dataToSave.userType === 'speaker') {
-        savedProfile = await speakerAPI.saveProfile(profileData);
+        await speakerAPI.saveProfile(profileData);
       }
 
       if (showLoading) {

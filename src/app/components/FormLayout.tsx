@@ -12,7 +12,7 @@ interface FormLayoutProps {
   nextDisabled?: boolean;
   prevDisabled?: boolean;
   progress: number;
-  title: string;
+  title?: string;
   subtitle?: string;
   hideHeader?: boolean;
   hideFooter?: boolean;

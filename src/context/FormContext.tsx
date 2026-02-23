@@ -44,7 +44,7 @@ export function FormProvider({ children }: FormProviderProps) {
   usePresencePing();
 
   // Helper: load profile and navigate after OAuth sign-in
-  const handleOAuthSignIn = async (userType: string, session: any) => {
+  const handleOAuthSignIn = async (userType: FormData['userType'], session: any) => {
     formMethods.setFormData(prev => ({ ...prev, userType }));
 
     // If the user hasn't completed onboarding yet, skip the profile API call
@@ -64,7 +64,7 @@ export function FormProvider({ children }: FormProviderProps) {
         : await speakerAPI.getProfile();
 
       if (profile) {
-        formMethods.setFormData(prev => ({ ...prev, ...profile }));
+        formMethods.setFormData(prev => ({ ...prev, ...profile } as FormData));
         sessionStorage.setItem('voxd_profile_completed', 'true');
         refreshLogo(userType);
         navigate('/dashboard', { replace: true });
@@ -115,7 +115,7 @@ export function FormProvider({ children }: FormProviderProps) {
         const signupUserType = authAPI.getAndClearSignupUserType();
 
         if (signupUserType) {
-          formMethods.setFormData(prev => ({ ...prev, userType: signupUserType }));
+          formMethods.setFormData(prev => ({ ...prev, userType: signupUserType } as FormData));
           try {
             await authAPI.updateUserMetadata({ userType: signupUserType });
           } catch (error) {
@@ -158,7 +158,7 @@ export function FormProvider({ children }: FormProviderProps) {
           const signupUserType = authAPI.getAndClearSignupUserType();
 
           if (signupUserType) {
-            formMethods.setFormData(prev => ({ ...prev, userType: signupUserType }));
+            formMethods.setFormData(prev => ({ ...prev, userType: signupUserType } as FormData));
 
             // Save user type to Supabase user metadata
             try {
@@ -183,7 +183,7 @@ export function FormProvider({ children }: FormProviderProps) {
           // Not a sign-up callback, load existing profile data
           const userType = session.user?.user_metadata?.userType;
           if (userType) {
-            formMethods.setFormData(prev => ({ ...prev, userType }));
+            formMethods.setFormData(prev => ({ ...prev, userType } as FormData));
 
             // Skip profile loading on onboarding routes to avoid unnecessary 404 errors
             const isOnboarding = location.pathname.startsWith('/onboarding/');
@@ -197,7 +197,7 @@ export function FormProvider({ children }: FormProviderProps) {
                 : await speakerAPI.getProfile();
 
               if (profile) {
-                formMethods.setFormData(prev => ({ ...prev, ...profile }));
+                formMethods.setFormData(prev => ({ ...prev, ...profile } as FormData));
                 // Mark profile as completed so returning users can access dashboard
                 sessionStorage.setItem('voxd_profile_completed', 'true');
                 // Resolve logo/photo URL for header avatar

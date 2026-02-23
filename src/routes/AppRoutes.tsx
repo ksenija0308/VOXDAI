@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 interface AppRoutesProps {
   formData: FormData;
   updateFormData: (data: Partial<FormData>) => void;
-  setFormData: (data: FormData) => void;
+  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
   calculateProgress: () => number;
   isSaving: boolean;
   saveProfile: (data: FormData, showLoading: boolean) => Promise<boolean>;

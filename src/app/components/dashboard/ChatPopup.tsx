@@ -9,7 +9,7 @@ interface ChatPopupProps {
   onMessageInputChange: (value: string) => void;
   onSendMessage: () => void;
   onClose: () => void;
-  chatMessagesEndRef: RefObject<HTMLDivElement>;
+  chatMessagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
 export default function ChatPopup({

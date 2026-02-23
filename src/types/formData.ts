@@ -13,7 +13,7 @@ export interface FormData {
   country: string;
   city: string;
   industries: string[];
-  logo: File | null;
+  logo: File | string | null;
   tagline: string;
 
   // Screen 3 - About
@@ -58,7 +58,7 @@ export interface FormData {
   professionalTitle: string;
   speakerLocation: string;
   speakerCity: string;
-  profilePhoto: File | null;
+  profilePhoto: File | string | null;
   speakerTagline: string;
 
   // Speaker Topics & Expertise

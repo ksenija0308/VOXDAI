@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import svgPaths from '../../imports/svg-yog84ugbyb';
 

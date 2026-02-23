@@ -338,7 +338,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
         <div className="flex flex-wrap gap-2">
           {arr.length > 0 ? arr.map((item, i) => (
             <span key={i} className="px-3 py-1 bg-[#f3f3f5] rounded-full text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-              {item}
+              {typeof item === 'string' ? item : String(item)}
             </span>
           )) : (
             <span className="text-sm text-[#717182]">—</span>
