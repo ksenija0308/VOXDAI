@@ -713,7 +713,7 @@ export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn
                 <li>
                   <button
                     onClick={() => setShowContactForm(true)}
-                    className="hover:text-[#0B3B2E] text-[13px] weight-400 transition-colors"
+                    className="hover:text-[#0B3B2E] text-[13px] font-normal transition-colors"
                   >
                     Contact
                   </button>
