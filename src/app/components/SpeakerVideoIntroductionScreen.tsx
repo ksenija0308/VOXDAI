@@ -16,7 +16,6 @@ interface SpeakerVideoIntroductionScreenProps {
 type VideoInputMethod = 'url' | 'upload' | 'record' | null;
 
 export default function SpeakerVideoIntroductionScreen({
-  formData,
   updateFormData,
   nextScreen,
   prevScreen,
@@ -33,7 +32,7 @@ export default function SpeakerVideoIntroductionScreen({
   const [cameraError, setCameraError] = useState<string>('');
   const [errorType, setErrorType] = useState<'permission' | 'notfound' | 'https' | 'unsupported' | 'other' | null>(null);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -126,7 +125,7 @@ export default function SpeakerVideoIntroductionScreen({
         const blob = new Blob(chunksRef.current, { type: mimeType });
         setRecordedBlob(blob);
         setIsPreviewing(true);
-        
+
         // Save to form data
         const file = new File([blob], 'video-intro.webm', { type: mimeType });
         updateFormData({ videoIntroFile: file });
@@ -162,7 +161,7 @@ export default function SpeakerVideoIntroductionScreen({
     } catch (error) {
       console.error('Error accessing camera:', error);
       setIsRequestingPermission(false);
-      
+
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           setErrorType('permission');
@@ -188,7 +187,7 @@ export default function SpeakerVideoIntroductionScreen({
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -203,7 +202,7 @@ export default function SpeakerVideoIntroductionScreen({
     setCameraError('');
     setErrorType(null);
     updateFormData({ videoIntroFile: null });
-    
+
     if (videoRef.current) {
       videoRef.current.src = '';
       videoRef.current.srcObject = null;
@@ -472,7 +471,7 @@ export default function SpeakerVideoIntroductionScreen({
                       </svg>
                       <div className="flex-1">
                         <p className="text-red-600 font-medium text-[14px] mb-2">{cameraError}</p>
-                        
+
                         {errorType === 'permission' && (
                           <div className="text-red-700 text-[13px] space-y-2">
                             <p className="font-medium">How to fix this:</p>
@@ -484,13 +483,13 @@ export default function SpeakerVideoIntroductionScreen({
                             <p className="text-[12px] mt-2 italic">{getBrowserInstructions()}</p>
                           </div>
                         )}
-                        
+
                         {errorType === 'notfound' && (
                           <div className="text-red-700 text-[13px]">
                             <p>Make sure your camera is properly connected and not being used by another application.</p>
                           </div>
                         )}
-                        
+
                         {errorType === 'https' && (
                           <div className="text-red-700 text-[13px]">
                             <p>For security reasons, browsers require a secure HTTPS connection to access your camera.</p>
@@ -513,7 +512,7 @@ export default function SpeakerVideoIntroductionScreen({
                     </div>
                   </div>
                 )}
-                
+
                 {isRequestingPermission && (
                   <div className="mb-4 p-5 bg-blue-50 border border-blue-200 rounded-[12px]">
                     <div className="flex items-center gap-3">
@@ -527,13 +526,13 @@ export default function SpeakerVideoIntroductionScreen({
                     </div>
                   </div>
                 )}
-                
+
                 {!isRecording && !isPreviewing && !isRequestingPermission && (
                   <div className="border border-[#d1d5dc] rounded-[12px] p-12 text-center bg-[#f9fafb]">
                     <p className="text-[#4a5565] text-[16px] mb-4">
                       Click the button below to start recording your video introduction
                     </p>
-                    <button 
+                    <button
                       onClick={handleStartRecording}
                       className="bg-[#0b3b2e] text-white px-6 py-3 rounded-[12px] font-['Inter',sans-serif] font-medium text-[16px] hover:bg-[#0b3b2e]/90 transition-all">
                       Start Recording
