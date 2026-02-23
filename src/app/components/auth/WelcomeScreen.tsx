@@ -4,7 +4,6 @@ import { FormData } from "@/types/formData.ts";
 import { useState, useEffect } from 'react';
 import voxdLogo from '../../../assets/9f82f23acc7a74a7bee4d1a8435c26568326a05d.png';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '../../../../utils/supabase/info';
 
 interface WelcomeScreenProps {
   formData: FormData;
@@ -43,21 +42,29 @@ export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-3a218522/contact`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/rest/v1/contact_submissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Prefer': 'return=minimal',
         },
-        body: JSON.stringify(contactFormData)
+        body: JSON.stringify({
+          first_name: contactFormData.firstName,
+          last_name: contactFormData.lastName,
+          email: contactFormData.email,
+          message: contactFormData.message,
+        })
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        const data = await response.json();
         console.error('Contact form error details:', data);
-        const errorMsg = data.details?.message || data.error || 'Failed to send message';
-        throw new Error(errorMsg);
+        throw new Error(data.message || 'Failed to send message');
       }
 
       toast.success('Message sent successfully! We\'ll get back to you soon.');
