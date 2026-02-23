@@ -96,14 +96,13 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
         title: filled('professionalTitle', 'professional_title', 'professional_headline'),
         location: filled('speakerLocation', 'speaker_country'),
         city: filled('speakerCity', 'speaker_city'),
-        tagline: filled('speakerTagline', 'speaker_tagline'),
+        bio: filled('bio'),
         languages: filled('speakerLanguages', 'speaker_languages'),
       };
       const topicsChecks = {
         topics: filled('topics', 'customTopics', 'custom_topics'),
         formats: filled('speakingFormats', 'speaking_formats'),
         experience: filled('yearsOfExperience', 'years_of_experience'),
-        bio: filled('bio'),
       };
       const hasPhoto = filled('profilePhoto', 'profile_photo');
 
