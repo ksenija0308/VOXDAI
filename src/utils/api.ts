@@ -118,13 +118,24 @@ export const authAPI = {
   },
 
   resetPasswordForEmail: async (email: string) => {
-    await fetch("/functions/v1/send-reset-email", {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-reset-email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseAnonKey}`,
       },
       body: JSON.stringify({ email }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Reset password failed: ${response.status}`);
+    }
+
+    return response.json();
   },
 
   // Get and clear stored user type from OAuth sign-up flow
