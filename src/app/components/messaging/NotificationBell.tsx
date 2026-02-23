@@ -121,7 +121,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute right-0 max-[410px]:right-[-63px] mt-2 w-80 bg-white border-2 border-[#e9ebef] rounded-lg shadow-lg z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-[#e9ebef] flex items-center justify-between">
             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600 }}>
               Notifications
