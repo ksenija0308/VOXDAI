@@ -7,7 +7,7 @@ import { Switch } from './ui/switch';
 import { Slider } from './ui/slider';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from '@/types/formData';
-import { organizerAPI, authAPI, fileAPI } from '@/utils/api';
+import { organizerAPI, authAPI, fileAPI } from '@/api';
 import { useLogoContext } from '@/context/LogoContext';
 import { toast } from 'sonner';
 

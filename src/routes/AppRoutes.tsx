@@ -18,7 +18,7 @@ import CookieSettingsScreen from '../app/components/CookieSettingsScreen';
 import BookingRespondPage from '../app/components/BookingRespondPage';
 import OutreachPage from '../app/components/OutreachPage';
 import MessagesPage from '../app/components/MessagesPage';
-import { organizerAPI, speakerAPI, authAPI } from '../utils/api';
+import { organizerAPI, speakerAPI, authAPI } from '@/api';
 import { toast } from 'sonner';
 
 interface AppRoutesProps {

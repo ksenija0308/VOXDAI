@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { authAPI } from '../../utils/api';
+import { authAPI } from '@/api';
 import { toast } from 'sonner';
 
 export default function ForgotPasswordScreen() {

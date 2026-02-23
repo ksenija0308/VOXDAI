@@ -4,7 +4,7 @@ import { Mail, Lock, Users, Mic, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { authAPI } from '../../utils/api';
+import { authAPI } from '@/api';
 import { toast } from 'sonner';
 
 interface SignInFormProps {

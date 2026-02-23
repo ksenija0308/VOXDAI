@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useFormContext } from '../context/FormContext';
 import AppRoutes from '../routes/AppRoutes';
-import { authAPI } from '../utils/api';
+import { authAPI } from '@/api';
 import { toast } from 'sonner';
 
 export default function AppContent() {

@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { authAPI } from '../../utils/api';
+import { authAPI } from '@/api';
 
 interface ProtectedRouteProps {
   children: ReactNode;

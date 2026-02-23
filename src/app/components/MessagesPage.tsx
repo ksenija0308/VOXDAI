@@ -2,7 +2,7 @@ import { Mail, Send, X as XIcon, LogOut, User, ArrowLeft } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { conversationAPI, authAPI } from '@/utils/api';
+import { conversationAPI, authAPI } from '@/api';
 import { useLogoContext } from '@/context/LogoContext';
 import { useConversationPresence } from '@/hooks/usePresencePing';
 import { useConversationRealtime } from '@/hooks/useConversationRealtime';

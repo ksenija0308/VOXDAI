@@ -1,7 +1,7 @@
 import { Bell } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notificationAPI } from '@/utils/api';
+import { notificationAPI } from '@/api';
 import { supabase } from '@/lib/supabaseClient';
 
 interface Notification {

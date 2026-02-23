@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import { FormData } from '@/types/formData';
 import { SearchResult, ViewingSpeaker } from '@/types/dashboard';
-import { organizerAPI, speakerAPI, conversationAPI } from '@/utils/api';
+import { organizerAPI, speakerAPI, conversationAPI } from '@/api';
 import { trackRecentMatchView, loadRecentMatches } from '@/utils/recentMatches';
 import { fetchOutreachCounts } from '@/features/outreach/outreachCounts';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';

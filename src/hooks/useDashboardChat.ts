@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Message, Conversation } from '@/types/dashboard';
-import { conversationAPI } from '@/utils/api';
+import { conversationAPI } from '@/api';
 import { supabase } from '@/lib/supabaseClient';
 import { useConversationRealtime } from '@/hooks/useConversationRealtime';
 import { toast } from 'sonner';

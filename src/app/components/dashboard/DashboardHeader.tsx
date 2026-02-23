@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, LogOut, User } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
 import { useLogoContext } from '@/context/LogoContext';
-import { authAPI } from '@/utils/api';
+import { authAPI } from '@/api';
 import { toast } from 'sonner';
 import { FormData } from '@/types/formData';
 

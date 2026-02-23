@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FormData, initialFormData } from '../types/formData';
-import { organizerAPI, speakerAPI, fileAPI } from '../utils/api';
+import { organizerAPI, speakerAPI, fileAPI } from '@/api';
 import { toast } from 'sonner';
 
 const STORAGE_KEY = 'voxdai_onboarding_data';

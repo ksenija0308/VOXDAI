@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { organizerAPI, speakerAPI } from '../utils/api';
+import { organizerAPI, speakerAPI } from '@/api';
 import { getSignedUrl } from '../lib/storage';
 
 interface LogoContextType {

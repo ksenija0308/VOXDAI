@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SearchResult, SearchResults, SearchFilters, DEFAULT_FILTERS } from '@/types/dashboard';
-import { searchAPI } from '@/utils/api';
+import { searchAPI } from '@/api';
 import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
 

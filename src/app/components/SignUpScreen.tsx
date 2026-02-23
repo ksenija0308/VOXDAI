@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from "@/types/formData.ts";
-import { authAPI } from '@/utils/api';
+import { authAPI } from '@/api';
 
 interface SignUpScreenProps {
   formData: FormData;

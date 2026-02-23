@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { FormData } from '@/types/formData';
-import { speakerAPI, authAPI, fileAPI } from '@/utils/api';
+import { speakerAPI, authAPI, fileAPI } from '@/api';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';

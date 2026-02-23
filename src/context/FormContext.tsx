@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FormData } from '../types/formData';
 import { useFormData } from '../hooks/useFormData';
 import { useLogoContext } from './LogoContext';
-import { authAPI, organizerAPI, speakerAPI } from '../utils/api';
+import { authAPI, organizerAPI, speakerAPI } from '@/api';
 import { supabase } from '../lib/supabaseClient';
 import { usePresencePing } from '../hooks/usePresencePing';
 import { toast } from 'sonner';

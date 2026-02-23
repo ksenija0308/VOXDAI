@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { FormData } from "@/types/formData.ts";
-import { authAPI } from '@/utils/api';
+import { authAPI } from '@/api';
 import OrganiserBasicsScreen from './OrganiserBasicsScreen';
 import AboutScreen from './AboutScreen';
 import EventTypesScreen from './EventTypesScreen';
