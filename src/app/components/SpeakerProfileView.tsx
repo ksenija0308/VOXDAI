@@ -19,9 +19,10 @@ interface SpeakerProfileProps {
   };
   onClose: () => void;
   onContact: () => void;
+  profileType?: 'speaker' | 'organizer';
 }
 
-export default function SpeakerProfileView({ speaker, onClose, onContact }: SpeakerProfileProps) {
+export default function SpeakerProfileView({ speaker, onClose, onContact, profileType = 'speaker' }: SpeakerProfileProps) {
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -153,57 +154,61 @@ export default function SpeakerProfileView({ speaker, onClose, onContact }: Spea
             </div>
           )}
 
-          {/* Speaking Availability & Fee */}
-          <div className="mb-8">
-            <h2 className="mb-4 flex items-center gap-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', fontSize: '20px' }}>
-              <Calendar className="w-5 h-5" />
-              Speaking Availability
-            </h2>
-            <div className="space-y-3">
-              {speaker.availability && (
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${speaker.availability === 'Available' ? 'bg-green-500' : 'bg-[#717182]'}`}></div>
-                  <span style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
-                    {speaker.availability}
-                  </span>
-                </div>
-              )}
-              {speaker.feeRange && (
-                <div className="flex items-center gap-2 text-[#717182]">
-                  <DollarSign className="w-4 h-4" />
-                  <span style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-                    {speaker.feeRange}
-                  </span>
-                </div>
-              )}
+          {/* Speaking Availability & Fee - only for speaker profiles */}
+          {profileType === 'speaker' && (
+            <div className="mb-8">
+              <h2 className="mb-4 flex items-center gap-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', fontSize: '20px' }}>
+                <Calendar className="w-5 h-5" />
+                Speaking Availability
+              </h2>
+              <div className="space-y-3">
+                {speaker.availability && (
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${speaker.availability === 'Available' ? 'bg-green-500' : 'bg-[#717182]'}`}></div>
+                    <span style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
+                      {speaker.availability}
+                    </span>
+                  </div>
+                )}
+                {speaker.feeRange && (
+                  <div className="flex items-center gap-2 text-[#717182]">
+                    <DollarSign className="w-4 h-4" />
+                    <span style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
+                      {speaker.feeRange}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Booking CTA */}
-          <div className="bg-[#0B3B2E] rounded-lg p-8 text-center text-white">
-            <h3 className="mb-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', fontSize: '22px' }}>
-              Interested in booking this speaker?
-            </h3>
-            <p className="mb-6" style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
-              Contact us to check availability and discuss your event requirements.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={onContact}
-                className="bg-white text-[#0B3B2E] hover:bg-[#f3f3f5] px-8 py-6"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}
-              >
-                Contact for Booking
-              </Button>
-              <Button
-                onClick={onClose}
-                className="bg-white text-[#0B3B2E] hover:bg-[#f3f3f5] px-8 py-6"
-                style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}
-              >
-                Close Preview
-              </Button>
+          {/* Booking CTA - only for speaker profiles */}
+          {profileType === 'speaker' && (
+            <div className="bg-[#0B3B2E] rounded-lg p-8 text-center text-white">
+              <h3 className="mb-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', fontSize: '22px' }}>
+                Interested in booking this speaker?
+              </h3>
+              <p className="mb-6" style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
+                Contact us to check availability and discuss your event requirements.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  onClick={onContact}
+                  className="bg-white text-[#0B3B2E] hover:bg-[#f3f3f5] px-8 py-6"
+                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}
+                >
+                  Contact for Booking
+                </Button>
+                <Button
+                  onClick={onClose}
+                  className="bg-white text-[#0B3B2E] hover:bg-[#f3f3f5] px-8 py-6"
+                  style={{ fontFamily: 'Inter, sans-serif', fontWeight: '500' }}
+                >
+                  Close Preview
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}

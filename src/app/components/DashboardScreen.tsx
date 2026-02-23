@@ -1304,6 +1304,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       {viewingSpeaker && (
         <SpeakerProfileView
           speaker={viewingSpeaker}
+          profileType={formData.userType === 'speaker' ? 'organizer' : 'speaker'}
           onClose={() => setViewingSpeaker(null)}
           onContact={async () => {
             try {
