@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient.ts';
 import { toast } from 'sonner';
 
 export default function ResetPasswordScreen() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +16,8 @@ export default function ResetPasswordScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const token = searchParams.get('access_token');
 
   const validatePassword = (pw: string): string | null => {
     if (pw.length < 8) return 'Password must be at least 8 characters';
@@ -38,11 +41,17 @@ export default function ResetPasswordScreen() {
       return;
     }
 
+    if (!token) {
+      setError('Invalid or expired reset link');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
+      const { error: updateError } = await supabase.auth.updateUser(
+        { password },
+        { accessToken: token }
+      );
 
       if (updateError) throw updateError;
 
