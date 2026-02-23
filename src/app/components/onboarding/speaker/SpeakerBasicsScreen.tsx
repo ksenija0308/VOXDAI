@@ -231,7 +231,7 @@ export default function SpeakerBasicsScreen({
             {/* Profile Photo */}
             <div className="mb-10">
               <label className="block mb-3 font-['Inter',sans-serif] font-medium text-[14px]">
-                Profile Photo <span className="text-[#e7000b]">*</span>
+                Profile Photo
               </label>
 
               <div className="flex gap-6 items-start">

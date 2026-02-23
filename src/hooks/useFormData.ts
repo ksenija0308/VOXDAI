@@ -164,7 +164,6 @@ export function useFormData() {
   };
 
   const clearOnboardingData = () => {
-    // Clear localStorage after successful onboarding completion
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
