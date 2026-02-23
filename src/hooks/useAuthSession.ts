@@ -1,0 +1,207 @@
+import { useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FormData } from '../types/formData';
+import { authAPI, organizerAPI, speakerAPI } from '@/api';
+import { supabase } from '../lib/supabaseClient';
+import { usePresencePing } from './usePresencePing';
+import { toast } from 'sonner';
+
+interface UseAuthSessionParams {
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  refreshLogo: (userType: string) => void;
+}
+
+export function useAuthSession({ setFormData, refreshLogo }: UseAuthSessionParams) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const handledByAuthChange = useRef(false);
+
+  // Ping presence every 30s so the backend knows the user is online
+  usePresencePing();
+
+  // Helper: load profile and navigate after OAuth sign-in
+  const handleOAuthSignIn = async (userType: FormData['userType'], session: any) => {
+    setFormData(prev => ({ ...prev, userType }));
+
+    // If the user hasn't completed onboarding yet, skip the profile API call
+    // entirely — there's no profile to fetch and calling it would produce an error
+    const profileCompleted = session.user?.user_metadata?.profileCompleted;
+    if (!profileCompleted) {
+      const path = userType === 'organizer'
+        ? '/onboarding/organizer/basics'
+        : '/onboarding/speaker/basics';
+      navigate(path, { replace: true });
+      return;
+    }
+
+    try {
+      const profile = userType === 'organizer'
+        ? await organizerAPI.getProfile()
+        : await speakerAPI.getProfile();
+
+      if (profile) {
+        setFormData(prev => ({ ...prev, ...profile } as FormData));
+        sessionStorage.setItem('voxd_profile_completed', 'true');
+        refreshLogo(userType);
+        navigate('/dashboard', { replace: true });
+      } else {
+        // No profile yet, go to onboarding
+        const path = userType === 'organizer'
+          ? '/onboarding/organizer/basics'
+          : '/onboarding/speaker/basics';
+        navigate(path, { replace: true });
+      }
+    } catch {
+      const path = userType === 'organizer'
+        ? '/onboarding/organizer/basics'
+        : '/onboarding/speaker/basics';
+      navigate(path, { replace: true });
+    }
+  };
+
+  // Listen for Supabase auth state changes (handles OAuth callback reliably).
+  // INITIAL_SESSION fires when the listener is first registered (guaranteed),
+  // SIGNED_IN fires on new sign-ins. We need both because the OAuth token
+  // exchange may complete before or after our listener is set up.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!session) return;
+        if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
+
+        // Capture OAuth provider token (e.g. LinkedIn) if present
+        const providerToken = session.provider_token;
+        if (providerToken && session.user) {
+          supabase.from('user_oauth_tokens').upsert({
+            user_id: session.user.id,
+            linkedin_access_token: providerToken,
+            linkedin_token_updated_at: new Date().toISOString(),
+          }).then(({ error }) => {
+            if (error) console.error('Failed to store OAuth provider token:', error);
+          });
+        }
+
+        // Only handle when on a public page (OAuth redirect lands on `/`)
+        const path = window.location.pathname;
+        if (path !== '/' && path !== '/login') return;
+
+        handledByAuthChange.current = true;
+
+        // Check if this is a sign-up flow
+        const signupUserType = authAPI.getAndClearSignupUserType();
+
+        if (signupUserType) {
+          setFormData(prev => ({ ...prev, userType: signupUserType } as FormData));
+          try {
+            await authAPI.updateUserMetadata({ userType: signupUserType });
+          } catch (error) {
+            console.error('Failed to update user metadata:', error);
+          }
+          sessionStorage.removeItem('voxd_profile_completed');
+          toast.success('Account created successfully! Please complete your profile.');
+          if (signupUserType === 'organizer') {
+            navigate('/onboarding/organizer/basics', { replace: true });
+          } else {
+            navigate('/onboarding/speaker/basics', { replace: true });
+          }
+          return;
+        }
+
+        // Existing user OAuth sign-in
+        const userType = session.user?.user_metadata?.userType;
+        if (userType) {
+          await handleOAuthSignIn(userType, session);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load profile on mount if user is authenticated
+  useEffect(() => {
+    const loadProfile = async () => {
+      // Skip if the onAuthStateChange handler already handled this
+      if (handledByAuthChange.current) {
+        handledByAuthChange.current = false;
+        return;
+      }
+
+      try {
+        const session = await authAPI.getSession();
+        if (session) {
+          // Check if this is an OAuth sign-up callback
+          const signupUserType = authAPI.getAndClearSignupUserType();
+
+          if (signupUserType) {
+            setFormData(prev => ({ ...prev, userType: signupUserType } as FormData));
+
+            // Save user type to Supabase user metadata
+            try {
+              await authAPI.updateUserMetadata({ userType: signupUserType });
+            } catch (error) {
+              console.error('Failed to update user metadata:', error);
+            }
+
+            // Clear any stale profile completion flags before starting onboarding
+            sessionStorage.removeItem('voxd_profile_completed');
+
+            toast.success('Account created successfully! Please complete your profile.');
+            // Navigate to first profile creation screen
+            if (signupUserType === 'organizer') {
+              navigate('/onboarding/organizer/basics', { replace: true });
+            } else {
+              navigate('/onboarding/speaker/basics', { replace: true });
+            }
+            return;
+          }
+
+          // Not a sign-up callback, load existing profile data
+          const userType = session.user?.user_metadata?.userType;
+          if (userType) {
+            setFormData(prev => ({ ...prev, userType } as FormData));
+
+            // Skip profile loading on onboarding routes to avoid unnecessary 404 errors
+            const isOnboarding = location.pathname.startsWith('/onboarding/');
+            if (isOnboarding) {
+              return;
+            }
+
+            try {
+              const profile = userType === 'organizer'
+                ? await organizerAPI.getProfile()
+                : await speakerAPI.getProfile();
+
+              if (profile) {
+                setFormData(prev => ({ ...prev, ...profile } as FormData));
+                // Mark profile as completed so returning users can access dashboard
+                sessionStorage.setItem('voxd_profile_completed', 'true');
+                // Resolve logo/photo URL for header avatar
+                refreshLogo(userType);
+
+                // Backfill profileCompleted metadata for old users who
+                // completed onboarding before this flag was introduced
+                if (!session.user?.user_metadata?.profileCompleted) {
+                  authAPI.updateUserMetadata({ profileCompleted: true }).catch(() => {});
+                }
+
+                // Redirect to dashboard if on a public page (e.g., page refresh while authenticated)
+                if (location.pathname === '/' || location.pathname === '/login') {
+                  navigate('/dashboard', { replace: true });
+                }
+              }
+            } catch (err) {
+              // Profile doesn't exist or failed to load - ProtectedRoute will handle navigation
+              console.error('Error loading profile:', err);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        // Silently fail - user can still use the app
+      }
+    };
+
+    loadProfile();
+  }, [navigate, location.pathname]);
+}

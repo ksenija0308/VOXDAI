@@ -3,7 +3,7 @@ import { FormProvider } from '../context/FormContext';
 import { LogoProvider } from '../context/LogoContext';
 import AppContent from './AppContent';
 import { Toaster } from './components/ui/toaster';
-import CookieBanner from './components/CookieBanner';
+import CookieBanner from './components/legal/CookieBanner';
 
 export default function App() {
   return (

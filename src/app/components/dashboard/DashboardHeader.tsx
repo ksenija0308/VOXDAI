@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, LogOut, User } from 'lucide-react';
-import NotificationBell from '../NotificationBell';
+import NotificationBell from '../messaging/NotificationBell';
 import { useLogoContext } from '@/context/LogoContext';
 import { authAPI } from '@/api';
 import { toast } from 'sonner';
