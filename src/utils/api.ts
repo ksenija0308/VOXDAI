@@ -118,15 +118,13 @@ export const authAPI = {
   },
 
   resetPasswordForEmail: async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+    await fetch("/functions/v1/send-reset-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
     });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
   },
 
   // Get and clear stored user type from OAuth sign-up flow

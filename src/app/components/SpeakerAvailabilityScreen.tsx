@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { format } from 'date-fns';
-import { FormData } from '../App';
+import { FormData } from "@/types/formData.ts";
 import FormLayout from './FormLayout';
 import { Calendar as CalendarComponent } from './ui/calendar';
 import { Calendar, X, ChevronDown } from 'lucide-react';

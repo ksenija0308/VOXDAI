@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -19,7 +19,7 @@ interface EventBriefData {
   eventTime: string;
 }
 
-export default function EventBriefForm({ onClose, organizerName = 'Your Organization' }: EventBriefFormProps) {
+export default function EventBriefForm({ onClose }: EventBriefFormProps) {
   const [step, setStep] = useState<'form' | 'share'>('form');
   const [copied, setCopied] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
