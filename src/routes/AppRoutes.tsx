@@ -4,6 +4,7 @@ import WelcomeScreen from '../app/components/WelcomeScreen';
 import SignUpScreen from '../app/components/SignUpScreen';
 import SignInForm from '../app/components/SignInForm';
 import ForgotPasswordScreen from '../app/components/ForgotPasswordScreen';
+import ResetPasswordScreen from '../app/components/ResetPasswordScreen';
 import DashboardScreen from '../app/components/DashboardScreen';
 import OrganizerProfileScreen from '../app/components/OrganizerProfileScreen';
 import SpeakerProfileScreen from '../app/components/SpeakerProfileScreen';
@@ -147,6 +148,15 @@ export default function AppRoutes({
         element={
           <PublicRoute>
             <ForgotPasswordScreen />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <ResetPasswordScreen />
           </PublicRoute>
         }
       />
