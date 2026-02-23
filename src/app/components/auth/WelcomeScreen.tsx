@@ -696,21 +696,17 @@ export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn
               <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style={{ fontFamily: 'Inter, sans-serif' }}>Product</h4>
               <ul className="space-y-2 text-[#717182]" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px' }}>
                 <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Security</a></li>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Integrations</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base" style={{ fontFamily: 'Inter, sans-serif' }}>Company</h4>
               <ul className="space-y-2 text-[#717182]" style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px' }}>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-[#0B3B2E] transition-colors">Careers</a></li>
+                <li><a href="#features" className="hover:text-[#0B3B2E] transition-colors">About Us</a></li>
                 <li>
                   <button
                     onClick={() => setShowContactForm(true)}
-                    className="hover:text-[#0B3B2E] transition-colors text-left"
+                    className="hover:text-[#0B3B2E] text-[13px] weight-400 transition-colors"
                   >
                     Contact
                   </button>
