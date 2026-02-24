@@ -99,6 +99,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     diversityGoals: profile.diversity_goals ?? false,
     diversityTargets: profile.diversity_targets ?? '',
     languages: profile.languages ?? [],
+    eventReach: profile.event_reach ?? [],
     budgetRange: profile.budget_range ?? [],
     budgetMin: profile.budget_min ?? 0,
     budgetMax: profile.budget_max ?? 10000,
@@ -898,6 +899,41 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Event reach
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Local (within my city)',
+                        'Regional (within my country)',
+                        'Continental (within my continent)',
+                        'Global (anywhere in the world)',
+                      ].map((reach) => {
+                        const current = getArrayValue('eventReach');
+                        return (
+                          <button
+                            key={reach}
+                            onClick={() => {
+                              const updated = current.includes(reach)
+                                ? current.filter((v) => v !== reach)
+                                : [...current, reach];
+                              updateEditData('eventReach', updated);
+                            }}
+                            className={`px-4 py-2 rounded-full border transition-colors ${
+                              current.includes(reach)
+                                ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
+                                : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
+                            }`}
+                            style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+                          >
+                            {reach}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
                       Budget range
                     </label>
                     <div className="space-y-4">
@@ -980,6 +1016,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <>
                   {renderArrayField('Speaker Formats', 'speakerFormats')}
                   {renderArrayField('Languages', 'languages')}
+                  {renderArrayField('Event Reach', 'eventReach')}
                   {renderArrayField('Budget Range', 'budgetRange')}
                   {renderField('Lead Time', 'leadTime')}
                   <div className="mb-4">

@@ -41,6 +41,7 @@ export interface FormData {
   diversityGoals: boolean;
   diversityTargets: string;
   languages: string[];
+  eventReach: string[];
   budgetRange: string[];
   budgetMin: number;
   budgetMax: number;
@@ -143,6 +144,7 @@ export const initialFormData: FormData = {
   diversityGoals: false,
   diversityTargets: '',
   languages: [],
+  eventReach: [],
   budgetRange: [],
   budgetMin: 0,
   budgetMax: 10000,

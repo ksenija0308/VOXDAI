@@ -85,6 +85,9 @@ export const organizerAPI = {
     if (profileData.diversityGoals !== undefined) organizationData.diversity_goals = profileData.diversityGoals;
     if (profileData.diversityTargets) organizationData.diversity_targets = profileData.diversityTargets;
     if (profileData.languages) organizationData.languages = profileData.languages;
+    if (profileData.eventReach && profileData.eventReach.length > 0) {
+      organizationData.event_reach = profileData.eventReach;
+    }
     if (profileData.budgetRange && profileData.budgetRange.length > 0) {
       organizationData.budget_range = profileData.budgetRange;
       if (profileData.budgetRange.includes('paid')) {

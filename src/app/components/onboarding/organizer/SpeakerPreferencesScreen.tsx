@@ -38,6 +38,13 @@ const languageOptions = [
   'Hindi',
 ];
 
+const eventReachOptions = [
+  'Local (within my city)',
+  'Regional (within my country)',
+  'Continental (within my continent)',
+  'Global (anywhere in the world)',
+];
+
 const leadTimeOptions = ['0–2 weeks', '3–4 weeks', '1–3 months', '3+ months'];
 
 export default function SpeakerPreferencesScreen({
@@ -61,6 +68,10 @@ export default function SpeakerPreferencesScreen({
 
     if (formData.languages.length === 0) {
       newErrors.languages = 'Please select at least one language';
+    }
+
+    if (formData.eventReach.length === 0) {
+      newErrors.eventReach = 'Please select at least one event reach';
     }
 
     if (!formData.leadTime) {
@@ -178,6 +189,34 @@ export default function SpeakerPreferencesScreen({
               className="bg-white border-none"
             />
           </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block mb-2">
+          Geographic Reach <span className="text-[#d4183d]">*</span>
+        </label>
+        <p className="text-[#717182] mb-3" style={{ fontSize: '14px' }}>
+          What geographic reach should a speaker have?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {eventReachOptions.map((reach) => (
+            <button
+              key={reach}
+              onClick={() => toggleOption(formData.eventReach, reach, 'eventReach')}
+              className={`px-4 py-2 rounded-full border transition-colors ${
+                formData.eventReach.includes(reach)
+                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
+                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
+              }`}
+              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+            >
+              {reach}
+            </button>
+          ))}
+        </div>
+        {errors.eventReach && (
+          <p className="text-[#d4183d] mt-2" style={{ fontSize: '14px' }}>{errors.eventReach}</p>
         )}
       </div>
 
