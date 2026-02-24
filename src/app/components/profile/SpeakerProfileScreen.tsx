@@ -33,8 +33,9 @@ const speakingFormatOptions = [
 const experienceOptions = ['0-2 years', '3-5 years', '6-10 years', '10+ years'];
 
 const languageOptions = [
-  'English', 'Spanish', 'French', 'German', 'Mandarin',
-  'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+  'English', 'Spanish', 'French', 'German', 'Mandarin', 'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+  'Italian', 'Dutch', 'Turkish', 'Polish', 'Swedish', 'Danish', 'Norwegian', 'Finnish', 'Greek',
+  'Czech', 'Romanian', 'Hungarian', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Tagalog', 'Ukrainian', 'Hebrew',
 ];
 
 const geographicOptions = [

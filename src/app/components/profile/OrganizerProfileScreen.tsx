@@ -41,7 +41,11 @@ const speakerFormatOptions = ['Keynote',
   'Webinar',
   'Moderation',
   'MC/Host',];
-const languageOptions = ['English', 'Spanish', 'French', 'German', 'Mandarin', 'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi'];
+const languageOptions = [
+  'English', 'Spanish', 'French', 'German', 'Mandarin', 'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+  'Italian', 'Dutch', 'Turkish', 'Polish', 'Swedish', 'Danish', 'Norwegian', 'Finnish', 'Greek',
+  'Czech', 'Romanian', 'Hungarian', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Tagalog', 'Ukrainian', 'Hebrew',
+];
 const leadTimeOptions = ['0–2 weeks', '3–4 weeks', '1–3 months', '3+ months'];
 
 export default function OrganizerProfileScreen({ formData, updateFormData, saveProfile, onLogout }: OrganizerProfileScreenProps) {

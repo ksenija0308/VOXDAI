@@ -8,8 +8,9 @@ import { toast } from 'sonner';
 const LINKEDIN_IMPORT_PENDING_KEY = 'voxd_linkedin_import_pending';
 
 const languageOptions = [
-  'English', 'Spanish', 'French', 'German', 'Mandarin',
-  'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+  'English', 'Spanish', 'French', 'German', 'Mandarin', 'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi',
+  'Italian', 'Dutch', 'Turkish', 'Polish', 'Swedish', 'Danish', 'Norwegian', 'Finnish', 'Greek',
+  'Czech', 'Romanian', 'Hungarian', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Tagalog', 'Ukrainian', 'Hebrew',
 ];
 
 interface SpeakerBasicsScreenProps {
