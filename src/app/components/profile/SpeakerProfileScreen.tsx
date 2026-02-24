@@ -90,6 +90,23 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { playbackUrl: videoPlaybackUrl, isLoading: isVideoLoading } = useVideoPlaybackUrl(profileData.videoIntroUrl);
 
+  // Video recording state
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [isVideoPreviewing, setIsVideoPreviewing] = useState(false);
+  const [videoRecordingTime, setVideoRecordingTime] = useState(0);
+  const [videoRecordedBlob, setVideoRecordedBlob] = useState<Blob | null>(null);
+  const [videoCameraError, setVideoCameraError] = useState('');
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [videoUploadSuccess, setVideoUploadSuccess] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState('');
+  const [newVideoPlaybackUrl, setNewVideoPlaybackUrl] = useState('');
+  const recordVideoRef = useRef<HTMLVideoElement>(null);
+  const videoMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
+  const videoChunksRef = useRef<Blob[]>([]);
+  const videoTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordedVideoUrlRef = useRef<string | null>(null);
+
   // Availability period editing state
   const [showAddPeriod, setShowAddPeriod] = useState(false);
   const [periodStart, setPeriodStart] = useState('');
@@ -148,6 +165,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
     setPhotoRemoved(false);
     setCustomTopicInput('');
     setShowAddPeriod(false);
+    resetVideoRecordingState();
   };
 
   const validateSection = (section: string, merged: FormData): Record<string, string> => {
@@ -215,6 +233,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
         setPhotoRemoved(false);
         setCustomTopicInput('');
         setShowAddPeriod(false);
+        resetVideoRecordingState();
       } else {
         toast.error('Failed to save profile');
       }
@@ -223,6 +242,189 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Video recording handlers
+  const stopVideoCamera = () => {
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach(track => track.stop());
+      videoStreamRef.current = null;
+    }
+  };
+
+  const resetVideoRecordingState = () => {
+    stopVideoCamera();
+    if (videoTimerRef.current) clearInterval(videoTimerRef.current);
+    if (recordedVideoUrlRef.current) URL.revokeObjectURL(recordedVideoUrlRef.current);
+    setIsVideoRecording(false);
+    setIsVideoPreviewing(false);
+    setVideoRecordingTime(0);
+    setVideoRecordedBlob(null);
+    setVideoCameraError('');
+    setIsVideoUploading(false);
+    setVideoUploadSuccess(false);
+    setVideoUploadError('');
+    setNewVideoPlaybackUrl('');
+  };
+
+  const handleStartVideoRecording = async () => {
+    try {
+      setVideoCameraError('');
+
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        setVideoCameraError('Camera access requires HTTPS.');
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setVideoCameraError('Your browser doesn\'t support camera recording.');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        audio: true,
+      });
+
+      videoStreamRef.current = stream;
+      setIsVideoRecording(true);
+      setVideoRecordingTime(0);
+
+      // Wait for React to render the video element
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      if (recordVideoRef.current) {
+        recordVideoRef.current.srcObject = stream;
+        recordVideoRef.current.muted = true;
+        await recordVideoRef.current.play();
+      }
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+        ? 'video/webm;codecs=vp8,opus'
+        : 'video/webm';
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      videoMediaRecorderRef.current = mediaRecorder;
+      videoChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) videoChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(videoChunksRef.current, { type: mimeType });
+        setVideoRecordedBlob(blob);
+        setIsVideoPreviewing(true);
+
+        if (recordVideoRef.current) {
+          recordVideoRef.current.srcObject = null;
+          if (recordedVideoUrlRef.current) URL.revokeObjectURL(recordedVideoUrlRef.current);
+          const url = URL.createObjectURL(blob);
+          recordedVideoUrlRef.current = url;
+          recordVideoRef.current.src = url;
+          recordVideoRef.current.muted = false;
+          recordVideoRef.current.controls = true;
+        }
+
+        stopVideoCamera();
+        uploadRecordedVideo(blob);
+      };
+
+      mediaRecorder.start(1000);
+
+      videoTimerRef.current = setInterval(() => {
+        setVideoRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setVideoCameraError('Camera permission was denied. Please allow access and try again.');
+      } else if (error instanceof Error && error.name === 'NotFoundError') {
+        setVideoCameraError('No camera detected. Please connect a camera and try again.');
+      } else {
+        setVideoCameraError('Unable to access camera.');
+      }
+    }
+  };
+
+  const handleStopVideoRecording = () => {
+    if (videoMediaRecorderRef.current && isVideoRecording) {
+      videoMediaRecorderRef.current.stop();
+      setIsVideoRecording(false);
+      if (videoTimerRef.current) {
+        clearInterval(videoTimerRef.current);
+        videoTimerRef.current = null;
+      }
+    }
+  };
+
+  const uploadRecordedVideo = async (blob: Blob) => {
+    setIsVideoUploading(true);
+    setVideoUploadError('');
+    setVideoUploadSuccess(false);
+
+    try {
+      const accessToken = await authAPI.getAccessToken();
+      if (!accessToken) throw new Error('Not authenticated');
+
+      const res = await fetch('https://api.voxdai.com/functions/v1/generate-upload-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          folder: 'intro',
+          fileName: `${Date.now()}.webm`,
+          contentType: 'video/webm',
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to generate upload URL');
+
+      const { signedUrl, key } = await res.json();
+      if (!signedUrl) throw new Error('No upload URL returned');
+
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'video/webm' },
+        body: blob,
+      });
+
+      if (!uploadRes.ok) throw new Error('Failed to upload video');
+
+      updateEditData('videoIntroUrl', key);
+      setVideoUploadSuccess(true);
+
+      // Fetch playback URL for the newly uploaded video
+      const playRes = await fetch('https://api.voxdai.com/functions/v1/generate-play-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ key }),
+      });
+
+      if (playRes.ok) {
+        const playData = await playRes.json();
+        if (playData.signedUrl) {
+          setNewVideoPlaybackUrl(playData.signedUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Video upload error:', error);
+      setVideoUploadError(error instanceof Error ? error.message : 'Failed to upload video');
+    } finally {
+      setIsVideoUploading(false);
+    }
+  };
+
+  const formatVideoTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const updateEditData = (field: string, value: any) => {
@@ -753,6 +955,130 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                       placeholder="YouTube, Vimeo, or Loom link"
                       className="text-sm"
                     />
+                  </div>
+
+                  <div className="border-t border-[#e9ebef] pt-4">
+                    <label className="block text-sm text-[#717182] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>Or record a new video</label>
+
+                    {videoCameraError && (
+                      <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                        <p className="text-red-600 text-sm">{videoCameraError}</p>
+                        <button
+                          onClick={handleStartVideoRecording}
+                          className="text-red-600 text-sm font-medium hover:text-red-700 ml-3 whitespace-nowrap"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    )}
+
+                    {!isVideoRecording && !isVideoPreviewing && (
+                      <button
+                        onClick={handleStartVideoRecording}
+                        className="flex items-center gap-2 bg-[#0b3b2e] text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[#0b3b2e]/90 transition-all"
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                      >
+                        <Video className="w-4 h-4" />
+                        Start Recording
+                      </button>
+                    )}
+
+                    {(isVideoRecording || isVideoPreviewing) && (
+                      <div className="border border-[#e9ebef] rounded-lg overflow-hidden bg-black">
+                        {newVideoPlaybackUrl && !isVideoRecording ? (
+                          <video
+                            controls
+                            src={newVideoPlaybackUrl}
+                            className="w-full aspect-video bg-black"
+                          />
+                        ) : (
+                          <video
+                            ref={recordVideoRef}
+                            className="w-full aspect-video bg-black"
+                            playsInline
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {isVideoRecording && (
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                          <span className="text-sm font-medium text-[#0b3b2e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            Recording: {formatVideoTime(videoRecordingTime)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleStopVideoRecording}
+                          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-all"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
+                            <rect x="4" y="4" width="8" height="8" rx="1" />
+                          </svg>
+                          Stop Recording
+                        </button>
+                      </div>
+                    )}
+
+                    {isVideoPreviewing && (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {isVideoUploading ? (
+                              <>
+                                <svg className="w-4 h-4 text-[#0b3b2e] animate-spin" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="text-sm text-[#0b3b2e]" style={{ fontFamily: 'Inter, sans-serif' }}>Uploading video...</span>
+                              </>
+                            ) : videoUploadSuccess ? (
+                              <>
+                                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24">
+                                  <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <span className="text-sm text-[#0b3b2e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                  Video uploaded ({formatVideoTime(videoRecordingTime)})
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-sm text-[#0b3b2e]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Video recorded ({formatVideoTime(videoRecordingTime)})
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => {
+                              resetVideoRecordingState();
+                              updateEditData('videoIntroUrl', profileData.videoIntroUrl);
+                            }}
+                            disabled={isVideoUploading}
+                            className={`flex items-center gap-1.5 border border-[#d1d5dc] text-[#4a5565] px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                              isVideoUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#0b3b2e] hover:text-[#0b3b2e]'
+                            }`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 16 16">
+                              <path d="M2 8a6 6 0 0 1 10.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              <path d="M12.5 1v3h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Retake
+                          </button>
+                        </div>
+
+                        {videoUploadError && (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                            <p className="text-red-600 text-sm">{videoUploadError}</p>
+                            <button
+                              onClick={() => videoRecordedBlob && uploadRecordedVideo(videoRecordedBlob)}
+                              className="bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-red-700 transition-all"
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
