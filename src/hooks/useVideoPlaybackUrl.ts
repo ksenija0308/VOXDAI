@@ -5,6 +5,8 @@ export function useVideoPlaybackUrl(videoKey: string | undefined) {
   const [playbackUrl, setPlaybackUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
   useEffect(() => {
     if (!videoKey || !videoKey.startsWith('videos/')) {
       setPlaybackUrl('');
@@ -20,7 +22,7 @@ export function useVideoPlaybackUrl(videoKey: string | undefined) {
         if (!accessToken || cancelled) return;
 
         const res = await fetch(
-          'https://api.voxdai.com/functions/v1/generate-play-url',
+          `${supabaseUrl}/functions/v1/generate-play-url`,
           {
             method: 'POST',
             headers: {
