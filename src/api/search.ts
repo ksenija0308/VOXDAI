@@ -2,11 +2,12 @@ import { supabase } from '@/lib/supabaseClient';
 import { authAPI } from './auth';
 
 // Search API
-const accessToken = await authAPI.getAccessToken();
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
 export const searchAPI = {
   searchSpeakers: async (userPrompt: string) => {
+    const accessToken = await authAPI.getAccessToken();
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
@@ -33,6 +34,8 @@ export const searchAPI = {
   },
 
   searchOrganizers: async (userPrompt: string) => {
+    const accessToken = await authAPI.getAccessToken();
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
