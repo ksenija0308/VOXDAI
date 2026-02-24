@@ -3,6 +3,7 @@ import { FormData } from "@/types/formData.ts";
 import FormLayout from '../shared/FormLayout';
 import svgPaths from '@/imports/svg-yog84ugbyb';
 import { authAPI } from '@/api/auth';
+import { useVideoPlaybackUrl } from '@/hooks/useVideoPlaybackUrl';
 
 interface SpeakerVideoIntroductionScreenProps {
   formData: FormData;
@@ -37,7 +38,6 @@ export default function SpeakerVideoIntroductionScreen({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [playbackUrl, setPlaybackUrl] = useState<string>('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -45,6 +45,7 @@ export default function SpeakerVideoIntroductionScreen({
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoUrlRef = useRef<string | null>(null);
+  const { playbackUrl } = useVideoPlaybackUrl(formData.videoIntroUrl);
 
   useEffect(() => {
     return () => {
@@ -60,42 +61,13 @@ export default function SpeakerVideoIntroductionScreen({
     };
   }, []);
 
-  // Load playback URL for existing video
+  // Show existing video when playback URL is loaded
   useEffect(() => {
-    async function loadPlaybackUrl() {
-      try {
-        const accessToken = await authAPI.getAccessToken();
-        if (!accessToken) return;
-
-        const res = await fetch(
-          'https://api.voxdai.com/functions/v1/generate-play-url',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({ key: formData.videoIntroUrl }),
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.signedUrl) {
-            setPlaybackUrl(data.signedUrl);
-            setSelectedMethod('record');
-            setIsPreviewing(true);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load video playback URL:', error);
-      }
+    if (playbackUrl) {
+      setSelectedMethod('record');
+      setIsPreviewing(true);
     }
-
-    if (formData.videoIntroUrl && formData.videoIntroUrl.startsWith('videos/')) {
-      loadPlaybackUrl();
-    }
-  }, [formData.videoIntroUrl]);
+  }, [playbackUrl]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -316,7 +288,6 @@ export default function SpeakerVideoIntroductionScreen({
     setErrorType(null);
     setUploadError('');
     setUploadSuccess(false);
-    setPlaybackUrl('');
     updateFormData({ videoIntroFile: null, videoIntroUrl: '' });
 
     if (videoRef.current) {

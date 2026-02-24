@@ -6,6 +6,7 @@ import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
 import { FormData } from '@/types/formData';
 import { speakerAPI, authAPI, fileAPI } from '@/api';
+import { useVideoPlaybackUrl } from '@/hooks/useVideoPlaybackUrl';
 import { useLogoContext } from '@/context/LogoContext';
 import { getSignedUrl } from '@/lib/storage';
 import { toast } from 'sonner';
@@ -87,6 +88,7 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
   const [customTopicInput, setCustomTopicInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { playbackUrl: videoPlaybackUrl, isLoading: isVideoLoading } = useVideoPlaybackUrl(profileData.videoIntroUrl);
 
   // Availability period editing state
   const [showAddPeriod, setShowAddPeriod] = useState(false);
@@ -754,9 +756,23 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
                   </div>
                 </div>
               ) : (
-                <>
-                  {renderField('Video URL', 'videoIntroUrl')}
-                </>
+                <div className="space-y-3">
+                  {videoPlaybackUrl ? (
+                    <video
+                      controls
+                      src={videoPlaybackUrl}
+                      className="w-full rounded-lg aspect-video bg-black"
+                    />
+                  ) : isVideoLoading ? (
+                    <div className="flex items-center justify-center aspect-video bg-[#f9fafb] rounded-lg border border-[#e5e7eb]">
+                      <p className="text-sm text-[#717182]" style={{ fontFamily: 'Inter, sans-serif' }}>Loading video...</p>
+                    </div>
+                  ) : profileData.videoIntroUrl && !profileData.videoIntroUrl.startsWith('videos/') ? (
+                    renderField('Video URL', 'videoIntroUrl')
+                  ) : (
+                    <p className="text-sm text-[#717182]" style={{ fontFamily: 'Inter, sans-serif' }}>No video introduction added yet.</p>
+                  )}
+                </div>
               )}
             </div>
 
