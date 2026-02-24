@@ -162,6 +162,13 @@ export default function SpeakerVideoIntroductionScreen({
       setIsRequestingPermission(false);
       streamRef.current = stream;
 
+      // Show video element and start recording state before attaching stream
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Wait for React to render the video element
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       // Display stream in video element
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -219,8 +226,6 @@ export default function SpeakerVideoIntroductionScreen({
 
       // Start recording
       mediaRecorder.start(1000); // Collect data every second
-      setIsRecording(true);
-      setRecordingTime(0);
 
       // Start timer
       timerRef.current = setInterval(() => {
