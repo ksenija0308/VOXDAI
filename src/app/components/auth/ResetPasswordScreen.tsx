@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 
@@ -12,6 +13,8 @@ export default function ResetPasswordScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const token = searchParams.get('token');
   const email = searchParams.get('email');
@@ -92,27 +95,55 @@ export default function ResetPasswordScreen() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="password"
-            placeholder="New password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError('');
-            }}
-            className="bg-[#f3f3f5] border-none h-12"
-            autoFocus
-          />
-          <Input
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setError('');
-            }}
-            className="bg-[#f3f3f5] border-none h-12"
-          />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="New password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError('');
+              }}
+              className="bg-[#f3f3f5] border-none h-12 pr-12"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] hover:text-[#0B3B2E] transition-colors bg-transparent border-none cursor-pointer p-0"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+          <div className="relative">
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setError('');
+              }}
+              className="bg-[#f3f3f5] border-none h-12 pr-12"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#717182] hover:text-[#0B3B2E] transition-colors bg-transparent border-none cursor-pointer p-0"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
           {error && (
             <p className="text-[#d4183d]" style={{ fontSize: '14px' }}>{error}</p>
           )}
