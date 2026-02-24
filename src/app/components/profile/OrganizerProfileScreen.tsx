@@ -24,14 +24,6 @@ const industries = [
   'Consulting', 'Real Estate', 'Robotics', 'Blockchain', 'Other',
 ];
 
-const countries = [
-  'Switzerland', 'Germany', 'Austria', 'Belgium', 'Bulgaria', 'Croatia',
-  'Cyprus', 'Czechia', 'Denmark', 'Estonia', 'Finland', 'France',
-  'Greece', 'Hungary', 'Ireland', 'Italy', 'Latvia', 'Lithuania',
-  'Luxembourg', 'Malta', 'Netherlands', 'Poland', 'Portugal', 'Romania',
-  'Slovakia', 'Slovenia', 'Spain', 'Sweden', 'Other',
-];
-
 const eventTypeOptions = [
   'Conference', 'Meetup', 'Corporate event', 'Workshop', 'Webinar',
   'Podcast', 'Panel', 'Internal training', 'Other',
@@ -543,17 +535,14 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                       <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                         Country <span className="text-[#d4183d]">*</span>
                       </label>
-                      <select
+                      <input
+                        type="text"
                         value={String(getDisplayValue('country') || '')}
                         onChange={(e) => { updateEditData('country', e.target.value); setErrors(prev => ({ ...prev, country: '' })); }}
+                        placeholder="Enter country"
                         className={`w-full h-10 px-3 rounded-md bg-[#f3f3f5] border-none text-sm ${errors.country ? 'ring-1 ring-[#d4183d]' : ''}`}
                         style={{ fontFamily: 'Inter, sans-serif' }}
-                      >
-                        <option value="">Select country</option>
-                        {countries.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
+                      />
                       {errors.country && <p className="text-[#d4183d] text-xs mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.country}</p>}
                     </div>
                     <div>
