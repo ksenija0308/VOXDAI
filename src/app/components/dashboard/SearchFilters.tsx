@@ -41,7 +41,7 @@ export default function SearchFilters({ filters, onFiltersChange, onReset }: Sea
       <div>
         <label className="block mb-2" style={{ fontSize: '14px', fontWeight: '500' }}>Speaking Format</label>
         <div className="flex flex-wrap gap-2">
-          {['Keynote', 'Workshop', 'Panel', 'Fireside Chat'].map(format => (
+          {['Keynote', 'Workshop', 'Panel Discussion', 'Fireside Chat'].map(format => (
             <button
               key={format}
               onClick={() => {

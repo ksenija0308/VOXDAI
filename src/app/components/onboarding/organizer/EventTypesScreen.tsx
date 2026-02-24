@@ -16,14 +16,15 @@ interface EventTypesScreenProps {
 
 const eventTypeOptions = [
   'Conference',
+  'Corporate Event',
+  'Workshop/Training',
+  'Summit',
   'Meetup',
-  'Corporate event',
-  'Workshop',
   'Webinar',
   'Podcast',
-  'Panel',
-  'Internal training',
-  'Other',
+  'Panel Discussion',
+  'University/Academic',
+  'Charity/Non-profit',
 ];
 
 const frequencyOptions = ['Weekly', 'Monthly', 'Quarterly', 'Bi-annually', 'Annually', 'Ad-hoc'];
