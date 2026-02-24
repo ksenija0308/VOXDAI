@@ -41,7 +41,14 @@ const frequencyOptions = ['Weekly', 'Monthly', 'Quarterly', 'Bi-annually', 'Annu
 const eventSizeOptions = ['10–30', '30–80', '80–200', '200–1000', '1000+'];
 const formatOptions = ['In-person', 'Online', 'Hybrid'];
 
-const speakerFormatOptions = ['Keynote', 'Panel', 'Workshop', 'Fireside chat', 'Podcast guest', 'Moderator'];
+const speakerFormatOptions = ['Keynote',
+  'Panel Discussion',
+  'Workshop',
+  'Fireside Chat',
+  'Breakout Session',
+  'Webinar',
+  'Moderation',
+  'MC/Host',];
 const languageOptions = ['English', 'Spanish', 'French', 'German', 'Mandarin', 'Portuguese', 'Japanese', 'Korean', 'Arabic', 'Hindi'];
 const leadTimeOptions = ['0–2 weeks', '3–4 weeks', '1–3 months', '3+ months'];
 

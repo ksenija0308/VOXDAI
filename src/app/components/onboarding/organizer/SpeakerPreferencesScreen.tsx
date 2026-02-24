@@ -18,11 +18,13 @@ interface SpeakerPreferencesScreenProps {
 
 const speakerFormatOptions = [
   'Keynote',
-  'Panel',
+  'Panel Discussion',
   'Workshop',
-  'Fireside chat',
-  'Podcast guest',
-  'Moderator',
+  'Fireside Chat',
+  'Breakout Session',
+  'Webinar',
+  'Moderation',
+  'MC/Host'
 ];
 
 const languageOptions = [
@@ -35,7 +37,7 @@ const languageOptions = [
   'Japanese',
   'Korean',
   'Arabic',
-  'Hindi',
+  'Hindi'
 ];
 
 const eventReachOptions = [
