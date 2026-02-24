@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import {supabase} from '@/lib/supabaseClient';
 
 // File Upload API
 export const fileAPI = {
@@ -12,12 +12,10 @@ export const fileAPI = {
     const { uploadToProfileMedia } = await import('@/lib/storage');
 
     const prefix = type === 'photo' ? 'profile' : 'intro';
-    const storagePath = await uploadToProfileMedia({
+    return await uploadToProfileMedia({
       userId: user.id,
       file,
       prefix: prefix as 'profile' | 'intro',
     });
-
-    return storagePath;
   }
 };

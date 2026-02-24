@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { authAPI } from './auth';
 
 // Speaker Profile API
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
 export const speakerAPI = {
   saveProfile: async (profileData: any) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -116,7 +118,7 @@ export const speakerAPI = {
     try {
       const accessToken = await authAPI.getAccessToken();
 
-      await fetch(`https://api.voxdai.com/functions/v1/create-speaker-embedding?user_id=${user.id}`, {
+      await fetch(`${supabaseUrl}/functions/v1/create-speaker-embedding?user_id=${user.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

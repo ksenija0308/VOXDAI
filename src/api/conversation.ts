@@ -79,42 +79,6 @@ export const conversationAPI = {
     return (data ?? []).reverse();
   },
 
-  loadOlderMessages: async (conversationId: string, oldestCreatedAt: string, limit = 50) => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('id,conversation_id,sender_id,body,created_at,edited_at,deleted_at,metadata')
-      .eq('conversation_id', conversationId)
-      .is('deleted_at', null)
-      .lt('created_at', oldestCreatedAt)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return (data ?? []).reverse();
-  },
-
-  subscribeToMessages: (conversationId: string, onNewMessage: (m: any) => void) => {
-    const channel = supabase
-      .channel(`messages:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          onNewMessage(payload.new);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  },
-
   loadMyConversations: async () => {
     const { data: auth } = await supabase.auth.getUser();
     const currentUserId = auth.user?.id;

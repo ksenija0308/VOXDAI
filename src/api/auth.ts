@@ -156,32 +156,6 @@ export const authAPI = {
     return data;
   },
 
-  // Get current session with user info
-  getCurrentSession: async (): Promise<AuthResponse> => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-
-      if (error || !data.session) {
-        return { error: 'No active session' };
-      }
-
-      const user: User = {
-        id: data.session.user.id,
-        email: data.session.user.email!,
-        name: data.session.user.user_metadata.name,
-        userType: data.session.user.user_metadata.userType
-      };
-
-      return {
-        user,
-        accessToken: data.session.access_token
-      };
-    } catch (error) {
-      console.error('Session error:', error);
-      return { error: String(error) };
-    }
-  },
-
   // Get access token
   getAccessToken: async (): Promise<string | null> => {
     const { data } = await supabase.auth.getSession();

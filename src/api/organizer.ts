@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { authAPI } from './auth';
 
 // Organizer Profile API
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
 export const organizerAPI = {
   saveProfile: async (profileData: any) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -132,7 +134,7 @@ export const organizerAPI = {
     try {
       const accessToken = await authAPI.getAccessToken();
 
-      await fetch(`https://api.voxdai.com/functions/v1/create-organization-embedding?user_id=${user.id}`, {
+      await fetch(`${supabaseUrl}/functions/v1/create-organization-embedding?user_id=${user.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -181,8 +183,6 @@ export const organizerAPI = {
     }
 
     const accessToken = await authAPI.getAccessToken();
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
     const response = await fetch(`${supabaseUrl}/functions/v1/toggle-org-speaker-visibility`, {
       method: 'POST',
       headers: {
