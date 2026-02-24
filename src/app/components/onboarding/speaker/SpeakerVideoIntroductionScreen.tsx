@@ -17,6 +17,7 @@ interface SpeakerVideoIntroductionScreenProps {
 type VideoInputMethod = 'url' | 'upload' | 'record' | null;
 
 export default function SpeakerVideoIntroductionScreen({
+  formData,
   updateFormData,
   nextScreen,
   prevScreen,
@@ -36,6 +37,7 @@ export default function SpeakerVideoIntroductionScreen({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [playbackUrl, setPlaybackUrl] = useState<string>('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -57,6 +59,43 @@ export default function SpeakerVideoIntroductionScreen({
       }
     };
   }, []);
+
+  // Load playback URL for existing video
+  useEffect(() => {
+    async function loadPlaybackUrl() {
+      try {
+        const accessToken = await authAPI.getAccessToken();
+        if (!accessToken) return;
+
+        const res = await fetch(
+          'https://api.voxdai.com/functions/v1/generate-play-url',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ key: formData.videoIntroUrl }),
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.signedUrl) {
+            setPlaybackUrl(data.signedUrl);
+            setSelectedMethod('record');
+            setIsPreviewing(true);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load video playback URL:', error);
+      }
+    }
+
+    if (formData.videoIntroUrl && formData.videoIntroUrl.startsWith('videos/')) {
+      loadPlaybackUrl();
+    }
+  }, [formData.videoIntroUrl]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -277,6 +316,7 @@ export default function SpeakerVideoIntroductionScreen({
     setErrorType(null);
     setUploadError('');
     setUploadSuccess(false);
+    setPlaybackUrl('');
     updateFormData({ videoIntroFile: null, videoIntroUrl: '' });
 
     if (videoRef.current) {
@@ -622,6 +662,7 @@ export default function SpeakerVideoIntroductionScreen({
                       ref={videoRef}
                       className="w-full aspect-video bg-black"
                       playsInline
+                      {...(playbackUrl && !isRecording ? { src: playbackUrl, controls: true } : {})}
                     />
                   </div>
                 )}
@@ -648,7 +689,7 @@ export default function SpeakerVideoIntroductionScreen({
                   </div>
                 )}
 
-                {isPreviewing && recordedBlob && (
+                {isPreviewing && (recordedBlob || playbackUrl) && (
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
