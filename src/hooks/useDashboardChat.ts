@@ -12,7 +12,7 @@ export function useDashboardChat(userType: string) {
   const [totalUnread, setTotalUnread] = useState(0);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
-  const currentUserIdRef = useRef<string | undefined>();
+  const currentUserIdRef = useRef<string | undefined>(undefined);
 
   // Load unread count on mount
   useEffect(() => {
@@ -68,7 +68,8 @@ export function useDashboardChat(userType: string) {
 
         const msgs = await conversationAPI.loadMessages(activeConversation);
         const otherMsg = msgs.find((m: any) => m.sender_id !== currentUserId);
-        const otherName = otherMsg?.sender?.display_name || null;
+        const sender = Array.isArray(otherMsg?.sender) ? otherMsg.sender[0] : otherMsg?.sender;
+        const otherName = sender?.display_name || null;
 
         const mapped: Message[] = msgs.map((m: any) => ({
           id: m.id,
