@@ -39,6 +39,9 @@ export default function SpeakerVideoIntroductionScreen({
   const [uploadError, setUploadError] = useState<string>('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFilePreview, setUploadedFilePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -54,9 +57,12 @@ export default function SpeakerVideoIntroductionScreen({
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      // Revoke object URL to prevent memory leak
+      // Revoke object URLs to prevent memory leak
       if (videoUrlRef.current) {
         URL.revokeObjectURL(videoUrlRef.current);
+      }
+      if (uploadedFilePreview) {
+        URL.revokeObjectURL(uploadedFilePreview);
       }
     };
   }, []);
@@ -76,7 +82,7 @@ export default function SpeakerVideoIntroductionScreen({
     }
   };
 
-  const uploadVideoToR2 = async (blob: Blob) => {
+  const uploadVideoToR2 = async (blob: Blob, contentType = 'video/webm', extension = 'webm') => {
     setIsUploading(true);
     setUploadError('');
     setUploadSuccess(false);
@@ -98,8 +104,8 @@ export default function SpeakerVideoIntroductionScreen({
           },
           body: JSON.stringify({
             folder: 'intro',
-            fileName: `${Date.now()}.webm`,
-            contentType: 'video/webm',
+            fileName: `${Date.now()}.${extension}`,
+            contentType,
           }),
         }
       );
@@ -118,7 +124,7 @@ export default function SpeakerVideoIntroductionScreen({
       const uploadRes = await fetch(signedUrl, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'video/webm',
+          'Content-Type': contentType,
         },
         body: blob,
       });
@@ -136,6 +142,49 @@ export default function SpeakerVideoIntroductionScreen({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleFileSelect = (file: File) => {
+    if (file.size > 100 * 1024 * 1024) {
+      setUploadError('File size exceeds 100MB limit');
+      return;
+    }
+
+    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('Unsupported file format. Please use MP4, MOV, AVI, or WebM.');
+      return;
+    }
+
+    setUploadedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setUploadedFilePreview(previewUrl);
+
+    const ext = file.name.split('.').pop() || 'mp4';
+    const contentType = file.type || 'video/mp4';
+    uploadVideoToR2(file, contentType, ext);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFileSelect(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  const handleRemoveUploadedFile = () => {
+    if (uploadedFilePreview) URL.revokeObjectURL(uploadedFilePreview);
+    setUploadedFile(null);
+    setUploadedFilePreview('');
+    setUploadError('');
+    setUploadSuccess(false);
+    updateFormData({ videoIntroFile: null, videoIntroUrl: '' });
   };
 
   const handleStartRecording = async () => {
@@ -536,14 +585,97 @@ export default function SpeakerVideoIntroductionScreen({
             {/* Upload File Section */}
             {selectedMethod === 'upload' && (
               <div className="mb-10">
-                <div className="border-2 border-dashed border-[#d1d5dc] rounded-[12px] p-12 text-center hover:border-[#0b3b2e] transition-colors">
-                  <p className="text-[#4a5565] text-[16px] mb-2">
-                    Drag and drop your video file here, or click to browse
-                  </p>
-                  <p className="text-[#6a7282] text-[14px]">
-                    Maximum file size: 100MB. Supported formats: MP4, MOV, AVI
-                  </p>
-                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/x-msvideo,video/webm"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+
+                {!uploadedFile && !uploadedFilePreview && (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleFileDrop}
+                    className="border-2 border-dashed border-[#d1d5dc] rounded-[12px] p-12 text-center hover:border-[#0b3b2e] transition-colors cursor-pointer"
+                  >
+                    <svg className="w-10 h-10 mx-auto mb-3 text-[#6a7282]" fill="none" viewBox="0 0 24 24">
+                      <path d="M12 16V4m0 0l-4 4m4-4l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <p className="text-[#4a5565] text-[16px] mb-2">
+                      Drag and drop your video file here, or click to browse
+                    </p>
+                    <p className="text-[#6a7282] text-[14px]">
+                      Maximum file size: 100MB. Supported formats: MP4, MOV, AVI, WebM
+                    </p>
+                  </div>
+                )}
+
+                {(uploadedFile || uploadedFilePreview) && (
+                  <>
+                    <div className="border border-[#d1d5dc] rounded-[12px] overflow-hidden bg-black">
+                      <video
+                        controls
+                        src={uploadedFilePreview}
+                        className="w-full aspect-video bg-black"
+                      />
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {isUploading ? (
+                            <>
+                              <svg className="w-5 h-5 text-[#0b3b2e] animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                                Uploading video...
+                              </span>
+                            </>
+                          ) : uploadSuccess ? (
+                            <>
+                              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24">
+                                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                                Video uploaded successfully
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                              {uploadedFile?.name}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleRemoveUploadedFile}
+                          disabled={isUploading}
+                          className={`border-2 border-[#d1d5dc] text-[#4a5565] px-6 py-3 rounded-[12px] font-['Inter',sans-serif] font-medium text-[16px] transition-all flex items-center gap-2 ${
+                            isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#0b3b2e] hover:text-[#0b3b2e]'
+                          }`}
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      {uploadError && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-[12px] flex items-center justify-between">
+                          <p className="text-red-600 font-medium text-[14px]">{uploadError}</p>
+                          <button
+                            onClick={() => uploadedFile && handleFileSelect(uploadedFile)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-[8px] font-['Inter',sans-serif] font-medium text-[14px] hover:bg-red-700 transition-all"
+                          >
+                            Retry Upload
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
