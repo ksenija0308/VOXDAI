@@ -1,5 +1,5 @@
 import { Video, Clock, DollarSign } from 'lucide-react';
-import { SearchFilters as SearchFiltersType, DEFAULT_FILTERS } from '@/types/dashboard';
+import { SearchFilters as SearchFiltersType } from '@/types/dashboard';
 
 interface SearchFiltersProps {
   filters: SearchFiltersType;
