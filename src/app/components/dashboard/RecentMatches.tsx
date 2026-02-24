@@ -30,7 +30,9 @@ export default function RecentMatches({
 
       {recentMatches.length === 0 ? (
         <p className="text-[#717182] text-center py-6" style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>
-          No matches yet. Use AI Speaker Matchmaking above to find speakers.
+          {userType === 'speaker'
+            ? 'No matches yet. Use AI Matchmaking to find organizations.'
+            : 'No matches yet. Use AI Speaker Matchmaking above to find speakers.'}
         </p>
       ) : (
         <div className="space-y-4">
