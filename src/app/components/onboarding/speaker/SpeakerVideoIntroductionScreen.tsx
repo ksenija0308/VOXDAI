@@ -3,7 +3,6 @@ import { FormData } from "@/types/formData.ts";
 import FormLayout from '../shared/FormLayout';
 import svgPaths from '@/imports/svg-yog84ugbyb';
 import { authAPI } from '@/api/auth';
-import { supabase } from '@/lib/supabaseClient';
 
 interface SpeakerVideoIntroductionScreenProps {
   formData: FormData;
@@ -117,16 +116,7 @@ export default function SpeakerVideoIntroductionScreen({
         throw new Error('Failed to upload video');
       }
 
-      // Save path to speaker_profiles
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('speaker_profiles')
-          .update({ video_intro_url: key })
-          .eq('id', user.id);
-      }
-
-      // Update form data
+      // Store path in form data — will be saved to speaker_profiles via speakerAPI.saveProfile()
       updateFormData({ videoIntroUrl: key });
       setUploadSuccess(true);
     } catch (error) {
