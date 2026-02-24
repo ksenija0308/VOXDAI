@@ -120,6 +120,7 @@ export async function loadRecentMatches(viewerRole: "speaker" | "organizer") {
                 bio: profile.bio || "",
                 profilePhoto: profilePhotoUrl,
                 profilePhotoPath: profile.profile_photo || null,
+                videoIntroUrl: profile.video_intro_url || '',
                 lastViewedAt: view.last_viewed_at,
             };
         })

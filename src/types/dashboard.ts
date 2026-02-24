@@ -33,6 +33,7 @@ export interface SearchResult {
   bio: string;
   profilePhoto: string | null;
   profilePhotoPath: string | null;
+  videoIntroUrl: string;
 }
 
 export interface SearchFilters {
@@ -71,6 +72,7 @@ export interface ViewingSpeaker {
   llmExplanation?: string;
   bio?: string;
   profilePhoto?: string | null;
+  videoIntroUrl?: string;
 }
 
 export const DEFAULT_FILTERS: SearchFilters = {

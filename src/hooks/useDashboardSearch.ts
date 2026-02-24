@@ -66,6 +66,7 @@ export function useDashboardSearch(userType: string) {
           bio: speaker.bio || '',
           profilePhoto: profilePhotoUrl,
           profilePhotoPath: speaker.profile_photo || null,
+          videoIntroUrl: speaker.video_intro_url || '',
         };
       };
 

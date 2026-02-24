@@ -108,6 +108,7 @@ export default function DashboardScreen({ formData, onLogout }: DashboardScreenP
       location: result.location,
       bio: result.bio,
       profilePhoto: result.profilePhoto,
+      videoIntroUrl: result.videoIntroUrl,
     });
     const viewerRole = formData.userType === 'speaker' ? 'speaker' as const : 'organizer' as const;
     const targetRole = viewerRole === 'organizer' ? 'speaker' as const : 'organizer' as const;

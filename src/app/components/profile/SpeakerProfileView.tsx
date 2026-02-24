@@ -1,5 +1,6 @@
 import { ArrowLeft, Calendar, MapPin, DollarSign, Globe, Video, Clock } from 'lucide-react';
 import { Button } from '../ui/button';
+import { useVideoPlaybackUrl } from '@/hooks/useVideoPlaybackUrl';
 
 interface SpeakerProfileProps {
   speaker: {
@@ -16,6 +17,7 @@ interface SpeakerProfileProps {
     location?: string;
     bio?: string;
     profilePhoto?: string | null;
+    videoIntroUrl?: string;
   };
   onClose: () => void;
   onContact: () => void;
@@ -23,6 +25,8 @@ interface SpeakerProfileProps {
 }
 
 export default function SpeakerProfileView({ speaker, onClose, onContact, profileType = 'speaker' }: SpeakerProfileProps) {
+  const { playbackUrl, isLoading: isVideoLoading } = useVideoPlaybackUrl(speaker.videoIntroUrl);
+
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -95,6 +99,27 @@ export default function SpeakerProfileView({ speaker, onClose, onContact, profil
               <p className="text-[#717182] leading-relaxed" style={{ fontSize: '16px', fontFamily: 'Inter, sans-serif' }}>
                 {speaker.bio}
               </p>
+            </div>
+          )}
+
+          {/* Video Introduction */}
+          {(playbackUrl || isVideoLoading) && (
+            <div className="mb-8">
+              <h2 className="mb-4 flex items-center gap-2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 'bold', fontSize: '20px' }}>
+                <Video className="w-5 h-5" />
+                Video Introduction
+              </h2>
+              {playbackUrl ? (
+                <video
+                  controls
+                  src={playbackUrl}
+                  className="w-full rounded-lg aspect-video bg-black"
+                />
+              ) : (
+                <div className="flex items-center justify-center aspect-video bg-[#f9fafb] rounded-lg border border-[#e9ebef]">
+                  <p className="text-[#717182]" style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}>Loading video...</p>
+                </div>
+              )}
             </div>
           )}
 
