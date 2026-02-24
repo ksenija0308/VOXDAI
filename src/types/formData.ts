@@ -41,7 +41,7 @@ export interface FormData {
   diversityGoals: boolean;
   diversityTargets: string;
   languages: string[];
-  budgetRange: string;
+  budgetRange: string[];
   budgetMin: number;
   budgetMax: number;
   leadTime: string;
@@ -143,7 +143,7 @@ export const initialFormData: FormData = {
   diversityGoals: false,
   diversityTargets: '',
   languages: [],
-  budgetRange: 'unpaid',
+  budgetRange: [],
   budgetMin: 0,
   budgetMax: 10000,
   leadTime: '',

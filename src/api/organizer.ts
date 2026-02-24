@@ -85,14 +85,14 @@ export const organizerAPI = {
     if (profileData.diversityGoals !== undefined) organizationData.diversity_goals = profileData.diversityGoals;
     if (profileData.diversityTargets) organizationData.diversity_targets = profileData.diversityTargets;
     if (profileData.languages) organizationData.languages = profileData.languages;
-    if (profileData.budgetRange) {
+    if (profileData.budgetRange && profileData.budgetRange.length > 0) {
       organizationData.budget_range = profileData.budgetRange;
-      if (profileData.budgetRange === 'unpaid') {
-        organizationData.budget_min = 0;
-        organizationData.budget_max = 0;
-      } else {
+      if (profileData.budgetRange.includes('paid')) {
         if (profileData.budgetMin !== undefined) organizationData.budget_min = profileData.budgetMin;
         if (profileData.budgetMax !== undefined) organizationData.budget_max = profileData.budgetMax;
+      } else {
+        organizationData.budget_min = 0;
+        organizationData.budget_max = 0;
       }
     }
     if (profileData.leadTime) organizationData.lead_time = profileData.leadTime;

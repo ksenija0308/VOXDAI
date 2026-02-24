@@ -189,42 +189,27 @@ export default function SpeakerPreferencesScreen({
 
         <div className="space-y-4">
           <div className="flex gap-4">
-            <button
-              onClick={() => updateFormData({ budgetRange: 'unpaid' })}
-              className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
-                formData.budgetRange === 'unpaid'
-                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
-                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
-              }`}
-              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
-            >
-              Unpaid
-            </button>
-            <button
-              onClick={() => updateFormData({ budgetRange: 'travel' })}
-              className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
-                formData.budgetRange === 'travel'
-                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
-                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
-              }`}
-              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
-            >
-              Travel covered
-            </button>
-            <button
-              onClick={() => updateFormData({ budgetRange: 'paid' })}
-              className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
-                formData.budgetRange === 'paid'
-                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
-                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
-              }`}
-              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
-            >
-              Paid
-            </button>
+            {[
+              { value: 'unpaid', label: 'Unpaid' },
+              { value: 'travel', label: 'Travel covered' },
+              { value: 'paid', label: 'Paid' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => toggleOption(formData.budgetRange, value, 'budgetRange')}
+                className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
+                  formData.budgetRange.includes(value)
+                    ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
+                    : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
+                }`}
+                style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          {formData.budgetRange === 'paid' && (
+          {formData.budgetRange.includes('paid') && (
             <div className="bg-[#f3f3f5] p-4 rounded-lg">
               <label className="block mb-4">
                 Budget range: CHF {formData.budgetMin.toLocaleString()} – CHF {formData.budgetMax.toLocaleString()}

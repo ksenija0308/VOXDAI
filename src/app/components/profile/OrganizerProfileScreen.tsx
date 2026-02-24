@@ -99,7 +99,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
     diversityGoals: profile.diversity_goals ?? false,
     diversityTargets: profile.diversity_targets ?? '',
     languages: profile.languages ?? [],
-    budgetRange: profile.budget_range ?? '',
+    budgetRange: profile.budget_range ?? [],
     budgetMin: profile.budget_min ?? 0,
     budgetMax: profile.budget_max ?? 10000,
     leadTime: profile.lead_time ?? '',
@@ -902,22 +902,34 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                     </label>
                     <div className="space-y-4">
                       <div className="flex gap-4">
-                        {(['unpaid', 'travel', 'paid'] as const).map((option) => (
-                          <button
-                            key={option}
-                            onClick={() => updateEditData('budgetRange', option)}
-                            className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
-                              getDisplayValue('budgetRange') === option
-                                ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
-                                : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
-                            }`}
-                            style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
-                          >
-                            {option === 'unpaid' ? 'Unpaid' : option === 'travel' ? 'Travel covered' : 'Paid'}
-                          </button>
-                        ))}
+                        {([
+                          { value: 'unpaid', label: 'Unpaid' },
+                          { value: 'travel', label: 'Travel covered' },
+                          { value: 'paid', label: 'Paid' },
+                        ] as const).map(({ value, label }) => {
+                          const current = getArrayValue('budgetRange');
+                          return (
+                            <button
+                              key={value}
+                              onClick={() => {
+                                const updated = current.includes(value)
+                                  ? current.filter((v) => v !== value)
+                                  : [...current, value];
+                                updateEditData('budgetRange', updated);
+                              }}
+                              className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${
+                                current.includes(value)
+                                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
+                                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
+                              }`}
+                              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
                       </div>
-                      {getDisplayValue('budgetRange') === 'paid' && (
+                      {getArrayValue('budgetRange').includes('paid') && (
                         <div className="bg-[#f3f3f5] p-4 rounded-lg">
                           <label className="block mb-4 text-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
                             Budget range: CHF {(Number(getDisplayValue('budgetMin')) || 0).toLocaleString()} – CHF {(Number(getDisplayValue('budgetMax')) || 10000).toLocaleString()}
@@ -968,7 +980,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <>
                   {renderArrayField('Speaker Formats', 'speakerFormats')}
                   {renderArrayField('Languages', 'languages')}
-                  {renderField('Budget Range', 'budgetRange')}
+                  {renderArrayField('Budget Range', 'budgetRange')}
                   {renderField('Lead Time', 'leadTime')}
                   <div className="mb-4">
                     <label className="block text-sm text-[#717182] mb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
