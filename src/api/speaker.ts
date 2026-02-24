@@ -95,6 +95,7 @@ export const speakerAPI = {
       speakerData.video_intro = profileData.videoIntroUrl;
     }
 
+
     // Availability Periods
     if (profileData.availabilityPeriods) speakerData.availability_periods = profileData.availabilityPeriods;
 

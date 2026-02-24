@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { FormData } from "@/types/formData.ts";
 import FormLayout from '../shared/FormLayout';
 import svgPaths from '@/imports/svg-yog84ugbyb';
+import { authAPI } from '@/api/auth';
+import { supabase } from '@/lib/supabaseClient';
 
 interface SpeakerVideoIntroductionScreenProps {
   formData: FormData;
@@ -32,6 +34,9 @@ export default function SpeakerVideoIntroductionScreen({
   const [cameraError, setCameraError] = useState<string>('');
   const [errorType, setErrorType] = useState<'permission' | 'notfound' | 'https' | 'unsupported' | 'other' | null>(null);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string>('');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -58,6 +63,77 @@ export default function SpeakerVideoIntroductionScreen({
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+    }
+  };
+
+  const uploadVideoToR2 = async (blob: Blob) => {
+    setIsUploading(true);
+    setUploadError('');
+    setUploadSuccess(false);
+
+    try {
+      const accessToken = await authAPI.getAccessToken();
+      if (!accessToken) {
+        throw new Error('Not authenticated');
+      }
+
+      // Get signed upload URL
+      const res = await fetch(
+        'https://api.voxdai.com/functions/v1/generate-upload-url',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            folder: 'intro',
+            fileName: `${Date.now()}.webm`,
+            contentType: 'video/webm',
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error('Failed to generate upload URL');
+      }
+
+      const { signedUrl, key } = await res.json();
+
+      if (!signedUrl) {
+        throw new Error('No upload URL returned');
+      }
+
+      // Upload video to R2
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'video/webm',
+        },
+        body: blob,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload video');
+      }
+
+      // Save path to speaker_profiles
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('speaker_profiles')
+          .update({ video_intro_url: key })
+          .eq('id', user.id);
+      }
+
+      // Update form data
+      updateFormData({ videoIntroUrl: key });
+      setUploadSuccess(true);
+    } catch (error) {
+      console.error('Video upload error:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to upload video');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -146,6 +222,9 @@ export default function SpeakerVideoIntroductionScreen({
         }
 
         stopCamera();
+
+        // Upload to R2
+        uploadVideoToR2(blob);
       };
 
       // Start recording
@@ -201,7 +280,9 @@ export default function SpeakerVideoIntroductionScreen({
     setRecordingTime(0);
     setCameraError('');
     setErrorType(null);
-    updateFormData({ videoIntroFile: null });
+    setUploadError('');
+    setUploadSuccess(false);
+    updateFormData({ videoIntroFile: null, videoIntroUrl: '' });
 
     if (videoRef.current) {
       videoRef.current.src = '';
@@ -573,25 +654,65 @@ export default function SpeakerVideoIntroductionScreen({
                 )}
 
                 {isPreviewing && recordedBlob && (
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24">
-                        <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
-                        Video recorded successfully ({formatTime(recordingTime)})
-                      </span>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {isUploading ? (
+                          <>
+                            <svg className="w-5 h-5 text-[#0b3b2e] animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                              Uploading video...
+                            </span>
+                          </>
+                        ) : uploadSuccess ? (
+                          <>
+                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24">
+                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                              Video uploaded successfully ({formatTime(recordingTime)})
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24">
+                              <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            <span className="font-['Inter',sans-serif] text-[16px] text-[#0b3b2e]">
+                              Video recorded ({formatTime(recordingTime)})
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <button
+                        onClick={handleRetakeVideo}
+                        disabled={isUploading}
+                        className={`border-2 border-[#d1d5dc] text-[#4a5565] px-6 py-3 rounded-[12px] font-['Inter',sans-serif] font-medium text-[16px] transition-all flex items-center gap-2 ${
+                          isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#0b3b2e] hover:text-[#0b3b2e]'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
+                          <path d="M2 8a6 6 0 0 1 10.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          <path d="M12.5 1v3h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Retake Video
+                      </button>
                     </div>
-                    <button
-                      onClick={handleRetakeVideo}
-                      className="border-2 border-[#d1d5dc] text-[#4a5565] px-6 py-3 rounded-[12px] font-['Inter',sans-serif] font-medium text-[16px] hover:border-[#0b3b2e] hover:text-[#0b3b2e] transition-all flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 16 16">
-                        <path d="M2 8a6 6 0 0 1 10.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                        <path d="M12.5 1v3h-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      Retake Video
-                    </button>
+
+                    {uploadError && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-[12px] flex items-center justify-between">
+                        <p className="text-red-600 font-medium text-[14px]">{uploadError}</p>
+                        <button
+                          onClick={() => recordedBlob && uploadVideoToR2(recordedBlob)}
+                          className="bg-red-600 text-white px-4 py-2 rounded-[8px] font-['Inter',sans-serif] font-medium text-[14px] hover:bg-red-700 transition-all"
+                        >
+                          Retry Upload
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
