@@ -899,7 +899,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-                      Event reach
+                      Geographic reach
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {[
@@ -1016,7 +1016,7 @@ export default function OrganizerProfileScreen({ formData, updateFormData, saveP
                 <>
                   {renderArrayField('Speaker Formats', 'speakerFormats')}
                   {renderArrayField('Languages', 'languages')}
-                  {renderArrayField('Event Reach', 'eventReach')}
+                  {renderArrayField('Geographic Reach', 'eventReach')}
                   {renderArrayField('Budget Range', 'budgetRange')}
                   {renderField('Lead Time', 'leadTime')}
                   <div className="mb-4">
