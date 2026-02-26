@@ -4,6 +4,9 @@ import { Slider } from '../../ui/slider';
 import { Input } from '../../ui/input';
 import { FormData } from "@/types/formData.ts";
 import FormLayout from '../shared/FormLayout';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../ui/command';
 
 interface SpeakerPreferencesScreenProps {
   formData: FormData;
@@ -136,22 +139,64 @@ export default function SpeakerPreferencesScreen({
         <p className="text-[#717182] mb-3" style={{ fontSize: '14px' }}>
           Which languages should speakers be able to present in?
         </p>
-        <div className="flex flex-wrap gap-2">
-          {languageOptions.map((language) => (
+        <Popover>
+          <PopoverTrigger asChild>
             <button
-              key={language}
-              onClick={() => toggleOption(formData.languages, language, 'languages')}
-              className={`px-4 py-2 rounded-full border transition-colors ${
-                formData.languages.includes(language)
-                  ? 'bg-[#0B3B2E] text-white border-[#0B3B2E]'
-                  : 'bg-white text-black border-[#e9ebef] hover:border-[#0B3B2E]'
-              }`}
-              style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+              type="button"
+              className="w-full px-4 py-3.5 border border-[#e9ebef] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-left flex items-center justify-between focus:border-[#0B3B2E] focus:ring-2 focus:ring-[#0B3B2E]/10 transition-all outline-none bg-white"
             >
-              {language}
+              <span className={`truncate ${formData.languages.length === 0 ? 'text-[rgba(0,0,0,0.5)]' : 'text-black'}`}>
+                {formData.languages.length === 0
+                  ? 'Select languages...'
+                  : `${formData.languages.length} language${formData.languages.length === 1 ? '' : 's'} selected`}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </button>
-          ))}
-        </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search languages..." />
+              <CommandList>
+                <CommandEmpty>No language found.</CommandEmpty>
+                <CommandGroup>
+                  {languageOptions.map((language) => (
+                    <CommandItem
+                      key={language}
+                      value={language}
+                      onSelect={() => toggleOption(formData.languages, language, 'languages')}
+                    >
+                      <Check
+                        className={`mr-2 h-4 w-4 ${
+                          formData.languages.includes(language) ? 'opacity-100' : 'opacity-0'
+                        }`}
+                      />
+                      {language}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        {formData.languages.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {formData.languages.map((language) => (
+              <span
+                key={language}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#0B3B2E] text-white text-[14px] font-['Inter',sans-serif]"
+              >
+                {language}
+                <button
+                  type="button"
+                  onClick={() => toggleOption(formData.languages, language, 'languages')}
+                  className="ml-0.5 hover:opacity-70"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         {errors.languages && (
           <p className="text-[#d4183d] mt-2" style={{ fontSize: '14px' }}>{errors.languages}</p>
         )}

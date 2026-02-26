@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, Pencil, Save, X, User, Briefcase, Calendar, Upload, Video, MapPin } from 'lucide-react';
+import { ArrowLeft, LogOut, Pencil, Save, X, User, Briefcase, Calendar, Upload, Video, MapPin, Check, ChevronsUpDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
@@ -808,7 +810,64 @@ export default function SpeakerProfileScreen({ formData, updateFormData, savePro
 
                   <div>
                     <label className="block text-sm text-[#717182] mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Languages <span className="text-[#d4183d]">*</span></label>
-                    {renderToggleButtons('speakerLanguages', languageOptions)}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full px-4 py-3 border border-[#e9ebef] rounded-[12px] font-['Inter',sans-serif] text-sm text-left flex items-center justify-between focus:border-[#0B3B2E] focus:ring-2 focus:ring-[#0B3B2E]/10 transition-all outline-none bg-white"
+                        >
+                          <span className={`truncate ${getArrayValue('speakerLanguages').length === 0 ? 'text-[rgba(0,0,0,0.5)]' : 'text-black'}`}>
+                            {getArrayValue('speakerLanguages').length === 0
+                              ? 'Select languages...'
+                              : `${getArrayValue('speakerLanguages').length} language${getArrayValue('speakerLanguages').length === 1 ? '' : 's'} selected`}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search languages..." />
+                          <CommandList>
+                            <CommandEmpty>No language found.</CommandEmpty>
+                            <CommandGroup>
+                              {languageOptions.map((language) => (
+                                <CommandItem
+                                  key={language}
+                                  value={language}
+                                  onSelect={() => toggleOption('speakerLanguages', language)}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      getArrayValue('speakerLanguages').includes(language) ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                  />
+                                  {language}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {getArrayValue('speakerLanguages').length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {getArrayValue('speakerLanguages').map((language) => (
+                          <span
+                            key={language}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0B3B2E] text-white text-xs font-['Inter',sans-serif]"
+                          >
+                            {language}
+                            <button
+                              type="button"
+                              onClick={() => toggleOption('speakerLanguages', language)}
+                              className="ml-0.5 hover:opacity-70"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {errors.speakerLanguages && <p className="text-[#d4183d] text-xs mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>{errors.speakerLanguages}</p>}
                   </div>
 

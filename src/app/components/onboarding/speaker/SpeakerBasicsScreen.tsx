@@ -4,6 +4,9 @@ import FormLayout from '../shared/FormLayout';
 import svgPaths from '@/imports/svg-5axqc4zoph';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../../ui/command';
 
 const LINKEDIN_IMPORT_PENDING_KEY = 'voxd_linkedin_import_pending';
 
@@ -367,23 +370,64 @@ export default function SpeakerBasicsScreen({
               <p className="text-[#6a7282] text-[16px] mb-3">
                 Which languages can you present in?
               </p>
-              <div className="flex flex-wrap gap-2">
-                {languageOptions.map((language) => (
+              <Popover>
+                <PopoverTrigger asChild>
                   <button
-                    key={language}
                     type="button"
-                    onClick={() => toggleLanguage(language)}
-                    className={`px-4 py-2 rounded-full border transition-colors ${
-                      (formData.speakerLanguages || []).includes(language)
-                        ? 'bg-[#0b3b2e] text-white border-[#0b3b2e]'
-                        : 'bg-white text-black border-[#d1d5dc] hover:border-[#0b3b2e]'
-                    }`}
-                    style={{ fontSize: '14px', fontFamily: 'Inter, sans-serif' }}
+                    className="w-full px-4 py-3.5 border border-[#d1d5dc] rounded-[12px] font-['Inter',sans-serif] text-[16px] text-left flex items-center justify-between focus:border-[#0b3b2e] focus:ring-2 focus:ring-[#0b3b2e]/10 transition-all outline-none bg-white"
                   >
-                    {language}
+                    <span className={`truncate ${(formData.speakerLanguages || []).length === 0 ? 'text-[rgba(0,0,0,0.5)]' : 'text-black'}`}>
+                      {(formData.speakerLanguages || []).length === 0
+                        ? 'Select languages...'
+                        : `${(formData.speakerLanguages || []).length} language${(formData.speakerLanguages || []).length === 1 ? '' : 's'} selected`}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </button>
-                ))}
-              </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search languages..." />
+                    <CommandList>
+                      <CommandEmpty>No language found.</CommandEmpty>
+                      <CommandGroup>
+                        {languageOptions.map((language) => (
+                          <CommandItem
+                            key={language}
+                            value={language}
+                            onSelect={() => toggleLanguage(language)}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                (formData.speakerLanguages || []).includes(language) ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            />
+                            {language}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {(formData.speakerLanguages || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(formData.speakerLanguages || []).map((language) => (
+                    <span
+                      key={language}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#0b3b2e] text-white text-[14px] font-['Inter',sans-serif]"
+                    >
+                      {language}
+                      <button
+                        type="button"
+                        onClick={() => toggleLanguage(language)}
+                        className="ml-0.5 hover:opacity-70"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
               {languageError && (
                 <p className="text-[#e7000b] mt-2" style={{ fontSize: '14px' }}>{languageError}</p>
               )}
