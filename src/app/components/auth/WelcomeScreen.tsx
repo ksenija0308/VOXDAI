@@ -67,6 +67,21 @@ export default function WelcomeScreen({ updateFormData, nextScreen, onShowSignIn
         throw new Error(data.message || 'Failed to send message');
       }
 
+      // Send notification email via edge function
+      await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          first_name: contactFormData.firstName,
+          last_name: contactFormData.lastName,
+          email: contactFormData.email,
+          message: contactFormData.message,
+        }),
+      });
+
       toast.success('Message sent successfully! We\'ll get back to you soon.');
       setShowContactForm(false);
       setContactFormData({
